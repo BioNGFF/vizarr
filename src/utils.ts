@@ -160,8 +160,8 @@ export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
       if (typeof axis === "string") {
         return { name: axis, type: getDefaultType(axis) };
       }
-      const { name, type } = axis;
-      return { name, type: type ?? getDefaultType(name) };
+      const { name, type, unit } = axis;
+      return { name, type: type ?? getDefaultType(name), unit };
     });
   }
   return axes;
@@ -590,4 +590,25 @@ export function zip<T extends unknown[]>(...arrays: { [K in keyof T]: ReadonlyAr
     result[i] = arr as T;
   }
   return result;
+}
+
+export function getPhysicalSizes(attrs: zarr.Attributes) {
+  if (isMultiscales(attrs)) {
+    const axes = getNgffAxes(attrs.multiscales);
+    const ct = coordinateTransformationsToMatrix(attrs.multiscales);
+    const matrixIndices = {
+      x: 0,
+      y: 5,
+      z: 10,
+    };
+    const physicalSizes = axes
+      .filter((a) => a.type === "space")
+      .reduce((acc: { [key: string]: Ome.PhysicalSize }, a) => {
+        acc[a.name] = { size: ct[matrixIndices[a.name as keyof typeof matrixIndices]], unit: a.unit };
+        return acc;
+      }, {});
+    // @TODO: get t size from multiscales.coordinateTransformations if axis is present
+    return physicalSizes;
+  }
+  return null;
 }

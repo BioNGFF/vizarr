@@ -31,6 +31,7 @@ declare namespace Ome {
   interface Axis {
     name: string;
     type?: string;
+    unit?: string;
   }
 
   type CoordinateTransformation =
@@ -108,4 +109,9 @@ declare namespace Ome {
     | { plate: Plate }
     | { well: Well }
     | { "image-label": ImageLabel; multiscales: Multiscale[] };
+
+  interface PhysicalSize {
+    size: number;
+    unit?: string;
+  }
 }

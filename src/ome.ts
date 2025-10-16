@@ -307,7 +307,7 @@ async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: strin
 async function resolveOmeLabelsFromMultiscales(grp: zarr.Group<zarr.Readable>): Promise<Array<string>> {
   return zarr
     .open(grp.resolve("labels"), { kind: "group" })
-    .then(({ attrs }) => (attrs.labels ?? []) as Array<string>)
+    .then(({ attrs }) => (utils.resolveAttrs(attrs).labels ?? []) as Array<string>)
     .catch((e) => {
       utils.rethrowUnless(e, zarr.NodeNotFoundError);
       return [];

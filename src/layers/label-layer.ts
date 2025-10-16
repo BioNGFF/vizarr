@@ -141,17 +141,21 @@ export class GrayscaleBitmapLayer extends BitmapLayer<{ pixelData: LabelPixelDat
   // @ts-expect-error - only way to extend the base state type
   state!: { texture: Texture } & BitmapLayer["state"];
 
+  // Temporary workaround for ANGLE bug https://issues.angleproject.org/issues/401546698
+  // "Error during validation: Two textures of different types use the same sampler location."
+  // Force grayscaleTexture to float32 to use sampler2D
   getShaders() {
-    const sampler = (
-      {
-        Uint8Array: "usampler2D",
-        Uint16Array: "usampler2D",
-        Uint32Array: "usampler2D",
-        Int8Array: "isampler2D",
-        Int16Array: "isampler2D",
-        Int32Array: "isampler2D",
-      } as const
-    )[typedArrayConstructorName(this.props.pixelData.data)];
+    // const sampler = (
+    //   {
+    //     Uint8Array: "usampler2D",
+    //     Uint16Array: "usampler2D",
+    //     Uint32Array: "usampler2D",
+    //     Int8Array: "isampler2D",
+    //     Int16Array: "isampler2D",
+    //     Int32Array: "isampler2D",
+    //   } as const
+    // )[typedArrayConstructorName(this.props.pixelData.data)];
+    const sampler = "sampler2D"; // Use sampler2D for ANGLE bug workaround
     // replace the builtin fragment shader with our own
     return {
       ...super.getShaders(),
@@ -192,7 +196,7 @@ void main() {
         texture: this.context.device.createTexture({
           width: props.pixelData.width,
           height: props.pixelData.height,
-          data: props.pixelData.data,
+          data: new Float32Array(props.pixelData.data), // Force float32 for ANGLE bug workaround
           dimension: "2d",
           mipmaps: false,
           sampler: {
@@ -201,16 +205,17 @@ void main() {
             addressModeU: "clamp-to-edge",
             addressModeV: "clamp-to-edge",
           },
-          format: (
-            {
-              Uint8Array: "r8uint",
-              Uint16Array: "r16uint",
-              Uint32Array: "r32uint",
-              Int8Array: "r8sint",
-              Int16Array: "r16sint",
-              Int32Array: "r32sint",
-            } as const
-          )[typedArrayConstructorName(props.pixelData.data)],
+          format: "r32float", // ANGLE bug workaround
+          // format: (
+          //   {
+          //     Uint8Array: "r8uint",
+          //     Uint16Array: "r16uint",
+          //     Uint32Array: "r32uint",
+          //     Int8Array: "r8sint",
+          //     Int16Array: "r16sint",
+          //     Int32Array: "r32sint",
+          //   } as const
+          // )[typedArrayConstructorName(props.pixelData.data)],
         }),
       });
     }
