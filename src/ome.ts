@@ -266,7 +266,15 @@ export async function loadOmeMultiscales(
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
     meta = await defaultMeta(lowresSource, axis_labels);
   }
-  const loader = data.map((arr) => new ZarrPixelSource(arr, { labels: axis_labels, tileSize }));
+  const physicalSizes = utils.getPhysicalSizes(utils.resolveAttrs(attrs));
+  const loader = data.map(
+    (arr, i) =>
+      new ZarrPixelSource(arr, {
+        labels: axis_labels,
+        tileSize,
+        ...(i === 0 ? { meta: { physicalSizes } } : {}),
+      }),
+  );
   const labels = await resolveOmeLabelsFromMultiscales(grp);
   return {
     loader: loader,

@@ -7,6 +7,7 @@ import type { LabelLayerProps } from "./layers/label-layer";
 import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-layers";
 import { lru } from "./lru-store";
 import type { ViewState } from "./state";
+import type * as viv from "@vivjs/types";
 
 export const MAX_CHANNELS = 6;
 
@@ -603,12 +604,37 @@ export function getPhysicalSizes(attrs: zarr.Attributes) {
     };
     const physicalSizes = axes
       .filter((a) => a.type === "space")
-      .reduce((acc: { [key: string]: Ome.PhysicalSize }, a) => {
-        acc[a.name] = { size: ct[matrixIndices[a.name as keyof typeof matrixIndices]], unit: a.unit };
+      .reduce((acc: { [key: string]: viv.PhysicalSize }, { name, unit }: Ome.Axis) => {
+        acc[name] = { size: ct[matrixIndices[name as keyof typeof matrixIndices]], unit: unit ?? "" };
         return acc;
       }, {});
     // @TODO: get t size from multiscales.coordinateTransformations if axis is present
     return physicalSizes;
   }
-  return null;
+}
+
+// @TODO: remove after updating deck.gl
+// From deck.gl geo-layers tileset-2d utils
+export function transformBox(bbox: number[], modelMatrix: Matrix4): number[] {
+  const transformedCoords = [
+    // top-left
+    modelMatrix.transformAsPoint([bbox[0], bbox[1]]),
+    // top-right
+    modelMatrix.transformAsPoint([bbox[2], bbox[1]]),
+    // bottom-left
+    modelMatrix.transformAsPoint([bbox[0], bbox[3]]),
+    // bottom-right
+    modelMatrix.transformAsPoint([bbox[2], bbox[3]]),
+  ];
+  const transformedBox = [
+    // Minimum x coord
+    Math.min(...transformedCoords.map((i) => i[0])),
+    // Minimum y coord
+    Math.min(...transformedCoords.map((i) => i[1])),
+    // Max x coord
+    Math.max(...transformedCoords.map((i) => i[0])),
+    // Max y coord
+    Math.max(...transformedCoords.map((i) => i[1])),
+  ];
+  return transformedBox;
 }

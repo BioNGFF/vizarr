@@ -165,7 +165,7 @@ const layerInstanceFamily = atomFamily((a: Atom<LayerState>) =>
     }
     const Layer = LayerConstructors[kind];
     // @ts-expect-error - TS can't resolve that Layer & layerProps bound together
-    return new Layer(layerProps) as VizarrLayer;
+    return new Layer({ ...layerProps, pickable: layerProps.pickable ?? false }) as VizarrLayer;
   }),
 );
 
@@ -180,6 +180,7 @@ const imageLabelsIstanceFamily = atomFamily((a: Atom<LayerState>) =>
         ? new LabelLayer({
             ...label.layerProps,
             selection: label.transformSourceSelection(layerProps.selections[0]),
+            pickable: true,
           })
         : null,
     );

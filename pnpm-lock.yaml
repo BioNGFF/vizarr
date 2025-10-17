@@ -13,6 +13,15 @@ importers:
 
   .:
     dependencies:
+      '@deck.gl/core':
+        specifier: ~9.0.0
+        version: 9.0.41
+      '@deck.gl/geo-layers':
+        specifier: ~9.0.0
+        version: 9.0.41(@deck.gl/core@9.0.41)(@deck.gl/extensions@9.0.41(@deck.gl/core@9.0.41)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28)))(@deck.gl/layers@9.0.41(@deck.gl/core@9.0.41)(@loaders.gl/core@4.3.3)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28)))(@deck.gl/mesh-layers@9.0.41(@deck.gl/core@9.0.41)(@loaders.gl/core@4.3.3)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28)))(@loaders.gl/core@4.3.3)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28))
+      '@deck.gl/layers':
+        specifier: ~9.0.0
+        version: 9.0.41(@deck.gl/core@9.0.41)(@loaders.gl/core@4.3.3)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28))
       '@hms-dbmi/viv':
         specifier: ~0.17.2
         version: 0.17.2(@deck.gl/core@9.0.41)(@deck.gl/geo-layers@9.0.41(@deck.gl/core@9.0.41)(@deck.gl/extensions@9.0.41(@deck.gl/core@9.0.41)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28)))(@deck.gl/layers@9.0.41(@deck.gl/core@9.0.41)(@loaders.gl/core@4.3.3)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28)))(@deck.gl/mesh-layers@9.0.41(@deck.gl/core@9.0.41)(@loaders.gl/core@4.3.3)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28)))(@loaders.gl/core@4.3.3)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28)))(@deck.gl/layers@9.0.41(@deck.gl/core@9.0.41)(@loaders.gl/core@4.3.3)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28)))(@deck.gl/react@9.0.41(@deck.gl/core@9.0.41)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@luma.gl/constants@9.0.28)(@luma.gl/core@9.0.28)(@luma.gl/engine@9.0.28(@luma.gl/core@9.0.28))(@luma.gl/shadertools@9.0.28(@luma.gl/core@9.0.28))(@luma.gl/webgl@9.0.28(@luma.gl/core@9.0.28))(react@18.3.1)

@@ -109,9 +109,4 @@ declare namespace Ome {
     | { plate: Plate }
     | { well: Well }
     | { "image-label": ImageLabel; multiscales: Multiscale[] };
-
-  interface PhysicalSize {
-    size: number;
-    unit?: string;
-  }
 }
