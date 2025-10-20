@@ -1,32 +1,32 @@
-import { AccordionSummary, Typography } from "@material-ui/core";
-import { withStyles } from "@material-ui/styles";
+import { AccordionSummary, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import React from "react";
 import LayerVisibilityButton from "./LayerVisibilityButton";
 
 import { useSourceData } from "../../hooks";
 
-const DenseAccordionSummary = withStyles({
-  root: {
-    borderBottom: "1px solid rgba(150, 150, 150, .125)",
-    backgroundColor: "rgba(150, 150, 150, 0.25)",
-    display: "block",
-    padding: "0 3px",
-    height: 27,
-    minHeight: 27,
-    overflow: "hidden",
-    transition: "none",
-    "&$expanded": {
-      minHeight: 27,
-    },
-  },
-  content: {
-    margin: 0,
-    "&$expanded": {
-      margin: 0,
-    },
-  },
-  expanded: {},
-})(AccordionSummary);
+const DenseAccordionSummary = styled(AccordionSummary)`
+  border-bottom: 1px solid rgba(150, 150, 150, .125);
+  background-color: rgba(150, 150, 150, 0.25);
+  display: block;
+  padding: 0 3px;
+  height: 27px;
+  min-height: 27px;
+  overflow: hidden;
+  transition: none;
+
+  &.Mui-expanded {
+    min-height: 27px;
+  }
+
+  .MuiAccordionSummary-content {
+    margin: 0;
+
+    &.Mui-expanded {
+      margin: 0;
+    }
+  }
+`;
 
 function Header({ name }: { name: string }) {
   const [sourceData] = useSourceData();

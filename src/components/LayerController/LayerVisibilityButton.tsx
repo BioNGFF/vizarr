@@ -1,5 +1,5 @@
-import { IconButton } from "@material-ui/core";
-import { Visibility, VisibilityOff } from "@material-ui/icons";
+import { IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import React from "react";
 import type { MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
@@ -16,9 +16,10 @@ function LayerVisibilityButton() {
   };
   return (
     <IconButton
+      component="span"
       aria-label={`toggle-layer-visibility-${sourceData.id}`}
       onClick={toggle}
-      style={{
+      sx={{
         backgroundColor: "transparent",
         marginTop: "2px",
         color: `rgb(255, 255, 255, ${layer.on ? 1 : 0.5})`,

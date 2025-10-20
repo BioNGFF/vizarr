@@ -1,7 +1,6 @@
-import { Grid, IconButton, Slider, Typography } from "@material-ui/core";
-import { RadioButtonChecked, RadioButtonUnchecked } from "@material-ui/icons";
+import { Grid, IconButton, Slider, Typography } from "@mui/material";
+import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
 import React from "react";
-import type { ChangeEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import ChannelOptions from "./ChannelOptions";
 
@@ -9,14 +8,13 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
   const [sourceData] = useSourceData();
   const [layer, setLayer] = useLayerState();
 
-  const handleContrastChange = (_: ChangeEvent<unknown>, v: number | number[]) => {
+  const handleContrastChange = (_: Event, v: number | number[]) => {
     setLayer((prev) => {
       const contrastLimits = [...prev.layerProps.contrastLimits];
       contrastLimits[channelIndex] = v as [number, number];
       return { ...prev, layerProps: { ...prev.layerProps, contrastLimits } };
     });
   };
-
   const handleVisibilityChange = () => {
     setLayer((prev) => {
       const channelsVisible = [...prev.layerProps.channelsVisible];
@@ -40,19 +38,19 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
   return (
     <>
       <Grid container justifyContent="space-between" wrap="nowrap">
-        <Grid item xs={10}>
+        <Grid size={{ xs: 10 }}>
           <div style={{ width: 165, overflow: "hidden", textOverflow: "ellipsis" }}>
             <Typography variant="caption" noWrap>
               {label}
             </Typography>
           </div>
         </Grid>
-        <Grid item xs={1}>
+        <Grid size={{ xs: 1 }}>
           <ChannelOptions channelIndex={channelIndex} />
         </Grid>
       </Grid>
       <Grid container justifyContent="space-between">
-        <Grid item xs={2}>
+        <Grid size={{ xs: 2 }}>
           <IconButton
             style={{
               color,
@@ -65,7 +63,7 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
             {on ? <RadioButtonChecked /> : <RadioButtonUnchecked />}
           </IconButton>
         </Grid>
-        <Grid item xs={10}>
+        <Grid size={{ xs: 10 }}>
           <Slider
             value={value}
             onChange={handleContrastChange}

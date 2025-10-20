@@ -1,5 +1,5 @@
-import { Divider, IconButton, NativeSelect, Paper, Popover, Typography } from "@material-ui/core";
-import { Add } from "@material-ui/icons";
+import { Divider, IconButton, NativeSelect, Paper, Popover, Typography } from "@mui/material";
+import { Add } from "@mui/icons-material";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 

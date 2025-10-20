@@ -3,7 +3,6 @@ import * as zarr from "zarrita";
 import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
 
 import { ZarrPixelSource } from "./ZarrPixelSource";
-import type { OmeColor } from "./layers/label-layer";
 import * as utils from "./utils";
 
 export async function loadWell(

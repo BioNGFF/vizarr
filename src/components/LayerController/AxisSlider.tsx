@@ -1,21 +1,15 @@
-import { Divider, Grid, Typography } from "@material-ui/core";
-import { Slider } from "@material-ui/core";
-import { withStyles } from "@material-ui/styles";
+import { Divider, Grid, Typography, Slider } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import * as React from "react";
-import type { ChangeEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import DimensionOptions from "./AxisOptions";
 
-const DenseSlider = withStyles({
-  root: {
-    color: "white",
-    padding: "10px 0px 5px 0px",
-    marginRight: "5px",
-  },
-  active: {
-    boxshadow: "0px 0px 0px 8px rgba(158, 158, 158, 0.16)",
-  },
-})(Slider);
+const DenseSlider = styled(Slider)`
+  color: white;
+  padding: 10px 0px 5px 0px;
+  margin-right: 5px;
+  :active { box-shadow: 0px 0px 0px 8px rgba(158, 158, 158, 0.16); }
+`;
 
 interface Props {
   axisIndex: number;
@@ -52,7 +46,7 @@ function AxisSlider({ axisIndex, max }: Props) {
     });
   };
 
-  const handleDrag = (_: ChangeEvent<unknown>, value: number | number[]) => {
+  const handleDrag = (_: Event, value: number | number[]) => {
     setValue(value as number);
   };
 
@@ -60,19 +54,19 @@ function AxisSlider({ axisIndex, max }: Props) {
     <>
       <Grid>
         <Grid container justifyContent="space-between">
-          <Grid item xs={10}>
+          <Grid size={{ xs: 10 }}>
             <div style={{ width: 165, overflow: "hidden", textOverflow: "ellipsis" }}>
               <Typography variant="caption" noWrap>
                 {axisLabel}: {value}/{max}
               </Typography>
             </div>
           </Grid>
-          <Grid item xs={1}>
+          <Grid size={{ xs: 1 }}>
             <DimensionOptions axisIndex={axisIndex} max={max} />
           </Grid>
         </Grid>
         <Grid container justifyContent="space-between">
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <DenseSlider
               value={value}
               onChange={handleDrag}
