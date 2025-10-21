@@ -21,7 +21,6 @@ function LayerVisibilityButton() {
       onClick={toggle}
       sx={{
         backgroundColor: "transparent",
-        marginTop: "2px",
         color: `rgb(255, 255, 255, ${layer.on ? 1 : 0.5})`,
       }}
     >

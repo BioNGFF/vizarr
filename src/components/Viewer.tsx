@@ -1,10 +1,16 @@
 import DeckGL from "deck.gl";
 import { OrthographicView } from "deck.gl";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
-import { layerAtoms } from "../state";
-import { fitImageToViewport, isGridLayerProps, isInterleaved, resolveLoaderFromLayerProps } from "../utils";
+import { layerAtoms, viewportAtom } from "../state";
+import {
+  fitImageToViewport,
+  getLayerSize,
+  isGridLayerProps,
+  isInterleaved,
+  resolveLoaderFromLayerProps,
+} from "../utils";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
@@ -13,26 +19,39 @@ import type { GrayscaleBitmapLayerPickingInfo } from "../layers/label-layer";
 
 export default function Viewer() {
   const deckRef = React.useRef<DeckGLRef>(null);
+  const setViewport = useSetAtom(viewportAtom);
   const [viewState, setViewState] = useViewState();
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0];
 
-  // If viewState hasn't been updated, use the first loader to guess viewState
-  // TODO: There is probably a better place / way to set the intital view and this is a hack.
-  if (deckRef.current?.deck && !viewState && firstLayer) {
-    const { deck } = deckRef.current;
-    setViewState(
-      fitImageToViewport({
-        image: getLayerSize(firstLayer),
-        viewport: deck,
-        padding: deck.width < 400 ? 10 : deck.width < 600 ? 30 : 50, // Adjust depending on viewport width.
-        matrix: firstLayer.props.modelMatrix,
-      }),
-    );
-  }
+  const resetViewState = React.useCallback(
+    (layer: VizarrLayer) => {
+      const { deck } = deckRef.current;
+      setViewState({
+        ...fitImageToViewport({
+          image: getLayerSize(layer),
+          viewport: deck,
+          padding: deck.width < 400 ? 10 : deck.width < 600 ? 30 : 50,
+          matrix: layer?.props.modelMatrix,
+        }),
+        width: deck.width,
+        height: deck.height,
+      });
+    },
+    [setViewState],
+  );
+
+  React.useEffect(() => {
+    if (deckRef.current?.deck) {
+      setViewport(deckRef.current.deck);
+    }
+    if (deckRef.current?.deck && !viewState && firstLayer) {
+      resetViewState(firstLayer);
+    }
+  }, [firstLayer, setViewport, resetViewState, viewState]);
 
   const deckLayers = React.useMemo(() => {
-    if (!firstLayer || !viewState) {
+    if (!firstLayer || !(viewState.width && viewState.height)) {
       return layers;
     }
     const loader = resolveLoaderFromLayerProps(firstLayer.props);
@@ -41,7 +60,7 @@ export default function Viewer() {
       const scalebar = new ScaleBarLayer({
         id: "scalebar",
         size: size / firstLayer.props.modelMatrix[0],
-        unit: unit, 
+        unit: unit,
         viewState: viewState,
         snap: false,
       });
@@ -61,10 +80,7 @@ export default function Viewer() {
       return null;
     }
     return {
-      text:
-        value !== null && value !== undefined
-          ? `${label}: ${value}`
-          : `${label}`,
+      text: value !== null && value !== undefined ? `${label}: ${value}` : `${label}`,
     };
   };
 
@@ -111,19 +127,4 @@ export default function Viewer() {
       getTooltip={getTooltip}
     />
   );
-}
-
-function getLayerSize({ props }: VizarrLayer) {
-  const loader = resolveLoaderFromLayerProps(props);
-  const [baseResolution, maxZoom] = Array.isArray(loader) ? [loader[0], loader.length] : [loader, 0];
-  const interleaved = isInterleaved(baseResolution.shape);
-  let [height, width] = baseResolution.shape.slice(interleaved ? -3 : -2);
-  if (isGridLayerProps(props)) {
-    // TODO: Don't hardcode spacer size. Probably best to inspect the deck.gl Layers rather than
-    // the Layer Props.
-    const spacer = 5;
-    height = (height + spacer) * props.rows;
-    width = (width + spacer) * props.columns;
-  }
-  return { height, width, maxZoom };
 }

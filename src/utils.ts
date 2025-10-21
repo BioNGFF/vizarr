@@ -6,7 +6,7 @@ import type { GridLayerProps } from "./layers/grid-layer";
 import type { LabelLayerProps } from "./layers/label-layer";
 import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-layers";
 import { lru } from "./lru-store";
-import type { ViewState } from "./state";
+import type { ViewState, VizarrLayer } from "./state";
 import type * as viv from "@vivjs/types";
 
 export const MAX_CHANNELS = 6;
@@ -591,6 +591,21 @@ export function zip<T extends unknown[]>(...arrays: { [K in keyof T]: ReadonlyAr
     result[i] = arr as T;
   }
   return result;
+}
+
+export function getLayerSize({ props }: VizarrLayer) {
+  const loader = resolveLoaderFromLayerProps(props);
+  const [baseResolution, maxZoom] = Array.isArray(loader) ? [loader[0], loader.length] : [loader, 0];
+  const interleaved = isInterleaved(baseResolution.shape);
+  let [height, width] = baseResolution.shape.slice(interleaved ? -3 : -2);
+  if (isGridLayerProps(props)) {
+    // TODO: Don't hardcode spacer size. Probably best to inspect the deck.gl Layers rather than
+    // the Layer Props.
+    const spacer = 5;
+    height = (height + spacer) * props.rows;
+    width = (width + spacer) * props.columns;
+  }
+  return { height, width, maxZoom };
 }
 
 export function getPhysicalSizes(attrs: zarr.Attributes) {

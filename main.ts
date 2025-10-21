@@ -11,6 +11,7 @@ async function main() {
     return;
   }
 
+  // @TODO: fix resetViewState when viewStateString
   // see if we have initial viewState
   const viewStateString = url.searchParams.get("viewState");
   if (viewStateString) {

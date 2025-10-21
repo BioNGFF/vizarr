@@ -2,7 +2,7 @@ import { type Atom, atom } from "jotai";
 import { atomFamily, splitAtom, waitForAll } from "jotai/utils";
 import { RedirectError, rethrowUnless } from "./utils";
 
-import type { Layer } from "deck.gl";
+import type { DeckGLRef, Layer } from "deck.gl";
 import type { PrimitiveAtom } from "jotai";
 import type { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import type { Matrix4 } from "math.gl";
@@ -114,6 +114,8 @@ export interface Redirect {
   message: string;
 }
 export const redirectObjAtom = atom<Redirect | null>(null);
+
+export const viewportAtom = atom<DeckGLRef | null>(null);
 
 export const sourceInfoAtom = atom<WithId<SourceData>[]>([]);
 

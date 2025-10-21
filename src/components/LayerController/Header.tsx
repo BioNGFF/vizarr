@@ -4,6 +4,7 @@ import React from "react";
 import LayerVisibilityButton from "./LayerVisibilityButton";
 
 import { useSourceData } from "../../hooks";
+import { LayerFitToViewportButton } from "./LayerFitToViewportButton";
 
 const DenseAccordionSummary = styled(AccordionSummary)`
   border-bottom: 1px solid rgba(150, 150, 150, .125);
@@ -35,6 +36,7 @@ function Header({ name }: { name: string }) {
     <DenseAccordionSummary aria-controls={label} id={label}>
       <div style={{ display: "flex", flexDirection: "row" }}>
         <LayerVisibilityButton />
+        <LayerFitToViewportButton />
         <Typography style={{ marginTop: "4px", marginLeft: "5px" }} variant="body2">
           {name}
         </Typography>
