@@ -1,57 +1,61 @@
 import DeckGL from "deck.gl";
 import { OrthographicView } from "deck.gl";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useAtom } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { layerAtoms, viewportAtom } from "../state";
-import {
-  fitImageToViewport,
-  getLayerSize,
-  isGridLayerProps,
-  isInterleaved,
-  resolveLoaderFromLayerProps,
-} from "../utils";
+import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
-import type { VizarrLayer } from "../state";
+import type { ViewState, VizarrLayer } from "../state";
 import type { GrayscaleBitmapLayerPickingInfo } from "../layers/label-layer";
 
 export default function Viewer() {
   const deckRef = React.useRef<DeckGLRef>(null);
-  const setViewport = useSetAtom(viewportAtom);
+  const [viewport, setViewport] = useAtom(viewportAtom);
   const [viewState, setViewState] = useViewState();
   const layers = useAtomValue(layerAtoms);
-  const firstLayer = layers[0];
+  const firstLayer = layers[0] as VizarrLayer;
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
-      const { deck } = deckRef.current;
-      setViewState({
-        ...fitImageToViewport({
-          image: getLayerSize(layer),
-          viewport: deck,
-          padding: deck.width < 400 ? 10 : deck.width < 600 ? 30 : 50,
-          matrix: layer?.props.modelMatrix,
-        }),
-        width: deck.width,
-        height: deck.height,
-      });
+      const { deck } = deckRef.current || {};
+      if (deck) {
+        setViewState({
+          ...fitImageToViewport({
+            image: getLayerSize(layer),
+            viewport: deck,
+            padding: deck.width < 400 ? 10 : deck.width < 600 ? 30 : 50,
+            matrix: layer?.props.modelMatrix,
+          }),
+          width: deck.width,
+          height: deck.height,
+        });
+      }
     },
     [setViewState],
   );
 
   React.useEffect(() => {
-    if (deckRef.current?.deck) {
+    if (!viewport && deckRef.current?.deck) {
       setViewport(deckRef.current.deck);
     }
-    if (deckRef.current?.deck && !viewState && firstLayer) {
-      resetViewState(firstLayer);
+    if (viewport && firstLayer) {
+      if (!viewState) {
+        resetViewState(firstLayer);
+      } else if (!(viewState?.width || viewState?.height)) {
+        setViewState((vs) => ({
+          ...(vs as ViewState),
+          width: viewport.width,
+          height: viewport.height,
+        }));
+      }
     }
-  }, [firstLayer, setViewport, resetViewState, viewState]);
+  }, [viewport, setViewport, firstLayer, resetViewState, viewState, setViewState]);
 
   const deckLayers = React.useMemo(() => {
-    if (!firstLayer || !(viewState.width && viewState.height)) {
+    if (!firstLayer || !(viewState?.width && viewState?.height)) {
       return layers;
     }
     const loader = resolveLoaderFromLayerProps(firstLayer.props);
@@ -74,8 +78,9 @@ export default function Viewer() {
     preserveDrawingBuffer: true,
   };
 
-  const getTooltip = ({ layer, index, ...props }: GrayscaleBitmapLayerPickingInfo | PickingInfo) => {
-    const { label, value } = props as GrayscaleBitmapLayerPickingInfo;
+  const getTooltip = (info: GrayscaleBitmapLayerPickingInfo | PickingInfo) => {
+    const { layer, index } = info as PickingInfo;
+    const { label, value } = info as GrayscaleBitmapLayerPickingInfo;
     if (!layer || index === null || index === undefined) {
       return null;
     }
@@ -90,7 +95,7 @@ export default function Viewer() {
     }
 
     const zs = layers.flatMap((layer) => {
-      const { modelMatrix: matrix } = layer?.props || {};
+      const matrix = (layer as VizarrLayer)?.props?.modelMatrix;
       if (!matrix) {
         return [];
       }
@@ -125,6 +130,7 @@ export default function Viewer() {
       views={[new OrthographicView({ id: "ortho", controller: true, near, far })]}
       glOptions={glOptions}
       getTooltip={getTooltip}
+      onDeviceInitialized={() => setViewport(deckRef.current?.deck || null)}
     />
   );
 }

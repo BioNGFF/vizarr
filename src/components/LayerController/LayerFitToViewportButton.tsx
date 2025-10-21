@@ -13,16 +13,18 @@ export function LayerFitToViewportButton() {
 
   const fitToViewport = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    setViewState((vs) => ({
-      ...fitImageToViewport({
-        image: getLayerSize({ props: layer.layerProps } as VizarrLayer),
-        viewport: viewport,
-        padding: viewport.width < 400 ? 10 : viewport.width < 600 ? 30 : 50,
-        matrix: layer.layerProps.modelMatrix,
-      }),
-      width: viewport.width,
-      height: viewport.height,
-    }));
+    if (viewport) {
+      setViewState(() => ({
+        ...fitImageToViewport({
+          image: getLayerSize({ props: layer.layerProps } as VizarrLayer),
+          viewport: viewport,
+          padding: viewport.width < 400 ? 10 : viewport.width < 600 ? 30 : 50,
+          matrix: layer.layerProps.modelMatrix,
+        }),
+        width: viewport.width,
+        height: viewport.height,
+      }));
+    }
   };
 
   return (
