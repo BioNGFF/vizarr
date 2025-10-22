@@ -1,5 +1,5 @@
-import { AccordionDetails, Divider, Grid, Typography } from "@material-ui/core";
-import { withStyles } from "@material-ui/styles";
+import { AccordionDetails, Divider, Grid, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import React from "react";
 
 import AcquisitionController from "./AcquisitionController";
@@ -12,13 +12,11 @@ import OpacitySlider from "./OpacitySlider";
 import { useLayerState } from "../../hooks";
 import { range } from "../../utils";
 
-const Details = withStyles({
-  root: {
-    padding: "2px 5px",
-    borderLeft: "1px solid rgba(150, 150, 150, .2)",
-    borderRight: "1px solid rgba(150, 150, 150, .2)",
-  },
-})(AccordionDetails);
+const Details = styled(AccordionDetails)`
+  padding: 2px 5px;
+  border-left: 1px solid rgba(150, 150, 150, .2);
+  border-right: 1px solid rgba(150, 150, 150, .2);
+`;
 
 function Content() {
   const [layer] = useLayerState();
@@ -29,20 +27,20 @@ function Content() {
         <AcquisitionController />
         <Grid>
           <Grid container justifyContent="space-between">
-            <Grid item xs={3}>
+            <Grid size={{ xs: 3 }}>
               <Typography variant="caption">opacity:</Typography>
             </Grid>
-            <Grid item xs={8}>
+            <Grid size={{ xs: 8 }}>
               <OpacitySlider />
             </Grid>
           </Grid>
         </Grid>
         <AxisSliders />
         <Grid container justifyContent="space-between">
-          <Grid item xs={3}>
+          <Grid size={{ xs: 3 }}>
             <Typography variant="caption">channels:</Typography>
           </Grid>
-          <Grid item xs={1}>
+          <Grid size={{ xs: 1 }}>
             <AddChannelButton />
           </Grid>
         </Grid>

@@ -1,10 +1,14 @@
-import { BitmapLayer, TileLayer } from "deck.gl";
+import { BitmapLayer, TileLayer, _Tileset2D as Tileset2D } from "deck.gl";
 import * as utils from "../utils";
 
-import type { Layer, UpdateParameters } from "deck.gl";
-import { type Matrix4, clamp } from "math.gl";
+import type { Layer, UpdateParameters, GetPickingInfoParams } from "deck.gl";
+import { Matrix4, clamp } from "math.gl";
 import type * as zarr from "zarrita";
 import type { ZarrPixelSource } from "../ZarrPixelSource";
+import type { BitmapLayerPickingInfo } from "@deck.gl/layers";
+import type { _Tile2DHeader as Tile2DHeader } from "@deck.gl/geo-layers";
+import type { FilterContext } from "@deck.gl/core";
+import { transformBox } from "../utils";
 
 type Texture = ReturnType<BitmapLayer["context"]["device"]["createTexture"]>;
 
@@ -13,6 +17,7 @@ export const DEFAULT_LABEL_OPACITY = 0.5;
 export type OmeColor = Readonly<{
   labelValue: number;
   rgba: readonly [r: number, g: number, b: number, a: number];
+  value?: string | number | null;
 }>;
 
 export interface LabelLayerProps {
@@ -22,6 +27,12 @@ export interface LabelLayerProps {
   opacity: number;
   modelMatrix: Matrix4;
   colors?: ReadonlyArray<OmeColor>;
+  pickable?: boolean;
+}
+
+export interface GrayscaleBitmapLayerPickingInfo extends BitmapLayerPickingInfo {
+  label?: number;
+  value?: string | number | null;
 }
 
 /**
@@ -41,13 +52,66 @@ type LabelPixelData = {
   height: number;
 };
 
+// @TODO: update deck.gl, this bug is fixed in version 9.2.0
+// Extend Tileset2D to use modelMatrix in isTileVisible
+// so picking works in the transformed tiles
+class LabelTileset2D extends Tileset2D {
+  isTileVisible(
+    tile: Tile2DHeader,
+    cullRect?: { x: number; y: number; width: number; height: number },
+    modelMatrix?: Matrix4 | null,
+  ) {
+    if (!tile.isVisible) {
+      return false;
+    }
+
+    // @ts-ignore
+    if (cullRect && this._viewport) {
+      // @ts-ignore
+      const boundsArr = this._getCullBounds({
+        // @ts-ignore
+        viewport: this._viewport,
+        // @ts-ignore
+        z: this._zRange,
+        cullRect,
+      });
+      let { bbox } = tile;
+      for (const [minX, minY, maxX, maxY] of boundsArr) {
+        let overlaps: boolean;
+        if ("west" in bbox) {
+          overlaps = bbox.west < maxX && bbox.east > minX && bbox.south < maxY && bbox.north > minY;
+        } else {
+          if (modelMatrix && !Matrix4.IDENTITY.equals(modelMatrix)) {
+            const [left, top, right, bottom] = transformBox(
+              [bbox.left, bbox.top, bbox.right, bbox.bottom],
+              modelMatrix,
+            );
+            bbox = { left, top, right, bottom };
+          }
+          // top/bottom could be swapped depending on the indexing system
+          const y0 = Math.min(bbox.top, bbox.bottom);
+          const y1 = Math.max(bbox.top, bbox.bottom);
+          overlaps = bbox.left < maxX && bbox.right > minX && y0 < maxY && y1 > minY;
+        }
+        if (overlaps) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return true;
+  }
+}
+
 export class LabelLayer extends TileLayer<LabelPixelData, LabelLayerProps> {
   static layerName = "VizarrLabelLayer";
   // @ts-expect-error - only way to extend the base state type
-  state!: { colorTexture: Texture } & TileLayer["state"];
+  state!: { colorTexture: Texture; valueMap?: Map<number, string | number | null> } & TileLayer["state"];
 
   constructor(props: LabelLayerProps) {
-    const resolutions = props.loader;
+    const { id, loader, selection, opacity, modelMatrix, colors, ...restTileLayerProps } = props;
+
+    const resolutions = loader;
     const dimensions = {
       height: resolutions[0].shape.at(-2),
       width: resolutions[0].shape.at(-1),
@@ -55,22 +119,23 @@ export class LabelLayer extends TileLayer<LabelPixelData, LabelLayerProps> {
     utils.assert(dimensions.width && dimensions.height);
     const tileSize = getTileSizeForResolutions(resolutions);
     super({
-      id: `labels-${props.id}`,
+      TilesetClass: LabelTileset2D,
+      id: `labels-${id}`,
       extent: [0, 0, dimensions.width, dimensions.height],
       tileSize: tileSize,
       minZoom: Math.round(-(resolutions.length - 1)),
-      opacity: props.opacity,
+      opacity: opacity,
       maxZoom: 0,
-      modelMatrix: props.modelMatrix,
-      colors: props.colors,
-      zoomOffset: Math.round(Math.log2(props.modelMatrix ? props.modelMatrix.getScale()[0] : 1)),
+      modelMatrix: modelMatrix,
+      colors: colors,
+      zoomOffset: Math.round(Math.log2(modelMatrix ? modelMatrix.getScale()[0] : 1)),
       updateTriggers: {
-        getTileData: [props.loader, props.selection],
+        getTileData: [loader, selection],
       },
       async getTileData({ index, signal }) {
         const { x, y, z } = index;
         const resolution = resolutions[Math.round(-z)];
-        const request = { x, y, signal, selection: props.selection };
+        const request = { x, y, signal, selection: selection };
         let { data, width, height } = await resolution.getTile(request);
         utils.assert(
           !(data instanceof Float32Array) && !(data instanceof Float64Array),
@@ -78,6 +143,7 @@ export class LabelLayer extends TileLayer<LabelPixelData, LabelLayerProps> {
         );
         return { data, width, height };
       },
+      ...restTileLayerProps,
     });
   }
 
@@ -100,11 +166,20 @@ export class LabelLayer extends TileLayer<LabelPixelData, LabelLayerProps> {
       opacity: props.opacity,
       modelMatrix: props.modelMatrix,
       colorTexture: this.state.colorTexture,
+      valueMap: this.state.valueMap,
       bounds: [clamp(left, 0, width), clamp(top, 0, height), clamp(right, 0, width), clamp(bottom, 0, height)],
       // For underlying class
       image: new ImageData(data.width, data.height),
-      pickable: false,
+      pickable: props.pickable ?? false,
+      modelMatrixInverse: props.modelMatrix ? new Matrix4(props.modelMatrix).invert() : undefined,
     });
+  }
+
+  filterSubLayer({ layer, cullRect }: FilterContext) {
+    const { tile } = (layer as Layer<{ tile: Tile2DHeader }>).props;
+    const { modelMatrix } = this.props;
+    const tileset = this.state.tileset as unknown as LabelTileset2D;
+    return tileset.isTileVisible(tile, cullRect, modelMatrix ? new Matrix4(modelMatrix) : null);
   }
 
   updateState({ props, oldProps, changeFlags, ...rest }: UpdateParameters<this>): void {
@@ -131,27 +206,76 @@ export class LabelLayer extends TileLayer<LabelPixelData, LabelLayerProps> {
           },
           format: "rgba8unorm",
         }),
+        valueMap: props.colors ? new Map(props.colors.map((c) => [c.labelValue, c.value])) : null,
       });
     }
   }
 }
 
-export class GrayscaleBitmapLayer extends BitmapLayer<{ pixelData: LabelPixelData; colorTexture: Texture }> {
+export class GrayscaleBitmapLayer extends BitmapLayer<{
+  pixelData: LabelPixelData;
+  colorTexture: Texture;
+  valueMap?: Map<number, string | number | null>;
+  modelMatrixInverse?: Matrix4;
+}> {
   static layerName = "VizarrGrayscaleBitmapLayer";
   // @ts-expect-error - only way to extend the base state type
-  state!: { texture: Texture } & BitmapLayer["state"];
+  state!: { texture: Texture; valueMap?: Map<number, string | number | null> } & BitmapLayer["state"];
 
+  getPickingInfo(params: GetPickingInfoParams): GrayscaleBitmapLayerPickingInfo {
+    const info = super.getPickingInfo(params) as GrayscaleBitmapLayerPickingInfo;
+
+    // Get label value
+    if (!info.coordinate) {
+      return info;
+    }
+    const { pixelData, bounds, modelMatrixInverse, valueMap } = this.props;
+    const { data, width, height } = pixelData;
+    let [x, y] = info.coordinate;
+    if (modelMatrixInverse && !Matrix4.IDENTITY.equals(modelMatrixInverse)) {
+      [x, y] = modelMatrixInverse.transformAsPoint([x, y]);
+    }
+    const [left, bottom, right, top] = bounds as number[];
+
+    if (right - left === 0 || top - bottom === 0) {
+      console.log("Picking info has zero-sized bounds");
+      return info;
+    }
+
+    const normX = (x - left) / (right - left);
+    const normY = (y - bottom) / (top - bottom);
+    const pixelX = Math.floor(normX * width);
+    const pixelY = Math.floor((1 - normY) * height);
+    const clampedX = clamp(pixelX, 0, width);
+    const clampedY = clamp(pixelY, 0, height);
+
+    const index = clampedY * width + clampedX;
+
+    if (index < 0 || index >= data.length) {
+      return info;
+    }
+    const label = data[index];
+    const value = valueMap ? valueMap.get(label) : null;
+    info.label = label;
+    info.value = value;
+    return info;
+  }
+
+  // Temporary workaround for ANGLE bug https://issues.angleproject.org/issues/401546698
+  // "Error during validation: Two textures of different types use the same sampler location."
+  // Force grayscaleTexture to float32 to use sampler2D
   getShaders() {
-    const sampler = (
-      {
-        Uint8Array: "usampler2D",
-        Uint16Array: "usampler2D",
-        Uint32Array: "usampler2D",
-        Int8Array: "isampler2D",
-        Int16Array: "isampler2D",
-        Int32Array: "isampler2D",
-      } as const
-    )[typedArrayConstructorName(this.props.pixelData.data)];
+    // const sampler = (
+    //   {
+    //     Uint8Array: "usampler2D",
+    //     Uint16Array: "usampler2D",
+    //     Uint32Array: "usampler2D",
+    //     Int8Array: "isampler2D",
+    //     Int16Array: "isampler2D",
+    //     Int32Array: "isampler2D",
+    //   } as const
+    // )[typedArrayConstructorName(this.props.pixelData.data)];
+    const sampler = "sampler2D"; // Use sampler2D for ANGLE bug workaround
     // replace the builtin fragment shader with our own
     return {
       ...super.getShaders(),
@@ -192,7 +316,7 @@ void main() {
         texture: this.context.device.createTexture({
           width: props.pixelData.width,
           height: props.pixelData.height,
-          data: props.pixelData.data,
+          data: new Float32Array(props.pixelData.data), // Force float32 for ANGLE bug workaround
           dimension: "2d",
           mipmaps: false,
           sampler: {
@@ -201,16 +325,17 @@ void main() {
             addressModeU: "clamp-to-edge",
             addressModeV: "clamp-to-edge",
           },
-          format: (
-            {
-              Uint8Array: "r8uint",
-              Uint16Array: "r16uint",
-              Uint32Array: "r32uint",
-              Int8Array: "r8sint",
-              Int16Array: "r16sint",
-              Int32Array: "r32sint",
-            } as const
-          )[typedArrayConstructorName(props.pixelData.data)],
+          format: "r32float", // ANGLE bug workaround
+          // format: (
+          //   {
+          //     Uint8Array: "r8uint",
+          //     Uint16Array: "r16uint",
+          //     Uint32Array: "r32uint",
+          //     Int8Array: "r8sint",
+          //     Int16Array: "r16sint",
+          //     Int32Array: "r32sint",
+          //   } as const
+          // )[typedArrayConstructorName(props.pixelData.data)],
         }),
       });
     }

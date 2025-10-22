@@ -2,7 +2,7 @@ import { type Atom, atom } from "jotai";
 import { atomFamily, splitAtom, waitForAll } from "jotai/utils";
 import { RedirectError, rethrowUnless } from "./utils";
 
-import type { Layer } from "deck.gl";
+import type { Deck, Layer } from "deck.gl";
 import type { PrimitiveAtom } from "jotai";
 import type { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import type { Matrix4 } from "math.gl";
@@ -22,6 +22,8 @@ import {
 export interface ViewState {
   zoom: number;
   target: [number, number];
+  width?: number;
+  height?: number;
 }
 
 interface BaseConfig {
@@ -115,6 +117,8 @@ export interface Redirect {
 }
 export const redirectObjAtom = atom<Redirect | null>(null);
 
+export const viewportAtom = atom<Deck | null>(null);
+
 export const sourceInfoAtom = atom<WithId<SourceData>[]>([]);
 
 export const addImageAtom = atom(null, async (get, set, config: ImageLayerConfig) => {
@@ -165,7 +169,7 @@ const layerInstanceFamily = atomFamily((a: Atom<LayerState>) =>
     }
     const Layer = LayerConstructors[kind];
     // @ts-expect-error - TS can't resolve that Layer & layerProps bound together
-    return new Layer(layerProps) as VizarrLayer;
+    return new Layer({ ...layerProps, pickable: layerProps.pickable ?? false }) as VizarrLayer;
   }),
 );
 
@@ -180,6 +184,7 @@ const imageLabelsIstanceFamily = atomFamily((a: Atom<LayerState>) =>
         ? new LabelLayer({
             ...label.layerProps,
             selection: label.transformSourceSelection(layerProps.selections[0]),
+            pickable: true,
           })
         : null,
     );

@@ -1,5 +1,5 @@
-import { Link, Typography } from "@material-ui/core";
-import { ThemeProvider, makeStyles } from "@material-ui/styles";
+import { Box, Link, Typography } from "@mui/material";
+import { ThemeProvider } from "@mui/material/styles";
 import { type PrimitiveAtom, Provider, atom } from "jotai";
 import { useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
@@ -34,22 +34,6 @@ export interface VizarrViewer {
   on<E extends keyof Events>(event: E, cb: (data: Events[E]) => void): void;
   destroy(): void;
 }
-
-const useStyles = makeStyles({
-  errorContainer: {
-    position: "fixed",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    textAlign: "center",
-    justifyContent: "center",
-    fontSize: "120%",
-  },
-});
 
 export function createViewer(element: HTMLElement, options: { menuOpen?: boolean } = {}): Promise<VizarrViewer> {
   const ref = React.createRef<VizarrViewer>();
@@ -88,7 +72,6 @@ export function createViewer(element: HTMLElement, options: { menuOpen?: boolean
         resolve(ref.current);
       }
     }, []);
-    const classes = useStyles();
     return (
       <>
         {sourceError === null && redirectObj === null && (
@@ -98,17 +81,45 @@ export function createViewer(element: HTMLElement, options: { menuOpen?: boolean
           </ViewStateContext.Provider>
         )}
         {sourceError !== null && (
-          <div className={classes.errorContainer}>
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              textAlign: "center",
+              justifyContent: "center",
+              fontSize: "120%",
+            }}
+          >
             <p>{`Error: server replied with "${sourceError}" when loading the resource`}</p>
-          </div>
+          </Box>
         )}
         {redirectObj !== null && (
-          <div className={classes.errorContainer}>
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              textAlign: "center",
+              justifyContent: "center",
+              fontSize: "120%",
+            }}
+          >
             <Typography variant="h5">
               {redirectObj.message}
               <Link href={redirectObj.url}> {redirectObj.url} </Link>
             </Typography>
-          </div>
+          </Box>
         )}
       </>
     );

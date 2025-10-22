@@ -1,4 +1,4 @@
-import { Divider, Grid } from "@material-ui/core";
+import { Divider, Grid } from "@mui/material";
 import React from "react";
 import { useSourceData } from "../../hooks";
 import AxisSlider from "./AxisSlider";
