@@ -1,5 +1,5 @@
-import { Grid, IconButton, Slider, Typography } from "@mui/material";
 import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
+import { Grid, IconButton, Slider, Typography } from "@mui/material";
 import React from "react";
 
 import { useLayerState, useSourceData } from "../../hooks";

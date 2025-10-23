@@ -1,9 +1,9 @@
+import { ZoomOutMap } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
 import { useAtomValue } from "jotai";
 import { useLayerState, useSourceData, useViewState } from "../../hooks";
+import { type VizarrLayer, viewportAtom } from "../../state";
 import { fitImageToViewport, getLayerSize } from "../../utils";
-import { viewportAtom, type VizarrLayer } from "../../state";
-import { IconButton } from "@mui/material";
-import { ZoomOutMap } from "@mui/icons-material";
 
 export function LayerFitToViewportButton() {
   const [sourceData] = useSourceData();

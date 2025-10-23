@@ -1,9 +1,9 @@
-import { Divider, IconButton, Input, Paper, Popover, Typography } from "@mui/material";
 import { MoreHoriz } from "@mui/icons-material";
+import { Divider, IconButton, Input, Paper, Popover, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
-import { styled } from "@mui/material/styles";
 
 const DenseInput = styled(Input)`
   width: 5.5em;

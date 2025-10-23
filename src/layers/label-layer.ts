@@ -1,13 +1,13 @@
 import { BitmapLayer, TileLayer, _Tileset2D as Tileset2D } from "deck.gl";
 import * as utils from "../utils";
 
-import type { Layer, UpdateParameters, GetPickingInfoParams } from "deck.gl";
+import type { FilterContext } from "@deck.gl/core";
+import type { _Tile2DHeader as Tile2DHeader } from "@deck.gl/geo-layers";
+import type { BitmapLayerPickingInfo } from "@deck.gl/layers";
+import type { GetPickingInfoParams, Layer, UpdateParameters } from "deck.gl";
 import { Matrix4, clamp } from "math.gl";
 import type * as zarr from "zarrita";
 import type { ZarrPixelSource } from "../ZarrPixelSource";
-import type { BitmapLayerPickingInfo } from "@deck.gl/layers";
-import type { _Tile2DHeader as Tile2DHeader } from "@deck.gl/geo-layers";
-import type { FilterContext } from "@deck.gl/core";
 import { transformBox } from "../utils";
 
 type Texture = ReturnType<BitmapLayer["context"]["device"]["createTexture"]>;

@@ -1,15 +1,15 @@
+import { ScaleBarLayer } from "@hms-dbmi/viv";
 import DeckGL from "deck.gl";
 import { OrthographicView } from "deck.gl";
-import { useAtomValue, useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { layerAtoms, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
-import { ScaleBarLayer } from "@hms-dbmi/viv";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
-import type { ViewState, VizarrLayer } from "../state";
 import type { GrayscaleBitmapLayerPickingInfo } from "../layers/label-layer";
+import type { ViewState, VizarrLayer } from "../state";
 
 export default function Viewer() {
   const deckRef = React.useRef<DeckGLRef>(null);

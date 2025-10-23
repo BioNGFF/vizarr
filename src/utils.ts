@@ -1,13 +1,13 @@
 import { Matrix4 } from "math.gl";
 import * as zarr from "zarrita";
 
+import type * as viv from "@vivjs/types";
 import type { ZarrPixelSource } from "./ZarrPixelSource";
 import type { GridLayerProps } from "./layers/grid-layer";
 import type { LabelLayerProps } from "./layers/label-layer";
 import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-layers";
 import { lru } from "./lru-store";
 import type { ViewState, VizarrLayer } from "./state";
-import type * as viv from "@vivjs/types";
 
 export const MAX_CHANNELS = 6;
 

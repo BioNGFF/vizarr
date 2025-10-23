@@ -1,4 +1,4 @@
-import { Divider, Grid, Typography, Slider } from "@mui/material";
+import { Divider, Grid, Slider, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
