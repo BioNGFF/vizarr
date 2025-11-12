@@ -8,7 +8,6 @@ on:
 permissions:
   contents: write
   id-token: write
-  pages: write
 
 jobs:
   release:
@@ -24,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
 
       - name: Install pnpm
@@ -33,10 +32,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Check pnpm version
-        run: pnpm -v
-
       - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-        run: pnpm exec semantic-release --dry-run
+        run: pnpm exec semantic-release
