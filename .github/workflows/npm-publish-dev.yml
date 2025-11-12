@@ -1,0 +1,26 @@
+name: publish-dev
+# This workflow publishes a pre-release version of your package to npmjs.org
+# whenever changes are pushed to the "dev" branch.
+on:
+  push:
+    branches: [dev]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # Setup .npmrc file to publish to npm
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Update your package.json with an npm pre-release version
+        id: pre-release-version
+        uses: adobe/update-prerelease-npm-version@v1.0.0
+        with:
+          pre-release-tag: 'dev'
+      - run: npm ci
+      - run: npm run build
+      - run: npm publish --tag dev
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
