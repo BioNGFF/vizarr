@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.1](https://github.com/BioNGFF/vizarr/compare/v1.0.0...v1.0.1) (2025-11-12)
+
+
+### Bug Fixes
+
+* npm publish workflow ([283baee](https://github.com/BioNGFF/vizarr/commit/283baee9c93391f3d86fd39ddfce706d868be2e9))
+* npm publish workflow ([85873a6](https://github.com/BioNGFF/vizarr/commit/85873a6282eb5addcd4c6ac79db3b735cebe1b6e))
+* npm publish workflow ([cc0e915](https://github.com/BioNGFF/vizarr/commit/cc0e91541fe921b67a11fb35720fcbcf509d28df))
+* npm publish workflow ([baefeae](https://github.com/BioNGFF/vizarr/commit/baefeaea38c9fb2b8eacecffcf7ac2c54eb37a4d))
+* update main npm-publish workflow ([2a4d56e](https://github.com/BioNGFF/vizarr/commit/2a4d56ec747b5a5b1bf677c583eb00571d391527))
+
 # 1.0.0 (2025-11-12)
 
 
