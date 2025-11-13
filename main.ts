@@ -2,7 +2,7 @@ import debounce from "just-debounce-it";
 import * as vizarr from "./src/index";
 
 async function main() {
-  console.log(`vizarr v${vizarr.version}: https://github.com/hms-dbmi/vizarr`);
+  console.log(`vizarr v${vizarr.version}: https://github.com/BioNGFF/vizarr`);
   // biome-ignore lint/style/noNonNullAssertion: We know the element exists
   const viewer = await vizarr.createViewer(document.querySelector("#root")!);
   const url = new URL(window.location.href);
