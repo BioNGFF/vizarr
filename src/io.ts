@@ -193,6 +193,7 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
     colormap,
     modelMatrix: source.model_matrix,
     onClick: source.onClick,
+    pickable: Boolean(source.onClick),
   } satisfies BaseLayerProps;
 
   if (source.loaders) {
@@ -203,6 +204,8 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
         loaders: source.loaders,
         columns: source.columns as number,
         rows: source.rows as number,
+        rowLabels: source.rowNames,
+        columnLabels: source.columnNames,
       },
       on: true,
     };
