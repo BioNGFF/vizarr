@@ -70,7 +70,7 @@ export async function loadWell(
           name: String(offset),
           row,
           col,
-          loader: new ZarrPixelSource(data[offset], { labels: axis_labels, tileSize }),
+          sources: [new ZarrPixelSource(data[offset], { labels: axis_labels, tileSize })],
         };
       });
   });
@@ -79,16 +79,16 @@ export async function loadWell(
   if (utils.isOmeMultiscales(imgAttrs)) {
     meta = parseOmeroMeta(imgAttrs.omero, axes);
   } else {
-    const lowres = loaders.at(-1);
+    const lowres = loaders.at(-1)?.sources.at(-1);
     utils.assert(lowres, "Expected at least one resolution, found none.");
-    meta = await defaultMeta(lowres.loader, axis_labels);
+    meta = await defaultMeta(lowres, axis_labels);
   }
 
   const sourceData: SourceData = {
     loaders,
     ...meta,
     axis_labels,
-    loader: [loaders[0].loader],
+    loader: loaders[0].sources,
     model_matrix: utils.parseMatrix(config.model_matrix),
     defaults: {
       selection: meta.defaultSelection,
@@ -159,7 +159,7 @@ export async function loadPlate(
 
   // Lowest resolution is the 'path' of the last 'dataset' from the first multiscales
   const { datasets } = imgAttrs.multiscales[0];
-  const resolution = datasets[datasets.length - 1].path;
+  const datasetPaths = datasets.map((dataset) => dataset.path);
 
   async function getImgPath(wellPath: string) {
     const wellAttrs = await utils.getAttrsOnly<{ well: Ome.Well }>(grp, {
@@ -172,40 +172,44 @@ export async function loadPlate(
   const wellImagePaths = await Promise.all(wellPaths.map(getImgPath));
 
   // Create loader for every Well. Some loaders may be undefined if Wells are missing.
-  const mapper = async ([key, path]: string[]) => {
-    // @ts-expect-error - we don't need the meta for these arrays
-    let arr: zarr.Array<zarr.DataType, zarr.Readable> = await zarr.open(grp.resolve(path), {
-      kind: "array",
-      attrs: false,
-    });
-    return [key, arr] as const;
-  };
-
-  const promises = await pMap(
-    wellImagePaths.map((p) => [p, utils.join(p, resolution)]),
-    mapper,
-    { concurrency: 10 },
+  const data = await pMap(
+    wellImagePaths,
+    async (imagePath) => {
+      const arrays = await Promise.all(
+        datasetPaths.map(async (datasetPath) => {
+          // @ts-expect-error - attrs not needed for pixel data arrays
+          const arr: zarr.Array<zarr.DataType, zarr.Readable> = await zarr.open(
+            grp.resolve(utils.join(imagePath, datasetPath)),
+            { kind: "array", attrs: false },
+          );
+          return arr;
+        }),
+      );
+      return [imagePath, arrays] as const;
+    },
+    { concurrency: 5 },
   );
-  const data = await Promise.all(promises);
   const axes = utils.getNgffAxes(imgAttrs.multiscales);
   const axis_labels = utils.getNgffAxisLabels(axes);
-  const tileSize = utils.guessTileSize(data[0][1]);
-  const loaders = data.map((d) => {
-    const [row, col] = d[0].split("/");
+  const loaders = data.map(([path, arrays]) => {
+    const [row, col] = path.split("/");
+    const sources = arrays.map(
+      (arr) => new ZarrPixelSource(arr, { labels: axis_labels, tileSize: utils.guessTileSize(arr) }),
+    );
     return {
       name: `${row}${col}`,
       row: rows.indexOf(row),
       col: columns.indexOf(col),
-      loader: new ZarrPixelSource(d[1], { labels: axis_labels, tileSize }),
+      sources,
     };
   });
   let meta: Meta;
   if ("omero" in imgAttrs) {
     meta = parseOmeroMeta(imgAttrs.omero, axes);
   } else {
-    const lowres = loaders.at(-1);
+    const lowres = loaders.at(-1)?.sources.at(-1);
     utils.assert(lowres, "Expected at least one resolution, found none.");
-    meta = await defaultMeta(lowres.loader, axis_labels);
+    meta = await defaultMeta(lowres, axis_labels);
   }
 
   // Load Image to use for channel names, rendering settings, sizeZ, sizeT etc.
@@ -213,7 +217,7 @@ export async function loadPlate(
     loaders,
     ...meta,
     axis_labels,
-    loader: [loaders[0].loader],
+    loader: loaders[0].sources,
     model_matrix: utils.parseMatrix(config.model_matrix),
     defaults: {
       selection: meta.defaultSelection,

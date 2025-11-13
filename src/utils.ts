@@ -524,7 +524,7 @@ export function isGridLayerProps(
 export function resolveLoaderFromLayerProps(
   layerProps: GridLayerProps | ImageLayerProps | MultiscaleImageLayerProps | LabelLayerProps,
 ) {
-  return isGridLayerProps(layerProps) ? layerProps.loaders[0].loader : layerProps.loader;
+  return isGridLayerProps(layerProps) ? layerProps.loaders[0].sources : layerProps.loader;
 }
 
 /**
