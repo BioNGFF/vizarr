@@ -4,7 +4,7 @@ import { OrthographicView } from "deck.gl";
 import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
-import { useAxisScroll } from "../hooks/useAxisScroll";
+import { useAxisNavigation } from "../hooks/useAxisNavigation";
 import { layerAtoms, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
@@ -19,7 +19,7 @@ export default function Viewer() {
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
 
-  useAxisScroll(deckRef, viewport);
+  useAxisNavigation(deckRef, viewport);
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
