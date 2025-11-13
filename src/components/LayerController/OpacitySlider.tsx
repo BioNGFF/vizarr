@@ -15,7 +15,7 @@ const DenseSlider = styled(Slider)`
 
 function OpacitySlider() {
   const [layer, setLayer] = useLayerState();
-  const handleChange = (_: ChangeEvent<unknown>, value: number | number[]) => {
+  const handleChange = (_: Event, value: number | number[]) => {
     const opacity = value as number;
     setLayer((prev) => ({ ...prev, layerProps: { ...prev.layerProps, opacity } }));
   };
