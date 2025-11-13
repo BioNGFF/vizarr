@@ -1,10 +1,10 @@
 import { CompositeLayer, SolidPolygonLayer, TextLayer } from "deck.gl";
 import type { Viewport } from "deck.gl";
+import { Matrix4 } from "math.gl";
 import pMap from "p-map";
 
 import { ColorPaletteExtension, XRLayer } from "@hms-dbmi/viv";
 import type { CompositeLayerProps, PickingInfo, SolidPolygonLayerProps, TextLayerProps } from "deck.gl";
-import type { Matrix4 } from "math.gl";
 import type { ZarrPixelSource } from "../ZarrPixelSource";
 import { assert } from "../utils";
 import type { BaseLayerProps } from "./viv-layers";
@@ -52,14 +52,15 @@ function validateWidthHeight(d: { data: { width: number; height: number } }[]) {
   return { width, height };
 }
 
-function refreshGridData(props: GridLayerProps, level: number) {
-  const { loaders, selections = [] } = props;
+function refreshGridData(props: GridLayerProps, level: number, viewport?: Viewport) {
+  const { loaders, selections = [], modelMatrix } = props;
   let { concurrency } = props;
   if (concurrency && selections.length > 0) {
     // There are `loaderSelection.length` requests per loader. This block scales
     // the provided concurrency to map to the number of actual requests.
     concurrency = Math.ceil(concurrency / selections.length);
   }
+  const visible = viewport ? getVisibleGridCells(loaders, viewport, modelMatrix) : loaders;
   const mapper = async (d: GridLoader) => {
     const sources = d.sources;
     assert(sources.length > 0, "Grid loader is missing pixel sources");
@@ -80,7 +81,7 @@ function refreshGridData(props: GridLayerProps, level: number) {
       },
     };
   };
-  return pMap(loaders, mapper, { concurrency });
+  return pMap(visible, mapper, { concurrency });
 }
 
 type SharedLayerState = {
@@ -125,7 +126,7 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
       fullHeight: fullSize.height,
       resolutionLevel: initialLevel,
     };
-    this.#refreshAndSetState(this.props, initialLevel);
+    this.#refreshAndSetState(this.props, initialLevel, this.context.viewport);
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: deck.gl typing does not expose narrowed props
@@ -163,7 +164,7 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
 
     if (loaderChanged || loaderSelectionChanged) {
       // Only fetch new data to render if loader has changed
-      this.#refreshAndSetState(props, this.#state.resolutionLevel);
+      this.#refreshAndSetState(props, this.#state.resolutionLevel, this.context.viewport);
       return;
     }
 
@@ -171,7 +172,9 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
       const level = this.#pickResolutionLevel(props.loaders, this.context.viewport);
       if (level !== this.#state.resolutionLevel) {
         this.setState({ resolutionLevel: level });
-        this.#refreshAndSetState(props, level);
+        this.#refreshAndSetState(props, level, this.context.viewport);
+      } else {
+        this.#refreshAndSetState(props, level, this.context.viewport);
       }
     }
   }
@@ -264,8 +267,8 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
     return layers;
   }
 
-  #refreshAndSetState(props: GridLayerProps, level: number) {
-    refreshGridData(props, level)
+  #refreshAndSetState(props: GridLayerProps, level: number, viewport?: Viewport) {
+    refreshGridData(props, level, viewport)
       .then((gridData) => {
         if (this.#state.resolutionLevel !== level) {
           return;
@@ -381,4 +384,38 @@ function getSourceDimensions(source: ZarrPixelSource) {
     width: source.shape[xIndex],
     height: source.shape[yIndex],
   };
+}
+
+function getVisibleGridCells(loaders: GridLoader[], viewport: Viewport, modelMatrix?: Matrix4) {
+  if (loaders.length === 0) {
+    return loaders;
+  }
+  const first = loaders.find((loader) => loader.sources.length > 0);
+  if (!first) {
+    return loaders;
+  }
+  const { width, height } = getSourceDimensions(first.sources[0]);
+  const spacer = 5;
+  const inverse = modelMatrix ? new Matrix4(modelMatrix).invert() : null;
+  const corners = [
+    viewport.unproject([0, 0, 0]),
+    viewport.unproject([viewport.width, 0, 0]),
+    viewport.unproject([viewport.width, viewport.height, 0]),
+    viewport.unproject([0, viewport.height, 0]),
+  ];
+  const transformed = inverse ? corners.map((corner) => inverse.transformAsPoint(corner)) : corners;
+  const xs = transformed.map((p) => p[0]);
+  const ys = transformed.map((p) => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  return loaders.filter((loader) => {
+    const x = loader.col * (width + spacer);
+    const y = loader.row * (height + spacer);
+    const right = x + width;
+    const bottom = y + height;
+    const intersects = right >= minX && x <= maxX && bottom >= minY && y <= maxY;
+    return intersects;
+  });
 }
