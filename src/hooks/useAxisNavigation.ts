@@ -272,7 +272,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
       axisScrollAccumulatorRef.current -= steps * AXIS_SCROLL_STEP_DELTA;
 
       const pointer = { x, y };
-      void adjustAxis({ axis: axisScrollKey, delta: steps, pointer });
+      void adjustAxis({ axis: axisScrollKey, delta: -steps, pointer });
     },
     [axisScrollKey, viewport, deckRef, adjustAxis],
   );
