@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/BioNGFF/vizarr/compare/v1.1.0...v1.1.1) (2025-11-14)
+
+
+### Bug Fixes
+
+* zipfilestore import ([58ead65](https://github.com/BioNGFF/vizarr/commit/58ead65c09aaabcfa2d944f9cb7e575c2e39365d))
+
 # [1.1.0](https://github.com/BioNGFF/vizarr/compare/v1.0.1...v1.1.0) (2025-11-14)
 
 
