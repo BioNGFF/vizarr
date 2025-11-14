@@ -41,7 +41,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       // try ZipFileStore first, fallback to FetchStore
       try {
         store = ZipFileStore.fromUrl(source);
-        await store.info;
+        await store.get("/.zgroup");
       } catch {
         const url = new URL(source);
         // grab the path and then set the URL to the root
