@@ -41,7 +41,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       // try ZipFileStore first, fallback to FetchStore
       try {
         const zipStore = ZipFileStore.fromUrl(source);
-        await zipStore.has("/");  // will throw an error for non-zipped
+        await zipStore.has("/"); // will throw an error for non-zipped
         store = zipStore;
       } catch {
         const url = new URL(source);
