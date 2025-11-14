@@ -49,7 +49,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
         path = "/";
       } else {
         // Original logic for URLs without colons in path
-        path = ensureAbosolutePath(url.pathname);
+        path = ensureAbsolutePath(url.pathname);
         url.pathname = "/";
         store = new zarr.FetchStore(url.href);
       }
@@ -62,7 +62,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
   return zarr.root(source);
 }
 
-function ensureAbosolutePath(path: string): `/${string}` {
+function ensureAbsolutePath(path: string): `/${string}` {
   if (path === "/") return path;
   // @ts-expect-error - path always starts with '/'
   return path.startsWith("/") ? path : `/${path}`;
