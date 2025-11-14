@@ -79,9 +79,25 @@ export default function Viewer() {
   };
 
   const getTooltip = (info: GrayscaleBitmapLayerPickingInfo | PickingInfo) => {
-    const { layer, index } = info as PickingInfo;
+    const pickingInfo = info as PickingInfo & {
+      gridCoord?: { row: number; column: number };
+      gridLabels?: { row?: string; column?: string };
+    };
+
+    if (pickingInfo.gridCoord) {
+      const { row, column } = pickingInfo.gridCoord;
+      if (typeof row === "number" && typeof column === "number") {
+        const rowLabel = pickingInfo.gridLabels?.row;
+        const columnLabel = pickingInfo.gridLabels?.column;
+        const rowText = rowLabel ? `${rowLabel}` : `${row + 1}`;
+        const columnText = columnLabel ? `${columnLabel}` : `${column + 1}`;
+        return { text: `${rowText}${columnText}` };
+      }
+    }
+
+    const { layer, index } = pickingInfo;
     const { label, value } = info as GrayscaleBitmapLayerPickingInfo;
-    if (!layer || index === null || index === undefined) {
+    if (!layer || index === null || index === undefined || !label) {
       return null;
     }
     return {

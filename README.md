@@ -83,3 +83,7 @@ If you are using Vizarr in your research, please cite our paper:
 > "[Viv: multiscale visualization of high-resolution multiplexed bioimaging data on the web](https://www.nature.com/articles/s41592-022-01482-7)."
 > **Nature Methods** (2022), [doi:10.31219/10.1038/s41592-022-01482-7](https://doi.org/10.1038/s41592-022-01482-7)
 
+
+## Development
+
+Please check [CONTRIBUTING.md](./CONTRIBUTING.md) for information on setting up a development environment and contributing to `vizarr`.
