@@ -510,12 +510,7 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
     return layers;
   }
 
-  #refreshAndSetState(
-    props: GridLayerProps,
-    level: number,
-    viewport?: Viewport,
-    context?: GridContext | null,
-  ) {
+  #refreshAndSetState(props: GridLayerProps, level: number, viewport?: Viewport, context?: GridContext | null) {
     const resolvedContext = context ?? buildGridContext(props, viewport);
     if (!resolvedContext) {
       this.setState({ gridData: [] });
@@ -545,14 +540,6 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
         }
         this.setState({ gridData: [] });
       });
-  }
-
-  #getFullResolutionSize(loaders: GridLoader[]) {
-    const first = loaders.find((loader) => loader.sources.length > 0);
-    if (!first) {
-      return { width: 0, height: 0 };
-    }
-    return getSourceDimensions(first.sources[0]);
   }
 
   #getMaxValidLevel(loaders: GridLoader[]) {

@@ -15,19 +15,16 @@ import type { ViewState, VizarrLayer } from "../state";
 const VIEWSTATE_EPSILON = 1e-3;
 
 function mapDeckToViewState(next: OrthographicViewState, prev?: ViewState | null): ViewState {
-  const targetCandidate = (Array.isArray(next.target) ? next.target : prev?.target ?? []) as number[];
-  const resolvedTarget: [number, number] = targetCandidate.length >= 2
-    ? [Number(targetCandidate[0] ?? 0), Number(targetCandidate[1] ?? 0)]
-    : prev?.target ?? [0, 0];
-  const zoom = typeof next.zoom === "number" ? next.zoom : prev?.zoom ?? 0;
+  const targetCandidate = (Array.isArray(next.target) ? next.target : (prev?.target ?? [])) as number[];
+  const resolvedTarget: [number, number] =
+    targetCandidate.length >= 2
+      ? [Number(targetCandidate[0] ?? 0), Number(targetCandidate[1] ?? 0)]
+      : (prev?.target ?? [0, 0]);
+  const zoom = typeof next.zoom === "number" ? next.zoom : (prev?.zoom ?? 0);
   const width =
-    typeof (next as { width?: unknown }).width === "number"
-      ? (next as { width: number }).width
-      : prev?.width;
+    typeof (next as { width?: unknown }).width === "number" ? (next as { width: number }).width : prev?.width;
   const height =
-    typeof (next as { height?: unknown }).height === "number"
-      ? (next as { height: number }).height
-      : prev?.height;
+    typeof (next as { height?: unknown }).height === "number" ? (next as { height: number }).height : prev?.height;
   return {
     zoom,
     target: resolvedTarget,
@@ -116,10 +113,13 @@ export default function Viewer() {
     [flushPendingViewState],
   );
 
-  React.useEffect(() => () => {
-    cancelPendingFrame();
-    pendingViewStateRef.current = null;
-  }, [cancelPendingFrame]);
+  React.useEffect(
+    () => () => {
+      cancelPendingFrame();
+      pendingViewStateRef.current = null;
+    },
+    [cancelPendingFrame],
+  );
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
@@ -167,7 +167,9 @@ export default function Viewer() {
     if (!viewStatesApproximatelyEqual(pendingViewStateRef.current, viewState)) {
       pendingViewStateRef.current = null;
     }
-    setLocalViewState((prev) => (viewStatesApproximatelyEqual(prev, viewState) ? prev : (viewState as OrthographicViewState)));
+    setLocalViewState((prev) =>
+      viewStatesApproximatelyEqual(prev, viewState) ? prev : (viewState as OrthographicViewState),
+    );
   }, [cancelPendingFrame, viewState]);
 
   const deckLayers = React.useMemo(() => {
@@ -256,7 +258,10 @@ export default function Viewer() {
       layers={deckLayers}
       viewState={localViewState ? { ortho: localViewState } : undefined}
       controller={{ keyboard: false }}
-      onViewStateChange={(event: { viewState: OrthographicViewState; interactionState?: { inTransition?: boolean } }) => {
+      onViewStateChange={(event: {
+        viewState: OrthographicViewState;
+        interactionState?: { inTransition?: boolean };
+      }) => {
         const { viewState: next, interactionState } = event;
         setLocalViewState((prev) => (viewStatesApproximatelyEqual(prev, next) ? prev : next));
         const immediate = !(interactionState?.inTransition ?? false);
