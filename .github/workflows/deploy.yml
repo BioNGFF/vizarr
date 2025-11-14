@@ -46,10 +46,10 @@ jobs:
           git fetch origin dev
           git checkout dev
           echo "Building dev branch output..."
-          pnpm build --outDir dist/dev
-          # Merge main build back
-          mkdir dist
+          # Restore main build into dist/
           mv dist-main/* dist/
+          # Build dev output under /dev
+          pnpm build --outDir dist/dev
           touch dist/.nojekyll
 
       - name: Upload build output
