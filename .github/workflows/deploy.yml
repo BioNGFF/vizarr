@@ -32,10 +32,10 @@ jobs:
 
       - name: Build project
         run: |
-          pnpm build
           if [ "${GITHUB_REF_NAME}" = "dev" ]; then
-            mkdir -p dist/dev
-            cp -r dist/* dist/dev/
+            pnpm build --outDir dist/dev
+          else
+            pnpm build --outDir dist
           fi
           touch dist/.nojekyll
 
