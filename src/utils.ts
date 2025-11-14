@@ -45,7 +45,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       
       if (hasColonInPath) {
         // Keep the full URL as base and use root path to avoid scheme misinterpretation
-        store = new zarr.FetchStore(source.endsWith('/') ? source : source + '/');
+        store = new zarr.FetchStore(source.endsWith('/') ? source : `${source}/`);
         path = "/";
       } else {
         // Original logic for URLs without colons in path
