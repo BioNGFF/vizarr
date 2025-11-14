@@ -83,12 +83,15 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
   async getRaster(options: {
     selection: viv.PixelSourceSelection<Array<string>> | Array<number>;
     signal?: AbortSignal;
+    window?: { x: [number, number]; y: [number, number] };
   }): Promise<viv.PixelData> {
-    const { selection, signal } = options;
+    const { selection, signal, window } = options;
+    const xSlice = makeSlice(window?.x, this.#width);
+    const ySlice = makeSlice(window?.y, this.#height);
     return this.#fetchData({
       selection: buildZarrSelection(selection, {
         labels: this.labels,
-        slices: { x: zarr.slice(null), y: zarr.slice(null) },
+        slices: { x: xSlice, y: ySlice },
       }),
       signal,
     });
@@ -179,4 +182,22 @@ function buildZarrSelection(
 function capitalize<T extends string>(s: T): Capitalize<T> {
   // @ts-expect-error - TypeScript can't verify that the return type is correct
   return s[0].toUpperCase() + s.slice(1);
+}
+
+function makeSlice(range: [number, number] | undefined, limit: number) {
+  if (!range) {
+    return zarr.slice(null);
+  }
+  const [rawStart, rawStop] = range;
+  if (!Number.isFinite(rawStart) || !Number.isFinite(rawStop)) {
+    return zarr.slice(null);
+  }
+  if (limit <= 0) {
+    return zarr.slice(null);
+  }
+  const maxStart = Math.max(0, limit - 1);
+  const start = Math.min(Math.max(0, Math.floor(rawStart)), maxStart);
+  const roundedStop = Math.ceil(rawStop);
+  const stop = Math.min(limit, Math.max(start + 1, roundedStop));
+  return zarr.slice(start, stop);
 }

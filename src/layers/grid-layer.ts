@@ -33,11 +33,147 @@ export interface GridLayerProps
 
 const MIN_PIXELS_PER_DATA_PIXEL = 0.5;
 
-function scaleBounds(width: number, height: number, translate = [0, 0], scale = 1) {
-  const [left, top] = translate;
-  const right = width * scale + left;
-  const bottom = height * scale + top;
-  return [left, bottom, right, top];
+type DeckBounds = [left: number, bottom: number, right: number, top: number];
+
+type CellBounds = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
+type Dimensions = {
+  width: number;
+  height: number;
+};
+
+type VisibleGridCell = {
+  loader: GridLoader;
+  viewportBounds: CellBounds;
+};
+
+type ComputeWindowResult = {
+  window?: { x: [number, number]; y: [number, number] };
+  renderBounds: CellBounds;
+  coversWholeCell: boolean;
+};
+
+function clamp(value: number, min: number, max: number) {
+  if (value < min) {
+    return min;
+  }
+  if (value > max) {
+    return max;
+  }
+  return value;
+}
+
+function getCellBounds(loader: GridLoader, width: number, height: number, spacer: number): CellBounds {
+  const left = loader.col * (width + spacer);
+  const top = loader.row * (height + spacer);
+  const right = left + width;
+  const bottom = top + height;
+  return { left, top, right, bottom };
+}
+
+function toDeckBounds(bounds: CellBounds): DeckBounds {
+  return [bounds.left, bounds.bottom, bounds.right, bounds.top];
+}
+
+function intersectBounds(a: CellBounds, b: CellBounds): CellBounds | null {
+  const left = Math.max(a.left, b.left);
+  const right = Math.min(a.right, b.right);
+  const top = Math.max(a.top, b.top);
+  const bottom = Math.min(a.bottom, b.bottom);
+  if (right <= left || bottom <= top) {
+    return null;
+  }
+  return { left, right, top, bottom };
+}
+
+function getViewportBounds(viewport: Viewport, modelMatrix?: Matrix4): CellBounds {
+  let inverse: Matrix4 | null = null;
+  if (modelMatrix) {
+    try {
+      inverse = new Matrix4(modelMatrix).invert();
+    } catch {
+      inverse = null;
+    }
+  }
+  const corners = [
+    viewport.unproject([0, 0, 0]),
+    viewport.unproject([viewport.width, 0, 0]),
+    viewport.unproject([viewport.width, viewport.height, 0]),
+    viewport.unproject([0, viewport.height, 0]),
+  ];
+  const inv = inverse;
+  const transformed = inv ? corners.map((corner) => inv.transformAsPoint(corner)) : corners;
+  const xs = transformed.map((p) => p[0]);
+  const ys = transformed.map((p) => p[1]);
+  const left = Math.min(...xs);
+  const right = Math.max(...xs);
+  const top = Math.min(...ys);
+  const bottom = Math.max(...ys);
+  return { left, right, top, bottom };
+}
+
+function getAllGridCells(loaders: GridLoader[], fullSize: Dimensions, spacer: number): VisibleGridCell[] {
+  const { width, height } = fullSize;
+  if (width === 0 || height === 0) {
+    return [];
+  }
+  return loaders
+    .filter((loader) => loader.sources.length > 0)
+    .map((loader) => ({
+      loader,
+      viewportBounds: getCellBounds(loader, width, height, spacer),
+    }));
+}
+
+function computeWindowForSource(options: {
+  viewportBounds: CellBounds;
+  cellBounds: CellBounds;
+  fullSize: Dimensions;
+  levelSize: Dimensions;
+}): ComputeWindowResult {
+  const { viewportBounds, cellBounds, fullSize, levelSize } = options;
+  const { width: levelWidth, height: levelHeight } = levelSize;
+  if (levelWidth === 0 || levelHeight === 0) {
+    return { window: undefined, renderBounds: cellBounds, coversWholeCell: true };
+  }
+
+  const pixelSizeX = fullSize.width / levelWidth;
+  const pixelSizeY = fullSize.height / levelHeight;
+
+  const localLeft = clamp(viewportBounds.left - cellBounds.left, 0, fullSize.width);
+  const localRight = clamp(viewportBounds.right - cellBounds.left, 0, fullSize.width);
+  const localTop = clamp(viewportBounds.top - cellBounds.top, 0, fullSize.height);
+  const localBottom = clamp(viewportBounds.bottom - cellBounds.top, 0, fullSize.height);
+
+  const xStart = Math.max(0, Math.floor(localLeft / pixelSizeX));
+  const xEnd = Math.min(levelWidth, Math.max(xStart + 1, Math.ceil(localRight / pixelSizeX)));
+  const yStart = Math.max(0, Math.floor(localTop / pixelSizeY));
+  const yEnd = Math.min(levelHeight, Math.max(yStart + 1, Math.ceil(localBottom / pixelSizeY)));
+
+  const coversWholeCell = xStart === 0 && xEnd === levelWidth && yStart === 0 && yEnd === levelHeight;
+
+  const renderBounds: CellBounds = coversWholeCell
+    ? cellBounds
+    : {
+        left: cellBounds.left + xStart * pixelSizeX,
+        right: cellBounds.left + xEnd * pixelSizeX,
+        top: cellBounds.top + yStart * pixelSizeY,
+        bottom: cellBounds.top + yEnd * pixelSizeY,
+      };
+
+  const window = coversWholeCell
+    ? undefined
+    : {
+        x: [xStart, xEnd] as [number, number],
+        y: [yStart, yEnd] as [number, number],
+      };
+
+  return { window, renderBounds, coversWholeCell };
 }
 
 function validateWidthHeight(d: { data: { width: number; height: number } }[]) {
@@ -60,20 +196,54 @@ function refreshGridData(props: GridLayerProps, level: number, viewport?: Viewpo
     // the provided concurrency to map to the number of actual requests.
     concurrency = Math.ceil(concurrency / selections.length);
   }
-  const visible = viewport ? getVisibleGridCells(loaders, viewport, modelMatrix) : loaders;
-  const mapper = async (d: GridLoader) => {
-    const sources = d.sources;
+
+  if (loaders.length === 0) {
+    return Promise.resolve([]);
+  }
+
+  const baseLoader = loaders.find((loader) => loader.sources.length > 0);
+  if (!baseLoader) {
+    return Promise.resolve([]);
+  }
+
+  const fullSize = getSourceDimensions(baseLoader.sources[0]);
+  if (fullSize.width === 0 || fullSize.height === 0) {
+    return Promise.resolve([]);
+  }
+
+  const spacer = props.spacer ?? 0;
+
+  const visibleCells = viewport
+    ? getVisibleGridCells(loaders, viewport, fullSize, spacer, modelMatrix)
+    : getAllGridCells(loaders, fullSize, spacer);
+
+  if (visibleCells.length === 0) {
+    return Promise.resolve([]);
+  }
+
+  const mapper = async ({ loader, viewportBounds }: VisibleGridCell) => {
+    const { sources } = loader;
     assert(sources.length > 0, "Grid loader is missing pixel sources");
-    const index = Math.min(level, sources.length - 1);
-    const source = sources[index];
-    const promises = selections.map((selection) => source.getRaster({ selection }));
+    const sourceIndex = Math.min(level, sources.length - 1);
+    const source = sources[sourceIndex];
+    const levelSize = getSourceDimensions(source);
+    const cellBounds = getCellBounds(loader, fullSize.width, fullSize.height, spacer);
+    const { window, renderBounds, coversWholeCell } = computeWindowForSource({
+      viewportBounds,
+      cellBounds,
+      fullSize,
+      levelSize,
+    });
+    const promises = selections.map((selection) => source.getRaster({ selection, window }));
     const tiles = await Promise.all(promises);
     const width = tiles[0]?.width ?? 0;
     const height = tiles[0]?.height ?? 0;
     return {
-      ...d,
+      ...loader,
+      bounds: toDeckBounds(renderBounds),
+      coversWholeCell,
       source,
-      sourceIndex: index,
+      sourceIndex,
       data: {
         data: tiles.map((tile) => tile.data),
         width,
@@ -81,7 +251,8 @@ function refreshGridData(props: GridLayerProps, level: number, viewport?: Viewpo
       },
     };
   };
-  return pMap(visible, mapper, { concurrency });
+
+  return pMap(visibleCells, mapper, { concurrency });
 }
 
 type SharedLayerState = {
@@ -212,11 +383,11 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
 
     const { rows, columns, spacer = 0, id = "" } = this.props;
     const layers = gridData.map((d) => {
-      const y = d.row * (fullHeight + spacer);
-      const x = d.col * (fullWidth + spacer);
+      const fallbackBounds = toDeckBounds(getCellBounds(d, fullWidth, fullHeight, spacer));
+      const bounds = d.bounds ?? fallbackBounds;
       const layerProps = {
         channelData: d.data, // coerce to null if no data
-        bounds: scaleBounds(fullWidth, fullHeight, [x, y]),
+        bounds,
         id: `${id}-GridLayer-${d.row}-${d.col}`,
         dtype: d.source?.dtype || d.sources[0]?.dtype || "Uint16", // fallback if missing,
         pickable: false,
@@ -274,7 +445,10 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
           return;
         }
         if (gridData.length > 0) {
-          validateWidthHeight(gridData);
+          const shouldValidate = gridData.every((entry) => entry.coversWholeCell);
+          if (shouldValidate) {
+            validateWidthHeight(gridData);
+          }
         }
         this.setState({ gridData });
       })
@@ -386,36 +560,29 @@ function getSourceDimensions(source: ZarrPixelSource) {
   };
 }
 
-function getVisibleGridCells(loaders: GridLoader[], viewport: Viewport, modelMatrix?: Matrix4) {
-  if (loaders.length === 0) {
-    return loaders;
+function getVisibleGridCells(
+  loaders: GridLoader[],
+  viewport: Viewport,
+  fullSize: Dimensions,
+  spacer: number,
+  modelMatrix?: Matrix4,
+): VisibleGridCell[] {
+  const { width, height } = fullSize;
+  if (loaders.length === 0 || width === 0 || height === 0) {
+    return [];
   }
-  const first = loaders.find((loader) => loader.sources.length > 0);
-  if (!first) {
-    return loaders;
+
+  const viewportBounds = getViewportBounds(viewport, modelMatrix);
+  const visible: VisibleGridCell[] = [];
+  for (const loader of loaders) {
+    if (loader.sources.length === 0) {
+      continue;
+    }
+    const cellBounds = getCellBounds(loader, width, height, spacer);
+    const intersection = intersectBounds(cellBounds, viewportBounds);
+    if (intersection) {
+      visible.push({ loader, viewportBounds: intersection });
+    }
   }
-  const { width, height } = getSourceDimensions(first.sources[0]);
-  const spacer = 5;
-  const inverse = modelMatrix ? new Matrix4(modelMatrix).invert() : null;
-  const corners = [
-    viewport.unproject([0, 0, 0]),
-    viewport.unproject([viewport.width, 0, 0]),
-    viewport.unproject([viewport.width, viewport.height, 0]),
-    viewport.unproject([0, viewport.height, 0]),
-  ];
-  const transformed = inverse ? corners.map((corner) => inverse.transformAsPoint(corner)) : corners;
-  const xs = transformed.map((p) => p[0]);
-  const ys = transformed.map((p) => p[1]);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  return loaders.filter((loader) => {
-    const x = loader.col * (width + spacer);
-    const y = loader.row * (height + spacer);
-    const right = x + width;
-    const bottom = y + height;
-    const intersects = right >= minX && x <= maxX && bottom >= minY && y <= maxY;
-    return intersects;
-  });
+  return visible;
 }
