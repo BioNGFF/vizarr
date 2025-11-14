@@ -21,13 +21,10 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
   const lastPointerRef = React.useRef<{ x: number; y: number } | undefined>(undefined);
   const lastTargetSourceIdRef = React.useRef<string | undefined>(undefined);
 
-  const updateAxisScrollKey = React.useCallback(
-    (nextKey: Axis | null) => {
-      axisScrollKeyRef.current = nextKey;
-      setAxisScrollKey(nextKey);
-    },
-    [setAxisScrollKey],
-  );
+  const updateAxisScrollKey = React.useCallback((nextKey: Axis | null) => {
+    axisScrollKeyRef.current = nextKey;
+    setAxisScrollKey(nextKey);
+  }, []);
 
   const adjustAxis = useAtomCallback(
     React.useCallback(
@@ -190,7 +187,12 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
         return; // set when pressing the key
       }
 
-      if (event.key === "ArrowUp" || event.key === "ArrowDown" || event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      if (
+        event.key === "ArrowUp" ||
+        event.key === "ArrowDown" ||
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight"
+      ) {
         const axis = axisScrollKeyRef.current;
         if (!axis) {
           return; // only respond when an axis key is active
@@ -270,7 +272,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
       axisScrollAccumulatorRef.current -= steps * AXIS_SCROLL_STEP_DELTA;
 
       const pointer = { x, y };
-      void adjustAxis({ axis: axisScrollKey, delta: steps, pointer });
+      void adjustAxis({ axis: axisScrollKey, delta: -steps, pointer });
     },
     [axisScrollKey, viewport, deckRef, adjustAxis],
   );
