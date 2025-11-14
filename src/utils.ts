@@ -41,8 +41,11 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       // Check if the pathname contains colons that might be misinterpreted as URL schemes
       // when constructing relative URLs later. If so, we need to preserve the full URL
       // as the base to avoid the colon being interpreted as a scheme separator.
-      const hasColonInPath = url.pathname.includes(":");
-      
+      const pathStart = source.indexOf("://") + 3;
+      const firstSlash = source.indexOf("/", pathStart);
+      const pathPart = firstSlash !== -1 ? source.substring(firstSlash) : "";
+      const hasColonInPath = pathPart.includes(":");
+
       if (hasColonInPath) {
         // Keep the full URL as base and use root path to avoid scheme misinterpretation
         store = new zarr.FetchStore(source.endsWith("/") ? source : `${source}/`);
