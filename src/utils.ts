@@ -38,7 +38,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       ]);
       store = ReferenceStore.fromSpec(json);
     } else {
-            // try ZipFileStore first, fallback to FetchStore
+      // try ZipFileStore first, fallback to FetchStore
       try {
         const zipStore = ZipFileStore.fromUrl(source);
         await zipStore.has("/"); // will throw an error for non-zipped
