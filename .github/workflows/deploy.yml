@@ -38,17 +38,12 @@ jobs:
           git checkout main
           echo "Building main branch output..."
           pnpm build --outDir dist
-          touch dist/.nojekyll
-          mv dist dist-main
 
       - name: Build dev branch
         run: |
           git fetch origin dev
           git checkout dev
           echo "Building dev branch output..."
-          # Restore main build into dist/
-          mv dist-main/* dist/
-          # Build dev output under /dev
           pnpm build --outDir dist/dev
           touch dist/.nojekyll
 
