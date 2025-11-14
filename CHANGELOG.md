@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.1.0](https://github.com/BioNGFF/vizarr/compare/v1.0.1...v1.1.0) (2025-11-14)
+
+
+### Features
+
+* try zarrita ZipFileStore ([ae5d6a7](https://github.com/BioNGFF/vizarr/commit/ae5d6a72875cc5df5839d32ca4d78ce6047ccf36))
+
 ## [1.0.1](https://github.com/BioNGFF/vizarr/compare/v1.0.0...v1.0.1) (2025-11-12)
 
 
