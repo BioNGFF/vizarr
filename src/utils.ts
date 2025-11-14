@@ -38,10 +38,21 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       store = ReferenceStore.fromSpec(json);
     } else {
       const url = new URL(source);
-      // grab the path and then set the URL to the root
-      path = ensureAbosolutePath(url.pathname);
-      url.pathname = "/";
-      store = new zarr.FetchStore(url.href);
+      // Check if the pathname contains colons that might be misinterpreted as URL schemes
+      // when constructing relative URLs later. If so, we need to preserve the full URL
+      // as the base to avoid the colon being interpreted as a scheme separator.
+      const hasColonInPath = url.pathname.includes(':');
+      
+      if (hasColonInPath) {
+        // Keep the full URL as base and use root path to avoid scheme misinterpretation
+        store = new zarr.FetchStore(source.endsWith('/') ? source : source + '/');
+        path = "/";
+      } else {
+        // Original logic for URLs without colons in path
+        path = ensureAbosolutePath(url.pathname);
+        url.pathname = "/";
+        store = new zarr.FetchStore(url.href);
+      }
     }
 
     // Wrap remote stores in a cache
