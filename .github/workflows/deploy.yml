@@ -4,15 +4,12 @@ on:
   push:
     branches:
       - main
+      - dev
 
 permissions:
   contents: write
   pages: write
   id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -35,7 +32,11 @@ jobs:
 
       - name: Build project
         run: |
-          pnpm build
+          if [ "${GITHUB_REF_NAME}" = "dev" ]; then
+            pnpm build --outDir dist/dev
+          else
+            pnpm build --outDir dist
+          fi
           touch dist/.nojekyll
 
       - name: Upload build output
