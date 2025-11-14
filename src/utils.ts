@@ -2,7 +2,7 @@ import { Matrix4 } from "math.gl";
 import * as zarr from "zarrita";
 
 import type * as viv from "@vivjs/types";
-import { ZipFileStore } from "@zarrita/storage";
+import ZipFileStore from "@zarrita/storage/zip";
 import type { ZarrPixelSource } from "./ZarrPixelSource";
 import type { GridLayerProps } from "./layers/grid-layer";
 import type { LabelLayerProps } from "./layers/label-layer";
