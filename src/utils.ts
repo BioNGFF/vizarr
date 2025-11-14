@@ -2,6 +2,7 @@ import { Matrix4 } from "math.gl";
 import * as zarr from "zarrita";
 
 import type * as viv from "@vivjs/types";
+import ZipFileStore from "@zarrita/storage/zip";
 import type { ZarrPixelSource } from "./ZarrPixelSource";
 import type { GridLayerProps } from "./layers/grid-layer";
 import type { LabelLayerProps } from "./layers/label-layer";
@@ -37,11 +38,18 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       ]);
       store = ReferenceStore.fromSpec(json);
     } else {
-      const url = new URL(source);
-      // grab the path and then set the URL to the root
-      path = ensureAbosolutePath(url.pathname);
-      url.pathname = "/";
-      store = new zarr.FetchStore(url.href);
+      // try ZipFileStore first, fallback to FetchStore
+      try {
+        const zipStore = ZipFileStore.fromUrl(source);
+        await zipStore.has("/"); // will throw an error for non-zipped
+        store = zipStore;
+      } catch {
+        const url = new URL(source);
+        // grab the path and then set the URL to the root
+        path = ensureAbosolutePath(url.pathname);
+        url.pathname = "/";
+        store = new zarr.FetchStore(url.href);
+      }
     }
 
     // Wrap remote stores in a cache
