@@ -257,7 +257,7 @@ export default function Viewer() {
       ref={deckRef}
       layers={deckLayers}
       viewState={localViewState ? { ortho: localViewState } : undefined}
-      controller={{ keyboard: false }}
+      controller={{ keyboard: true }}
       onViewStateChange={(event: {
         viewState: OrthographicViewState;
         interactionState?: { inTransition?: boolean };

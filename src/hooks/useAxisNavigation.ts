@@ -16,9 +16,15 @@ const AXIS_SCROLL_STEP_DELTA = 40;
 
 export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport: DeckInstance) {
   const [axisScrollKey, setAxisScrollKey] = React.useState<Axis | null>(null);
+  const axisScrollKeyRef = React.useRef<Axis | null>(null);
   const axisScrollAccumulatorRef = React.useRef(0);
   const lastPointerRef = React.useRef<{ x: number; y: number } | undefined>(undefined);
   const lastTargetSourceIdRef = React.useRef<string | undefined>(undefined);
+
+  const updateAxisScrollKey = React.useCallback((nextKey: Axis | null) => {
+    axisScrollKeyRef.current = nextKey;
+    setAxisScrollKey(nextKey);
+  }, []);
 
   const adjustAxis = useAtomCallback(
     React.useCallback(
@@ -175,7 +181,9 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
     const handleKeyDown = (event: KeyboardEvent) => {
       const lower = event.key.toLowerCase();
       if (lower === "z" || lower === "t") {
-        setAxisScrollKey(lower as Axis);
+        event.preventDefault();
+        event.stopPropagation();
+        updateAxisScrollKey(lower as Axis);
         return; // set when pressing the key
       }
 
@@ -185,9 +193,18 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
         event.key === "ArrowLeft" ||
         event.key === "ArrowRight"
       ) {
-        const axis: Axis = event.key === "ArrowUp" || event.key === "ArrowDown" ? "z" : "t";
-        const delta = event.key === "ArrowUp" || event.key === "ArrowLeft" ? -1 : 1;
+        const axis = axisScrollKeyRef.current;
+        if (!axis) {
+          return; // only respond when an axis key is active
+        }
+        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+          event.preventDefault();
+          event.stopPropagation();
+          return; // suppress vertical arrows when an axis key is active
+        }
+        const delta = event.key === "ArrowLeft" ? -1 : 1;
         event.preventDefault();
+        event.stopPropagation();
         void adjustAxis({ axis, delta });
       }
     };
@@ -195,24 +212,28 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
     const handleKeyUp = (event: KeyboardEvent) => {
       const lower = event.key.toLowerCase();
       if (lower === "z" || lower === "t") {
-        setAxisScrollKey((prev) => (prev === lower ? null : prev));
+        event.preventDefault();
+        event.stopPropagation();
+        if (axisScrollKeyRef.current === lower) {
+          updateAxisScrollKey(null);
+        }
       } // reset when letting go of the key
     };
 
     const handleBlur = () => {
       // reset when switching windows
-      setAxisScrollKey(null);
+      updateAxisScrollKey(null);
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("keyup", handleKeyUp, true);
     window.addEventListener("blur", handleBlur);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("keyup", handleKeyUp, true);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [adjustAxis]);
+  }, [adjustAxis, updateAxisScrollKey]);
 
   React.useEffect(() => {
     // reset accumulator when axis key changes
