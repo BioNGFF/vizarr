@@ -4,6 +4,7 @@ import { Matrix4 } from "math.gl";
 import pMap from "p-map";
 
 import { ColorPaletteExtension, XRLayer } from "@hms-dbmi/viv";
+import type { SupportedTypedArray } from "@vivjs/types";
 import type { CompositeLayerProps, PickingInfo, SolidPolygonLayerProps, TextLayerProps } from "deck.gl";
 import type { ZarrPixelSource } from "../ZarrPixelSource";
 import { assert } from "../utils";
@@ -49,13 +50,26 @@ type Dimensions = {
 
 type VisibleGridCell = {
   loader: GridLoader;
+  cellBounds: CellBounds;
   viewportBounds: CellBounds;
 };
 
-type ComputeWindowResult = {
-  window?: { x: [number, number]; y: [number, number] };
-  renderBounds: CellBounds;
+type GridContext = {
+  fullSize: Dimensions;
+  spacer: number;
+  visibleCells: VisibleGridCell[];
+};
+
+type GridDataEntry = GridLoader & {
+  bounds: DeckBounds;
   coversWholeCell: boolean;
+  source: ZarrPixelSource;
+  sourceIndex: number;
+  data: {
+    data: SupportedTypedArray[];
+    width: number;
+    height: number;
+  };
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -106,28 +120,58 @@ function getViewportBounds(viewport: Viewport, modelMatrix?: Matrix4): CellBound
     viewport.unproject([viewport.width, viewport.height, 0]),
     viewport.unproject([0, viewport.height, 0]),
   ];
-  const inv = inverse;
-  const transformed = inv ? corners.map((corner) => inv.transformAsPoint(corner)) : corners;
+  const transformed = inverse ? corners.map((corner) => inverse.transformAsPoint(corner)) : corners;
   const xs = transformed.map((p) => p[0]);
   const ys = transformed.map((p) => p[1]);
-  const left = Math.min(...xs);
-  const right = Math.max(...xs);
-  const top = Math.min(...ys);
-  const bottom = Math.max(...ys);
-  return { left, right, top, bottom };
+  return {
+    left: Math.min(...xs),
+    right: Math.max(...xs),
+    top: Math.min(...ys),
+    bottom: Math.max(...ys),
+  };
 }
 
-function getAllGridCells(loaders: GridLoader[], fullSize: Dimensions, spacer: number): VisibleGridCell[] {
-  const { width, height } = fullSize;
+function getAllGridCells(loaders: GridLoader[], cellSize: Dimensions, spacer: number): VisibleGridCell[] {
+  const { width, height } = cellSize;
   if (width === 0 || height === 0) {
     return [];
   }
   return loaders
     .filter((loader) => loader.sources.length > 0)
-    .map((loader) => ({
-      loader,
-      viewportBounds: getCellBounds(loader, width, height, spacer),
-    }));
+    .map((loader) => {
+      const cellBounds = getCellBounds(loader, width, height, spacer);
+      return {
+        loader,
+        cellBounds,
+        viewportBounds: cellBounds,
+      };
+    });
+}
+
+function getVisibleGridCells(
+  loaders: GridLoader[],
+  viewport: Viewport,
+  cellSize: Dimensions,
+  spacer: number,
+  modelMatrix?: Matrix4,
+): VisibleGridCell[] {
+  const { width, height } = cellSize;
+  if (width === 0 || height === 0) {
+    return [];
+  }
+  const viewportBounds = getViewportBounds(viewport, modelMatrix);
+  const visible: VisibleGridCell[] = [];
+  for (const loader of loaders) {
+    if (loader.sources.length === 0) {
+      continue;
+    }
+    const cellBounds = getCellBounds(loader, width, height, spacer);
+    const intersection = intersectBounds(cellBounds, viewportBounds);
+    if (intersection) {
+      visible.push({ loader, cellBounds, viewportBounds: intersection });
+    }
+  }
+  return visible;
 }
 
 function computeWindowForSource(options: {
@@ -135,7 +179,11 @@ function computeWindowForSource(options: {
   cellBounds: CellBounds;
   fullSize: Dimensions;
   levelSize: Dimensions;
-}): ComputeWindowResult {
+}): {
+  window?: { x: [number, number]; y: [number, number] };
+  renderBounds: CellBounds;
+  coversWholeCell: boolean;
+} {
   const { viewportBounds, cellBounds, fullSize, levelSize } = options;
   const { width: levelWidth, height: levelHeight } = levelSize;
   if (levelWidth === 0 || levelHeight === 0) {
@@ -176,87 +224,111 @@ function computeWindowForSource(options: {
   return { window, renderBounds, coversWholeCell };
 }
 
-function validateWidthHeight(d: { data: { width: number; height: number } }[]) {
-  const [first] = d;
-  // Return early if no grid data. Maybe throw an error?
+function buildGridContext(props: GridLayerProps, viewport?: Viewport): GridContext | null {
+  const { loaders, spacer = 0 } = props;
+  if (loaders.length === 0) {
+    return null;
+  }
+  const baseLoader = loaders.find((loader) => loader.sources.length > 0);
+  if (!baseLoader) {
+    return null;
+  }
+  const fullSize = getSourceDimensions(baseLoader.sources[0]);
+  if (fullSize.width === 0 || fullSize.height === 0) {
+    return null;
+  }
+  const visibleCells = viewport
+    ? getVisibleGridCells(loaders, viewport, fullSize, spacer, props.modelMatrix as Matrix4 | undefined)
+    : getAllGridCells(loaders, fullSize, spacer);
+  return { fullSize, spacer, visibleCells };
+}
+
+function getEffectiveConcurrency(concurrency: number | undefined, selectionCount: number) {
+  if (!concurrency) {
+    return undefined;
+  }
+  if (selectionCount <= 0) {
+    return concurrency;
+  }
+  return Math.max(1, Math.ceil(concurrency / selectionCount));
+}
+
+async function loadVisibleCell(
+  cell: VisibleGridCell,
+  level: number,
+  selections: number[][],
+  context: GridContext,
+): Promise<GridDataEntry> {
+  const { loader } = cell;
+  assert(loader.sources.length > 0, "Grid loader is missing pixel sources");
+  const sourceIndex = Math.min(level, loader.sources.length - 1);
+  const source = loader.sources[sourceIndex];
+  const levelSize = getSourceDimensions(source);
+  const { window, renderBounds, coversWholeCell } = computeWindowForSource({
+    viewportBounds: cell.viewportBounds,
+    cellBounds: cell.cellBounds,
+    fullSize: context.fullSize,
+    levelSize,
+  });
+  const tiles = await Promise.all(selections.map((selection) => source.getRaster({ selection, window })));
+  const firstTile = tiles[0];
+  const width = firstTile?.width ?? 0;
+  const height = firstTile?.height ?? 0;
+  return {
+    ...loader,
+    bounds: toDeckBounds(renderBounds),
+    coversWholeCell,
+    source,
+    sourceIndex,
+    data: {
+      data: tiles.map((tile) => tile.data) as SupportedTypedArray[],
+      width,
+      height,
+    },
+  };
+}
+
+function refreshGridData(
+  context: GridContext,
+  level: number,
+  selections: number[][],
+  concurrency?: number,
+): Promise<GridDataEntry[]> {
+  if (context.visibleCells.length === 0) {
+    return Promise.resolve([]);
+  }
+  const effectiveConcurrency = getEffectiveConcurrency(concurrency, selections.length);
+  return pMap(context.visibleCells, (cell) => loadVisibleCell(cell, level, selections, context), {
+    concurrency: effectiveConcurrency,
+  });
+}
+
+function validateWidthHeight(data: GridDataEntry[]) {
+  const [first] = data;
   const { width, height } = first.data;
-  // Verify that all grid data is same shape (ignoring undefined)
-  for (const { data } of d) {
-    if (!data) continue;
-    assert(data.width === width && data.height === height, "Grid data is not same shape.");
+  for (const entry of data) {
+    const current = entry.data;
+    if (!current) {
+      continue;
+    }
+    assert(current.width === width && current.height === height, "Grid data is not same shape.");
   }
   return { width, height };
 }
 
-function refreshGridData(props: GridLayerProps, level: number, viewport?: Viewport) {
-  const { loaders, selections = [], modelMatrix } = props;
-  let { concurrency } = props;
-  if (concurrency && selections.length > 0) {
-    // There are `loaderSelection.length` requests per loader. This block scales
-    // the provided concurrency to map to the number of actual requests.
-    concurrency = Math.ceil(concurrency / selections.length);
-  }
-
-  if (loaders.length === 0) {
-    return Promise.resolve([]);
-  }
-
-  const baseLoader = loaders.find((loader) => loader.sources.length > 0);
-  if (!baseLoader) {
-    return Promise.resolve([]);
-  }
-
-  const fullSize = getSourceDimensions(baseLoader.sources[0]);
-  if (fullSize.width === 0 || fullSize.height === 0) {
-    return Promise.resolve([]);
-  }
-
-  const spacer = props.spacer ?? 0;
-
-  const visibleCells = viewport
-    ? getVisibleGridCells(loaders, viewport, fullSize, spacer, modelMatrix)
-    : getAllGridCells(loaders, fullSize, spacer);
-
-  if (visibleCells.length === 0) {
-    return Promise.resolve([]);
-  }
-
-  const mapper = async ({ loader, viewportBounds }: VisibleGridCell) => {
-    const { sources } = loader;
-    assert(sources.length > 0, "Grid loader is missing pixel sources");
-    const sourceIndex = Math.min(level, sources.length - 1);
-    const source = sources[sourceIndex];
-    const levelSize = getSourceDimensions(source);
-    const cellBounds = getCellBounds(loader, fullSize.width, fullSize.height, spacer);
-    const { window, renderBounds, coversWholeCell } = computeWindowForSource({
-      viewportBounds,
-      cellBounds,
-      fullSize,
-      levelSize,
-    });
-    const promises = selections.map((selection) => source.getRaster({ selection, window }));
-    const tiles = await Promise.all(promises);
-    const width = tiles[0]?.width ?? 0;
-    const height = tiles[0]?.height ?? 0;
-    return {
-      ...loader,
-      bounds: toDeckBounds(renderBounds),
-      coversWholeCell,
-      source,
-      sourceIndex,
-      data: {
-        data: tiles.map((tile) => tile.data),
-        width,
-        height,
-      },
-    };
+function getSourceDimensions(source: ZarrPixelSource) {
+  const labels = source.labels as unknown as string[];
+  const xIndex = labels.indexOf("x");
+  const yIndex = labels.indexOf("y");
+  assert(xIndex !== -1 && yIndex !== -1, "Expected pixel source with x/y axes");
+  return {
+    width: source.shape[xIndex],
+    height: source.shape[yIndex],
   };
-
-  return pMap(visibleCells, mapper, { concurrency });
 }
 
 type SharedLayerState = {
-  gridData: Awaited<ReturnType<typeof refreshGridData>>;
+  gridData: GridDataEntry[];
   fullWidth: number;
   fullHeight: number;
   resolutionLevel: number;
@@ -267,14 +339,12 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
   static defaultProps = {
     // @ts-expect-error - XRLayer props are not typed
     ...XRLayer.defaultProps,
-    // Special grid props
     loaders: { type: "array", value: [], compare: true },
     spacer: { type: "number", value: 5, compare: true },
     rows: { type: "number", value: 0, compare: true },
     columns: { type: "number", value: 0, compare: true },
-    concurrency: { type: "number", value: 10, compare: false }, // set concurrency for queue
+    concurrency: { type: "number", value: 10, compare: false },
     text: { type: "boolean", value: false, compare: true },
-    // Deck.gl
     onClick: { type: "function", value: null, compare: true },
     onHover: { type: "function", value: null, compare: true },
   };
@@ -289,15 +359,17 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
   }
 
   initializeState() {
-    const fullSize = this.#getFullResolutionSize(this.props.loaders);
     const initialLevel = this.#getInitialResolutionLevel(this.props.loaders);
+    const context = buildGridContext(this.props, this.context.viewport);
     this.#state = {
       gridData: [],
-      fullWidth: fullSize.width,
-      fullHeight: fullSize.height,
+      fullWidth: context?.fullSize.width ?? 0,
+      fullHeight: context?.fullSize.height ?? 0,
       resolutionLevel: initialLevel,
     };
-    this.#refreshAndSetState(this.props, initialLevel, this.context.viewport);
+    if (context) {
+      this.#refreshAndSetState(this.props, initialLevel, this.context.viewport, context);
+    }
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: deck.gl typing does not expose narrowed props
@@ -327,15 +399,18 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
   }) {
     const { propsChanged } = changeFlags;
     const loaderChanged = typeof propsChanged === "string" && propsChanged.includes("props.loaders");
-    const loaderSelectionChanged = props.selections !== oldProps.selections;
+    const selectionChanged = props.selections !== oldProps.selections;
+    const context = buildGridContext(props, this.context.viewport);
+
     if (loaderChanged) {
-      const fullSize = this.#getFullResolutionSize(props.loaders);
-      this.setState({ fullWidth: fullSize.width, fullHeight: fullSize.height });
+      this.setState({
+        fullWidth: context?.fullSize.width ?? 0,
+        fullHeight: context?.fullSize.height ?? 0,
+      });
     }
 
-    if (loaderChanged || loaderSelectionChanged) {
-      // Only fetch new data to render if loader has changed
-      this.#refreshAndSetState(props, this.#state.resolutionLevel, this.context.viewport);
+    if (loaderChanged || selectionChanged) {
+      this.#refreshAndSetState(props, this.#state.resolutionLevel, this.context.viewport, context ?? undefined);
       return;
     }
 
@@ -343,15 +418,12 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
       const level = this.#pickResolutionLevel(props.loaders, this.context.viewport);
       if (level !== this.#state.resolutionLevel) {
         this.setState({ resolutionLevel: level });
-        this.#refreshAndSetState(props, level, this.context.viewport);
-      } else {
-        this.#refreshAndSetState(props, level, this.context.viewport);
       }
+      this.#refreshAndSetState(props, level, this.context.viewport, context ?? undefined);
     }
   }
 
   getPickingInfo({ info }: { info: PickingInfo }) {
-    // provide Grid row and column info for mouse events (hover & click)
     if (!info.coordinate) {
       return info;
     }
@@ -379,17 +451,17 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
 
   renderLayers() {
     const { gridData, fullWidth, fullHeight } = this.#state;
-    if (fullWidth === 0 || fullHeight === 0) return null; // early return if no data
+    if (fullWidth === 0 || fullHeight === 0) {
+      return null;
+    }
 
     const { rows, columns, spacer = 0, id = "" } = this.props;
-    const layers = gridData.map((d) => {
-      const fallbackBounds = toDeckBounds(getCellBounds(d, fullWidth, fullHeight, spacer));
-      const bounds = d.bounds ?? fallbackBounds;
+    const layers = gridData.map((entry) => {
       const layerProps = {
-        channelData: d.data, // coerce to null if no data
-        bounds,
-        id: `${id}-GridLayer-${d.row}-${d.col}`,
-        dtype: d.source?.dtype || d.sources[0]?.dtype || "Uint16", // fallback if missing,
+        channelData: entry.data,
+        bounds: entry.bounds,
+        id: `${id}-GridLayer-${entry.row}-${entry.col}`,
+        dtype: entry.source?.dtype || entry.sources[0]?.dtype || "Uint16",
         pickable: false,
         extensions: [new ColorPaletteExtension()],
       };
@@ -409,10 +481,10 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
       ] satisfies Polygon;
       const layerProps = {
         data: [{ polygon }],
-        getPolygon: (d) => d.polygon,
-        getFillColor: [0, 0, 0, 0], // transparent
+        getPolygon: (d: Data) => d.polygon,
+        getFillColor: [0, 0, 0, 0],
         getLineColor: [0, 0, 0, 0],
-        pickable: true, // enable picking
+        pickable: true,
         id: `${id}-GridLayer-picking`,
       } satisfies SolidPolygonLayerProps<Data>;
       const layer = new SolidPolygonLayer<Data, SolidPolygonLayerProps<Data>>({ ...this.props, ...layerProps });
@@ -438,8 +510,19 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
     return layers;
   }
 
-  #refreshAndSetState(props: GridLayerProps, level: number, viewport?: Viewport) {
-    refreshGridData(props, level, viewport)
+  #refreshAndSetState(
+    props: GridLayerProps,
+    level: number,
+    viewport?: Viewport,
+    context?: GridContext | null,
+  ) {
+    const resolvedContext = context ?? buildGridContext(props, viewport);
+    if (!resolvedContext) {
+      this.setState({ gridData: [] });
+      return;
+    }
+    const selections = props.selections ?? [];
+    refreshGridData(resolvedContext, level, selections, props.concurrency)
       .then((gridData) => {
         if (this.#state.resolutionLevel !== level) {
           return;
@@ -450,7 +533,11 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
             validateWidthHeight(gridData);
           }
         }
-        this.setState({ gridData });
+        this.setState({
+          gridData,
+          fullWidth: resolvedContext.fullSize.width,
+          fullHeight: resolvedContext.fullSize.height,
+        });
       })
       .catch(() => {
         if (this.#state.resolutionLevel !== level) {
@@ -548,41 +635,3 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
 }
 
 export { GridLayer };
-
-function getSourceDimensions(source: ZarrPixelSource) {
-  const labels = source.labels as unknown as string[];
-  const xIndex = labels.indexOf("x");
-  const yIndex = labels.indexOf("y");
-  assert(xIndex !== -1 && yIndex !== -1, "Expected pixel source with x/y axes");
-  return {
-    width: source.shape[xIndex],
-    height: source.shape[yIndex],
-  };
-}
-
-function getVisibleGridCells(
-  loaders: GridLoader[],
-  viewport: Viewport,
-  fullSize: Dimensions,
-  spacer: number,
-  modelMatrix?: Matrix4,
-): VisibleGridCell[] {
-  const { width, height } = fullSize;
-  if (loaders.length === 0 || width === 0 || height === 0) {
-    return [];
-  }
-
-  const viewportBounds = getViewportBounds(viewport, modelMatrix);
-  const visible: VisibleGridCell[] = [];
-  for (const loader of loaders) {
-    if (loader.sources.length === 0) {
-      continue;
-    }
-    const cellBounds = getCellBounds(loader, width, height, spacer);
-    const intersection = intersectBounds(cellBounds, viewportBounds);
-    if (intersection) {
-      visible.push({ loader, viewportBounds: intersection });
-    }
-  }
-  return visible;
-}

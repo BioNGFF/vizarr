@@ -13,19 +13,27 @@ import type { GrayscaleBitmapLayerPickingInfo } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
 
 const VIEWSTATE_EPSILON = 1e-3;
-const VIEWSTATE_COMMIT_DELAY_MS = 50;
 
-function normalizeTarget(state: OrthographicViewState | ViewState): number[] {
-  const candidate = (state as OrthographicViewState).target ?? (state as ViewState).target;
-  return Array.isArray(candidate) ? candidate.map((value) => Number(value)) : [];
-}
-
-function normalizeZoom(state: OrthographicViewState | ViewState): number {
-  const candidate = (state as OrthographicViewState).zoom ?? (state as ViewState).zoom;
-  if (Array.isArray(candidate)) {
-    return candidate[0] ?? 0;
-  }
-  return typeof candidate === "number" ? candidate : 0;
+function mapDeckToViewState(next: OrthographicViewState, prev?: ViewState | null): ViewState {
+  const targetCandidate = (Array.isArray(next.target) ? next.target : prev?.target ?? []) as number[];
+  const resolvedTarget: [number, number] = targetCandidate.length >= 2
+    ? [Number(targetCandidate[0] ?? 0), Number(targetCandidate[1] ?? 0)]
+    : prev?.target ?? [0, 0];
+  const zoom = typeof next.zoom === "number" ? next.zoom : prev?.zoom ?? 0;
+  const width =
+    typeof (next as { width?: unknown }).width === "number"
+      ? (next as { width: number }).width
+      : prev?.width;
+  const height =
+    typeof (next as { height?: unknown }).height === "number"
+      ? (next as { height: number }).height
+      : prev?.height;
+  return {
+    zoom,
+    target: resolvedTarget,
+    width,
+    height,
+  };
 }
 
 function hasViewportDimensions(state: unknown): state is ViewState & { width: number; height: number } {
@@ -36,89 +44,82 @@ function hasViewportDimensions(state: unknown): state is ViewState & { width: nu
   return typeof maybe.width === "number" && typeof maybe.height === "number";
 }
 
-function viewStatesEqual(a: OrthographicViewState | null, b: (OrthographicViewState | ViewState) | null): boolean {
+function viewStatesApproximatelyEqual(
+  a: OrthographicViewState | null,
+  b: (OrthographicViewState | ViewState) | null,
+): boolean {
   if (!a || !b) {
     return a === (b as OrthographicViewState | null);
   }
-  const targetA = normalizeTarget(a);
-  const targetB = normalizeTarget(b as OrthographicViewState | ViewState);
-  const length = Math.min(targetA.length, targetB.length);
+  const nextTarget = Array.isArray(a.target) ? a.target.map((value) => Number(value)) : [];
+  const rawPrevTarget = Array.isArray((b as OrthographicViewState).target)
+    ? (b as OrthographicViewState).target
+    : ((b as ViewState).target ?? []);
+  const prevTarget = (rawPrevTarget as number[]).map((value) => Number(value));
+  const length = Math.min(nextTarget.length, prevTarget.length);
   for (let i = 0; i < length; i += 1) {
-    if (Math.abs(targetA[i] - targetB[i]) > VIEWSTATE_EPSILON) {
+    if (Math.abs(nextTarget[i] - prevTarget[i]) > VIEWSTATE_EPSILON) {
       return false;
     }
   }
-  const zoomA = normalizeZoom(a);
-  const zoomB = normalizeZoom(b as OrthographicViewState | ViewState);
+  const zoomA = typeof a.zoom === "number" ? a.zoom : 0;
+  const zoomCandidate = (b as OrthographicViewState).zoom ?? (b as ViewState).zoom;
+  const zoomB = typeof zoomCandidate === "number" ? zoomCandidate : 0;
   return Math.abs(zoomA - zoomB) <= VIEWSTATE_EPSILON;
-}
-
-function mapDeckToViewState(next: OrthographicViewState, prev?: ViewState | null): ViewState {
-  const target = normalizeTarget(next);
-  const resolvedTarget = (target.length >= 2 ? [target[0], target[1]] : (prev?.target ?? [0, 0])) as [number, number];
-  const zoom = normalizeZoom(next);
-  const width =
-    typeof (next as { width?: unknown }).width === "number" ? (next as { width: number }).width : prev?.width;
-  const height =
-    typeof (next as { height?: unknown }).height === "number" ? (next as { height: number }).height : prev?.height;
-  return {
-    zoom: Number.isFinite(zoom) ? zoom : (prev?.zoom ?? 0),
-    target: resolvedTarget,
-    width,
-    height,
-  };
 }
 
 export default function Viewer() {
   const deckRef = React.useRef<DeckGLRef>(null);
   const [viewport, setViewport] = useAtom(viewportAtom);
   const [viewState, setViewState] = useViewState();
-  const [deckViewState, setDeckViewState] = React.useState<OrthographicViewState | null>(null);
+  const [localViewState, setLocalViewState] = React.useState<OrthographicViewState | null>(null);
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
 
   useAxisNavigation(deckRef, viewport);
 
   const pendingViewStateRef = React.useRef<OrthographicViewState | null>(null);
-  const pendingTimeoutRef = React.useRef<number | null>(null);
+  const pendingFrameRef = React.useRef<number>();
   const interactionStateRef = React.useRef({ isActive: false });
 
-  const flushPendingViewState = React.useCallback(() => {
-    if (pendingTimeoutRef.current !== null) {
-      window.clearTimeout(pendingTimeoutRef.current);
-      pendingTimeoutRef.current = null;
+  const cancelPendingFrame = React.useCallback(() => {
+    if (pendingFrameRef.current !== undefined) {
+      window.cancelAnimationFrame(pendingFrameRef.current);
+      pendingFrameRef.current = undefined;
     }
+  }, []);
+
+  const flushPendingViewState = React.useCallback(() => {
+    cancelPendingFrame();
     const next = pendingViewStateRef.current;
     pendingViewStateRef.current = null;
     if (next) {
       setViewState((prev) => mapDeckToViewState(next, prev));
     }
-  }, [setViewState]);
+  }, [cancelPendingFrame, setViewState]);
 
   const scheduleViewStateCommit = React.useCallback(
     (next: OrthographicViewState, immediate = false) => {
       pendingViewStateRef.current = next;
-      if (pendingTimeoutRef.current !== null) {
-        window.clearTimeout(pendingTimeoutRef.current);
-      }
       if (immediate) {
         flushPendingViewState();
-      } else {
-        pendingTimeoutRef.current = window.setTimeout(flushPendingViewState, VIEWSTATE_COMMIT_DELAY_MS);
+        return;
       }
+      if (pendingFrameRef.current !== undefined) {
+        return;
+      }
+      pendingFrameRef.current = window.requestAnimationFrame(() => {
+        pendingFrameRef.current = undefined;
+        flushPendingViewState();
+      });
     },
     [flushPendingViewState],
   );
 
-  React.useEffect(() => {
-    return () => {
-      if (pendingTimeoutRef.current !== null) {
-        window.clearTimeout(pendingTimeoutRef.current);
-        pendingTimeoutRef.current = null;
-      }
-      pendingViewStateRef.current = null;
-    };
-  }, []);
+  React.useEffect(() => () => {
+    cancelPendingFrame();
+    pendingViewStateRef.current = null;
+  }, [cancelPendingFrame]);
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
@@ -158,23 +159,16 @@ export default function Viewer() {
 
   React.useEffect(() => {
     if (!viewState) {
-      setDeckViewState(null);
-      if (pendingTimeoutRef.current !== null) {
-        window.clearTimeout(pendingTimeoutRef.current);
-        pendingTimeoutRef.current = null;
-      }
+      cancelPendingFrame();
       pendingViewStateRef.current = null;
+      setLocalViewState(null);
       return;
     }
-    if (!viewStatesEqual(pendingViewStateRef.current, viewState)) {
-      if (pendingTimeoutRef.current !== null) {
-        window.clearTimeout(pendingTimeoutRef.current);
-        pendingTimeoutRef.current = null;
-      }
+    if (!viewStatesApproximatelyEqual(pendingViewStateRef.current, viewState)) {
       pendingViewStateRef.current = null;
     }
-    setDeckViewState((prev) => (viewStatesEqual(prev, viewState) ? prev : (viewState as OrthographicViewState)));
-  }, [viewState]);
+    setLocalViewState((prev) => (viewStatesApproximatelyEqual(prev, viewState) ? prev : (viewState as OrthographicViewState)));
+  }, [cancelPendingFrame, viewState]);
 
   const deckLayers = React.useMemo(() => {
     if (!firstLayer || !hasViewportDimensions(viewState)) {
@@ -260,15 +254,13 @@ export default function Viewer() {
     <DeckGL
       ref={deckRef}
       layers={deckLayers}
-      viewState={(() => {
-        const effective = deckViewState ?? (viewState as OrthographicViewState | null);
-        return effective ? { ortho: effective } : undefined;
-      })()}
+      viewState={localViewState ? { ortho: localViewState } : undefined}
       controller={{ keyboard: false }}
-      onViewStateChange={(e: { viewState: OrthographicViewState; interactionState?: { inTransition?: boolean } }) => {
-        setDeckViewState((prev) => (viewStatesEqual(prev, e.viewState) ? prev : e.viewState));
-        const inTransition = e.interactionState?.inTransition ?? false;
-        scheduleViewStateCommit(e.viewState, !inTransition);
+      onViewStateChange={(event: { viewState: OrthographicViewState; interactionState?: { inTransition?: boolean } }) => {
+        const { viewState: next, interactionState } = event;
+        setLocalViewState((prev) => (viewStatesApproximatelyEqual(prev, next) ? prev : next));
+        const immediate = !(interactionState?.inTransition ?? false);
+        scheduleViewStateCommit(next, immediate);
       }}
       onInteractionStateChange={(state) => {
         const isActive = Boolean(state.isDragging || state.isZooming || state.isRotating || state.isPanning);
