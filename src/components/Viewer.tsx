@@ -142,6 +142,7 @@ export default function Viewer() {
       ref={deckRef}
       layers={deckLayers}
       viewState={viewState && { ortho: viewState }}
+      controller={{ keyboard: true }}
       onViewStateChange={(e: { viewState: OrthographicViewState }) =>
         // @ts-expect-error - deck doesn't know this should be ok
         setViewState(e.viewState)
