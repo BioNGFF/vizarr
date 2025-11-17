@@ -34,6 +34,7 @@ interface BaseConfig {
   opacity?: number;
   acquisition?: string;
   model_matrix?: string | number[];
+  parent_transforms?: Ome.CoordinateTransformation[];
   onClick?: (e: unknown) => void;
 }
 

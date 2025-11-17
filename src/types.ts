@@ -34,7 +34,12 @@ declare namespace Ome {
     unit?: string;
   }
 
-  type CoordinateTransformation =
+  interface CoordinateSystems {
+    name: string;
+    axes?: Axis[];
+  }
+
+  type BaseTransformation =
     | {
         type: "scale";
         scale: Array<number>;
@@ -42,6 +47,28 @@ declare namespace Ome {
     | {
         type: "translation";
         translation: Array<number>;
+      }
+    | {
+        type: "rotation";
+        rotation: Array<Array<number>>;
+      }
+    | {
+        type: "affine";
+        affine: Array<Array<number>>;
+      };
+
+  type NamedTransformation = BaseTransformation & { name: string };
+
+  type CoordinateTransformation =
+    | (BaseTransformation & {
+        input?: string;
+        output?: string;
+      })
+    | {
+        type: "sequence";
+        input?: string;
+        output?: string;
+        transformations: Array<NamedTransformation>;
       };
 
   interface Dataset {
@@ -53,6 +80,8 @@ declare namespace Ome {
     datasets: Array<Dataset>;
     version?: string;
     axes?: string[] | Axis[];
+    coordinateSystems?: CoordinateSystems[];
+    coordinateTransformations?: Array<CoordinateTransformation>;
   }
 
   interface Bioformats2rawlayout {

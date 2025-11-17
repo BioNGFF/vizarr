@@ -282,7 +282,7 @@ export async function loadOmeMultiscales(
     axis_labels,
     model_matrix: config.model_matrix
       ? utils.parseMatrix(config.model_matrix)
-      : utils.coordinateTransformationsToMatrix(attrs.multiscales),
+      : utils.coordinateTransformationsToMatrix(attrs.multiscales, config.parent_transforms),
     defaults: {
       selection: meta.defaultSelection,
       colormap,

@@ -173,6 +173,16 @@ export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
       return { name, type: type ?? getDefaultType(name), unit };
     });
   }
+  // v0.6dev2
+  // @TODO: consider different axes per coordinateSystem
+  else if (multiscales[0].coordinateSystems) {
+    if (multiscales[0].coordinateSystems[0].axes) {
+      axes = multiscales[0].coordinateSystems[0].axes.map((axis) => {
+        const { name, type, unit } = axis;
+        return { name, type: type ?? getDefaultType(name), unit };
+      });
+    }
+  }
   return axes;
 }
 
@@ -546,13 +556,59 @@ export function resolveLoaderFromLayerProps(
  *
  * @returns Array of 16 numbers representing the Matrix4.
  */
-export function coordinateTransformationsToMatrix(multiscales: Array<Ome.Multiscale>) {
+export function coordinateTransformationsToMatrix(
+  multiscales: Array<Ome.Multiscale>,
+  parent_transforms?: Array<Ome.CoordinateTransformation>,
+): Matrix4 {
   let mat = new Matrix4().identity();
   const axes = getNgffAxes(multiscales);
-  const coordinateTransformations = multiscales[0].datasets[0]?.coordinateTransformations;
+
+  // in v0.6dev2 dataset coordinateTransformations should be a list of a single item (which can be a sequence)
+  const coordinateTransformations = multiscales[0].datasets[0]?.coordinateTransformations || [];
   const xyzIndices = ["x", "y", "z"].map((name) =>
     axes.findIndex((axisObj) => axisObj.type === "space" && axisObj.name === name),
   );
+
+  // v0.6dev2 check for coordinateSystems
+  // get first coordinateSystem (default) name
+  // get coordinateTransformation that outputs that coordinateSystem
+  // go through transformations
+  // consider if checking if target coordinateSystem even exists? and intermediary ones
+  if (multiscales[0].coordinateSystems) {
+    // e.g. "rotated"
+    const { name } = multiscales[0].coordinateSystems[0];
+    // e.g. "physical"
+    let prevName = coordinateTransformations[0].output;
+
+    let found = true;
+    while (found) {
+      const transform = multiscales[0].coordinateTransformations?.find((ct) => ct.input === prevName);
+      if (transform) {
+        prevName = transform.output;
+        if (transform.type === "sequence") {
+          for (const t of transform.transformations) {
+            coordinateTransformations?.push(t);
+          }
+        } else {
+          coordinateTransformations.push(transform);
+        }
+        if (prevName === name) found = false;
+      } else {
+        found = false;
+      }
+    }
+  }
+
+  // if parent_transforms, apply those last
+  if (parent_transforms) {
+    for (const pt of parent_transforms) {
+      if (pt.type === "sequence") {
+        for (const t of pt.transformations) {
+          coordinateTransformations?.push(t);
+        }
+      }
+    }
+  }
 
   // Apply each transformation sequentially and in order according to the OME-NGFF v0.4 spec.
   // Reference: https://ngff.openmicroscopy.org/0.4/#trafo-md
@@ -580,6 +636,42 @@ export function coordinateTransformationsToMatrix(multiscales: Array<Ome.Multisc
       // Get the scale values for [x, y, z].
       const xyzScale = xyzIndices.map((axisIndex) => (axisIndex >= 0 ? axisOrderedScale[axisIndex] : defaultValue));
       const nextMat = new Matrix4().scale(xyzScale);
+      mat = mat.multiplyLeft(nextMat);
+    }
+    if (transform.type === "rotation") {
+      // @TODO: cleanup
+      const nextMat = new Matrix4().identity();
+      for (const axisName of ["x", "y"]) {
+        for (const axisName2 of ["x", "y"]) {
+          const targetIndex = axisName === "x" ? 0 : 1;
+          const targetIndex2 = axisName2 === "x" ? 0 : 1;
+          const ngffIndex = axes.findIndex((axis) => axis.name === axisName);
+          const ngffIndex2 = axes.findIndex((axis) => axis.name === axisName2);
+
+          nextMat.setElement(targetIndex, targetIndex2, transform.rotation[ngffIndex][ngffIndex2]);
+        }
+      }
+      mat = mat.multiplyLeft(nextMat);
+    }
+    if (transform.type === "affine") {
+      // @TODO: cleanup
+      const matrixSize = transform.affine[0].length;
+      const nextMat = new Matrix4().identity();
+      for (const row of ["x", "y"]) {
+        for (const column of ["x", "y"]) {
+          const rowIndex = row === "x" ? 0 : 1;
+          const columnIndex = column === "x" ? 0 : 1;
+          const ngffIndex = axes.findIndex((axis) => axis.name === row);
+          const ngffIndex2 = axes.findIndex((axis) => axis.name === column);
+
+          nextMat.setElement(rowIndex, columnIndex, transform.affine[ngffIndex][ngffIndex2]);
+        }
+        const rowIndex = row === "x" ? 0 : 1;
+        const ngffIndex = axes.findIndex((axis) => axis.name === row);
+
+        const columnIndex = 3;
+        nextMat.setElement(rowIndex, columnIndex, transform.affine[ngffIndex][matrixSize - 1]);
+      }
       mat = mat.multiplyLeft(nextMat);
     }
   }
