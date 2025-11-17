@@ -93,6 +93,32 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
       return loadOmeMultiscales(config, node, attrs);
     }
 
+    // @TODO: return multiple source data
+    // if (utils.isOmeCoordinateSystems(attrs)) {
+    //   const { coordinateSystems, coordinateTransformations } = attrs;
+    //   const prevName = coordinateSystems[0].name;
+
+    //   // @TODO handle nested images
+    //   const images = [];
+    //   for (const ct of coordinateTransformations || []) {
+    //     const coordinateTransformations = [];
+    //     if (ct.output !== prevName) continue;
+    //     const input = ct.input; // assuming path to image, @TODO recursion
+    //     coordinateTransformations.push(ct);
+    //     images.push({ input, coordinateTransformations });
+    //   }
+
+    //   const sourceDataPromises = images.map((s) => {
+    //     const seriesUrl = `${config.source.toString().replace(/\/?$/, "/")}${s.input || ""}`;
+    //     return createSourceData({
+    //       ...config,
+    //       source: seriesUrl,
+    //       parent_transforms: s.coordinateTransformations,
+    //     });
+    //   });
+    //   return Promise.all(sourceDataPromises).then((results) => results.flat());
+    // }
+
     if (Object.keys(attrs).length === 0 && node.path) {
       // No rootAttrs in this group.
       const parent = await zarr.open(node.resolve(".."), { kind: "group" });

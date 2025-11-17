@@ -494,6 +494,15 @@ export function isBioformats2rawlayout(attrs: zarr.Attributes): attrs is { multi
   return "bioformats2raw.layout" in attrs;
 }
 
+export function isOmeCoordinateSystems(
+  attrs: zarr.Attributes,
+): attrs is {
+  coordinateSystems: Ome.CoordinateSystems[];
+  coordinateTransformations?: Array<Ome.CoordinateTransformation>;
+} {
+  return "coordinateSystems" in attrs;
+}
+
 /**
  * Ensures an error matches expected type(s), otherwise rethrows.
  *
