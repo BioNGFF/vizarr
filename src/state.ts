@@ -69,6 +69,8 @@ export type SourceData = {
   loaders?: GridLoader[]; // for OME plates
   rows?: number;
   columns?: number;
+  rowNames?: string[];
+  columnNames?: string[];
   acquisitions?: Ome.Acquisition[];
   acquisitionId?: number;
   name?: string;

@@ -223,6 +223,8 @@ export async function loadPlate(
     name: plateAttrs.name || "Plate",
     rows: rows.length,
     columns: columns.length,
+    rowNames: rows,
+    columnNames: columns,
   };
   // Us onClick from image config or Open Well in new window
   sourceData.onClick = (info: OnClickData) => {
