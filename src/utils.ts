@@ -494,9 +494,7 @@ export function isBioformats2rawlayout(attrs: zarr.Attributes): attrs is { multi
   return "bioformats2raw.layout" in attrs;
 }
 
-export function isOmeCoordinateSystems(
-  attrs: zarr.Attributes,
-): attrs is {
+export function isOmeCoordinateSystems(attrs: zarr.Attributes): attrs is {
   coordinateSystems: Ome.CoordinateSystems[];
   coordinateTransformations?: Array<Ome.CoordinateTransformation>;
 } {
@@ -613,7 +611,7 @@ export function coordinateTransformationsToMatrix(
     for (const pt of parent_transforms) {
       if (pt.type === "sequence") {
         for (const t of pt.transformations) {
-          coordinateTransformations?.push(t);
+          coordinateTransformations.push(t);
         }
       }
     }
@@ -621,7 +619,7 @@ export function coordinateTransformationsToMatrix(
 
   // Apply each transformation sequentially and in order according to the OME-NGFF v0.4 spec.
   // Reference: https://ngff.openmicroscopy.org/0.4/#trafo-md
-  for (const transform of coordinateTransformations ?? []) {
+  for (const transform of coordinateTransformations) {
     if (transform.type === "translation") {
       const { translation: axisOrderedTranslation } = transform;
       if (axisOrderedTranslation.length !== axes.length) {
@@ -717,24 +715,19 @@ export function getLayerSize({ props }: VizarrLayer) {
   return { height, width, maxZoom };
 }
 
-export function getPhysicalSizes(attrs: zarr.Attributes) {
-  if (isMultiscales(attrs)) {
-    const axes = getNgffAxes(attrs.multiscales);
-    const ct = coordinateTransformationsToMatrix(attrs.multiscales);
-    const matrixIndices = {
-      x: 0,
-      y: 5,
-      z: 10,
-    };
-    const physicalSizes = axes
-      .filter((a) => a.type === "space")
-      .reduce((acc: { [key: string]: viv.PhysicalSize }, { name, unit }: Ome.Axis) => {
-        acc[name] = { size: ct[matrixIndices[name as keyof typeof matrixIndices]], unit: unit ?? "" };
-        return acc;
-      }, {});
-    // @TODO: get t size from multiscales.coordinateTransformations if axis is present
-    return physicalSizes;
-  }
+export function getPhysicalSizesFromMatrix(axes: Ome.Axis[], matrix: Matrix4) {
+  const matrixIndices = {
+    x: 0,
+    y: 5,
+    z: 10,
+  };
+  const physicalSizes = axes
+    .filter((a) => a.type === "space")
+    .reduce((acc: { [key: string]: viv.PhysicalSize }, { name, unit }: Ome.Axis) => {
+      acc[name] = { size: matrix[matrixIndices[name as keyof typeof matrixIndices]], unit: unit ?? "" };
+      return acc;
+    }, {});
+  return physicalSizes;
 }
 
 // @TODO: remove after updating deck.gl
