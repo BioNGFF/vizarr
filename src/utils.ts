@@ -45,24 +45,10 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
         store = zipStore;
       } catch {
         const url = new URL(source);
-        // Check if the pathname contains colons that might be misinterpreted as URL schemes
-        // when constructing relative URLs later. If so, we need to preserve the full URL
-        // as the base to avoid the colon being interpreted as a scheme separator.
-        const pathStart = source.indexOf("://") + 3;
-        const firstSlash = source.indexOf("/", pathStart);
-        const pathPart = firstSlash !== -1 ? source.substring(firstSlash) : "";
-        const hasColonInPath = pathPart.includes(":");
-
-        if (hasColonInPath) {
-          // Keep the full URL as base and use root path to avoid scheme misinterpretation
-          store = new zarr.FetchStore(source.endsWith("/") ? source : `${source}/`);
-          path = "/";
-        } else {
-          // Original logic for URLs without colons in path
-          path = ensureAbsolutePath(url.pathname);
-          url.pathname = "/";
-          store = new zarr.FetchStore(url.href);
-        }
+        // grab the path and then set the URL to the root
+        path = ensureAbsolutePath(url.pathname);
+        url.pathname = "/";
+        store = new zarr.FetchStore(url.href);
       }
     }
 
