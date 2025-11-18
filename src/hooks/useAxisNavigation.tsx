@@ -1,3 +1,5 @@
+import { Snackbar } from "@mui/material";
+import Fade from "@mui/material/Fade";
 import type { DeckGLRef, PickingInfo } from "deck.gl";
 import { useAtomCallback } from "jotai/utils";
 import * as React from "react";
@@ -13,6 +15,23 @@ type AdjustArgs = {
 };
 
 const AXIS_SCROLL_STEP_DELTA = 40;
+
+function AxisNavigationSnackbar({ open, axis }: { open: boolean; axis: string }) {
+  return (
+    <Snackbar
+      open={open}
+      message={`Hold down key ${axis.toUpperCase()} + scroll or left/right arrows to navigate ${axis.toUpperCase()} axis`}
+      slots={{ transition: Fade }}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      sx={{
+        "& .MuiSnackbarContent-root": {
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          color: "white",
+        },
+      }}
+    />
+  );
+}
 
 export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport: DeckInstance) {
   const [axisScrollKey, setAxisScrollKey] = React.useState<Axis | null>(null);
@@ -149,27 +168,25 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
           return;
         }
 
-        const resolvedTarget = targetSource;
-
         set(sourceInfoAtom, (prev: typeof sources) =>
           prev.map((item) => {
-            if (item.id !== resolvedTarget.id) {
+            if (item.id !== targetSource.id) {
               return item;
             }
             const prevSelection = item.defaults.selection;
             const isSame =
               prevSelection.length === defaultSelection.length &&
               prevSelection.every((value: number, index: number) => value === defaultSelection[index]);
-            if (isSame) {
-              return item;
-            }
-            return {
-              ...item,
-              defaults: {
-                ...item.defaults,
-                selection: defaultSelection,
-              },
-            };
+
+            return isSame
+              ? item
+              : {
+                  ...item,
+                  defaults: {
+                    ...item.defaults,
+                    selection: defaultSelection,
+                  },
+                };
           }),
         );
       },
@@ -205,7 +222,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
         const delta = event.key === "ArrowLeft" ? -1 : 1;
         event.preventDefault();
         event.stopPropagation();
-        void adjustAxis({ axis, delta });
+        adjustAxis({ axis, delta });
       }
     };
 
@@ -272,7 +289,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
       axisScrollAccumulatorRef.current -= steps * AXIS_SCROLL_STEP_DELTA;
 
       const pointer = { x, y };
-      void adjustAxis({ axis: axisScrollKey, delta: -steps, pointer });
+      adjustAxis({ axis: axisScrollKey, delta: -steps, pointer });
     },
     [axisScrollKey, viewport, deckRef, adjustAxis],
   );
@@ -294,4 +311,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
       element.removeEventListener("wheel", listener);
     };
   }, [viewport, handleWheel, deckRef]);
+
+  // @TODO: check axis is present
+  return axisScrollKey !== null && <AxisNavigationSnackbar open={true} axis={axisScrollKey} />;
 }

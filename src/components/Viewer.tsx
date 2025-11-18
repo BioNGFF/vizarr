@@ -19,7 +19,7 @@ export default function Viewer() {
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
 
-  useAxisNavigation(deckRef, viewport);
+  const axisNavigationSnackbar = useAxisNavigation(deckRef, viewport);
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
@@ -138,19 +138,22 @@ export default function Viewer() {
   }, [layers, firstLayer]);
 
   return (
-    <DeckGL
-      ref={deckRef}
-      layers={deckLayers}
-      viewState={viewState && { ortho: viewState }}
-      controller={{ keyboard: true }}
-      onViewStateChange={(e: { viewState: OrthographicViewState }) =>
-        // @ts-expect-error - deck doesn't know this should be ok
-        setViewState(e.viewState)
-      }
-      views={[new OrthographicView({ id: "ortho", controller: true, near, far })]}
-      glOptions={glOptions}
-      getTooltip={getTooltip}
-      onDeviceInitialized={() => setViewport(deckRef.current?.deck || null)}
-    />
+    <>
+      <DeckGL
+        ref={deckRef}
+        layers={deckLayers}
+        viewState={viewState && { ortho: viewState }}
+        controller={{ keyboard: true }}
+        onViewStateChange={(e: { viewState: OrthographicViewState }) =>
+          // @ts-expect-error - deck doesn't know this should be ok
+          setViewState(e.viewState)
+        }
+        views={[new OrthographicView({ id: "ortho", controller: true, near, far })]}
+        glOptions={glOptions}
+        getTooltip={getTooltip}
+        onDeviceInitialized={() => setViewport(deckRef.current?.deck || null)}
+      />
+      {axisNavigationSnackbar}
+    </>
   );
 }
