@@ -4,6 +4,7 @@ import { OrthographicView } from "deck.gl";
 import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
+import { useAxisNavigation } from "../hooks/useAxisNavigation";
 import { layerAtoms, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
@@ -17,6 +18,8 @@ export default function Viewer() {
   const [viewState, setViewState] = useViewState();
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
+
+  const axisNavigationSnackbar = useAxisNavigation(deckRef, viewport);
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
@@ -135,18 +138,22 @@ export default function Viewer() {
   }, [layers, firstLayer]);
 
   return (
-    <DeckGL
-      ref={deckRef}
-      layers={deckLayers}
-      viewState={viewState && { ortho: viewState }}
-      onViewStateChange={(e: { viewState: OrthographicViewState }) =>
-        // @ts-expect-error - deck doesn't know this should be ok
-        setViewState(e.viewState)
-      }
-      views={[new OrthographicView({ id: "ortho", controller: true, near, far })]}
-      glOptions={glOptions}
-      getTooltip={getTooltip}
-      onDeviceInitialized={() => setViewport(deckRef.current?.deck || null)}
-    />
+    <>
+      <DeckGL
+        ref={deckRef}
+        layers={deckLayers}
+        viewState={viewState && { ortho: viewState }}
+        controller={{ keyboard: true }}
+        onViewStateChange={(e: { viewState: OrthographicViewState }) =>
+          // @ts-expect-error - deck doesn't know this should be ok
+          setViewState(e.viewState)
+        }
+        views={[new OrthographicView({ id: "ortho", controller: true, near, far })]}
+        glOptions={glOptions}
+        getTooltip={getTooltip}
+        onDeviceInitialized={() => setViewport(deckRef.current?.deck || null)}
+      />
+      {axisNavigationSnackbar}
+    </>
   );
 }
