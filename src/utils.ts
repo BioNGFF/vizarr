@@ -46,7 +46,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       } catch {
         const url = new URL(source);
         // grab the path and then set the URL to the root
-        path = ensureAbosolutePath(url.pathname);
+        path = ensureAbsolutePath(url.pathname);
         url.pathname = "/";
         store = new zarr.FetchStore(url.href);
       }
@@ -59,7 +59,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
   return zarr.root(source);
 }
 
-function ensureAbosolutePath(path: string): `/${string}` {
+function ensureAbsolutePath(path: string): `/${string}` {
   if (path === "/") return path;
   // @ts-expect-error - path always starts with '/'
   return path.startsWith("/") ? path : `/${path}`;
