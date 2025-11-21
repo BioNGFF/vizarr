@@ -1,6 +1,7 @@
 import { Box, Link, Typography } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { type PrimitiveAtom, Provider, atom } from "jotai";
+
 import { useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import ReactDOM from "react-dom/client";
@@ -20,7 +21,10 @@ import {
 import theme from "./theme";
 import { defer, typedEmitter } from "./utils";
 
-export { version } from "../package.json";
+export { version } from "../../package.json";
+
+export { default as Vizarr } from "./components/VizarrViewer";
+export type { VizarrViewerProps } from "./components/VizarrViewer";
 
 type Events = {
   viewStateChange: ViewState;

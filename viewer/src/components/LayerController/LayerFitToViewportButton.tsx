@@ -1,17 +1,19 @@
 import { ZoomOutMap } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import { useAtomValue } from "jotai";
+import type { MouseEvent } from "react";
+import React from "react";
 import { useLayerState, useSourceData, useViewState } from "../../hooks";
 import { type VizarrLayer, viewportAtom } from "../../state";
 import { fitImageToViewport, getLayerSize } from "../../utils";
 
-export function LayerFitToViewportButton() {
+function LayerFitToViewportButton() {
   const [sourceData] = useSourceData();
   const [layer] = useLayerState();
   const [, setViewState] = useViewState();
   const viewport = useAtomValue(viewportAtom);
 
-  const fitToViewport = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const fitToViewport = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     if (viewport) {
       setViewState(() => ({
@@ -41,3 +43,5 @@ export function LayerFitToViewportButton() {
     </IconButton>
   );
 }
+
+export default LayerFitToViewportButton;

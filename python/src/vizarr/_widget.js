@@ -1,4 +1,4 @@
-import * as vizarr from "https://hms-dbmi.github.io/vizarr/index.js";
+import * as vizarr from "https://biongff.github.io/vizarr/index.js";
 import debounce from "https://esm.sh/just-debounce-it@3";
 
 /**

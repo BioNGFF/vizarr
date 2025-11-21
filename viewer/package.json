@@ -1,0 +1,57 @@
+{
+  "name": "@biongff/vizarr",
+  "version": "1.1.1",
+  "type": "module",
+  "main": "dist/biongff-vizarr.cjs.js",
+  "module": "dist/biongff-vizarr.es.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/biongff-vizarr.es.js",
+      "require": "./dist/biongff-vizarr.cjs.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run check && vite build",
+    "preview": "vite preview",
+    "check": "tsc"
+  },
+  "dependencies": {
+    "@deck.gl/core": "~9.0.0",
+    "@deck.gl/geo-layers": "~9.0.0",
+    "@deck.gl/layers": "~9.0.0",
+    "@hms-dbmi/viv": "~0.17.2",
+    "@vivjs/types": "~0.17.0",
+    "@zarrita/storage": "0.1.3",
+    "deck.gl": "~9.0.0",
+    "jotai": "^1.0.0",
+    "math.gl": "^4.1.0",
+    "p-map": "^7.0.3",
+    "quick-lru": "^7.0.0",
+    "react-is": "18.3.1",
+    "zarrita": "0.5.0"
+  },
+  "peerDependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.2.0",
+    "@mui/material": "^7.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "^18.3.10",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.7",
+    "vite-plugin-dts": "^4.5.4"
+  },
+  "overrides": {
+    "react-is": "^18.3.1"
+  }
+}
