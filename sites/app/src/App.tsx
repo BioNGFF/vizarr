@@ -42,7 +42,6 @@ export default function App() {
           }),
         );
         window.history.replaceState(window.history.state, "", decodeURIComponent(url.href));
-        // setViewState(update);
       }, 200),
     [],
   );
