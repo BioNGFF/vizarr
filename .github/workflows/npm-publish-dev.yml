@@ -27,15 +27,18 @@ jobs:
 
       - name: Update prerelease version
         id: pre-release-version
-        uses: adobe/update-prerelease-npm-version@v1.0.0
+        uses: adobe/update-prerelease-npm-version@v1.2.0
         with:
           pre-release-tag: "dev"
+
+      - name: Sync package versions
+        run: pnpm -r exec npm version ${{ steps.pre-release-version.outputs.pre-release-version }} --no-git-tag-version
 
       - name: Install dependencies
         run: pnpm install
 
       - name: Build package
-        run: pnpm run build
+        run: pnpm build:viewer
 
       - name: Configure npm authentication
         run: |
@@ -46,4 +49,4 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish --tag dev --access public --no-git-checks
+        run: pnpm publish viewer --tag dev --access public --no-git-checks
