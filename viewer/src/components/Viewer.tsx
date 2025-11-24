@@ -9,7 +9,7 @@ import { layerAtoms, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
-import type { GrayscaleBitmapLayerPickingInfo } from "../layers/label-layer";
+import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
 
 export default function Viewer() {
@@ -114,7 +114,7 @@ export default function Viewer() {
     }
 
     const zs = layers.flatMap((layer: VizarrLayer | null) => {
-      if (!layer) return [];
+      if (!layer || layer instanceof LabelLayer) return [];
       const { modelMatrix: matrix } = layer?.props || {};
       if (!matrix) return [];
       const { width, height } = getLayerSize(layer);
