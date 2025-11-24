@@ -1,4 +1,4 @@
-import * as vizarr from "https://biongff.github.io/vizarr/index.js";
+import { createViewer } from "https://biongff.github.io/vizarr/index.js";
 import debounce from "https://esm.sh/just-debounce-it@3";
 
 /**
@@ -82,7 +82,7 @@ export default {
 				div.style.height = model.get("height");
 			});
 		}
-		let viewer = await vizarr.createViewer(div);
+		let viewer = await createViewer(div);
 		{
 			model.on("change:view_state", () => {
 				viewer.setViewState(model.get("view_state"));
