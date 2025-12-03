@@ -13,13 +13,14 @@ git clone https://github.com/your-username/vizarr.git
 cd vizarr
 ``` 
 
-Set the `upstream` remote to the base `vizarr` repository:
+Set the `upstream` remote to the base `vizarr` repository: 
 
 ```bash
-git remote add upstream https://github.com/hms-dbmi/vizarr.git
+git remote add upstream git@github.com:BioNGFF/vizarr.git
 ```
 
-Install the dependencies to develop and build `vizarr` via `pnpm`.
+Install the dependencies to develop and build `vizarr` via `pnpm`. First [install pnpm](https://pnpm.io/installation) if you do not have it already.
+
 
 ```bash
 pnpm install 
@@ -80,3 +81,5 @@ pnpm version [<new version> | major | minor | patch]
 pnpm publish
 ```
 
+### Useful VSCode plugins:
+- [Biome](https://marketplace.visualstudio.com/items?itemName=biomejs.biome) for code formatting/linting
