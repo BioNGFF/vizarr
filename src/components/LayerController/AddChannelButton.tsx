@@ -1,5 +1,5 @@
-import { Divider, IconButton, NativeSelect, Paper, Popover, Typography } from "@material-ui/core";
-import { Add } from "@material-ui/icons";
+import { Add } from "@mui/icons-material";
+import { Divider, IconButton, NativeSelect, Paper, Popover, Typography } from "@mui/material";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 
@@ -23,7 +23,7 @@ function AddChannelButton() {
     handleClose();
     const channelIndex = +event.target.value;
     const channelSelection = [...source.defaults.selection];
-    if (source.channel_axis) {
+    if (source.channel_axis != null) {
       channelSelection[source.channel_axis] = channelIndex;
     }
 
@@ -42,7 +42,6 @@ function AddChannelButton() {
         return { ...prev, contrast_limits: clims };
       });
     }
-
     setLayer((prev) => {
       const { layerProps } = prev;
       const selections = [...layerProps.selections, channelSelection];

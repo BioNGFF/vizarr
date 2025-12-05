@@ -1,5 +1,5 @@
-import MuiAccordion from "@material-ui/core/Accordion";
-import { withStyles } from "@material-ui/styles";
+import { Accordion as MuiAccordion } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import React from "react";
 
 import { LayerStateContext, useSourceData } from "../../hooks";
@@ -7,26 +7,24 @@ import { layerFamilyAtom } from "../../state";
 import Content from "./Content";
 import Header from "./Header";
 
-const Accordion = withStyles({
-  root: {
-    borderBottom: "1px solid rgba(150, 150, 150, .2)",
-    width: 200,
-    boxshadow: "none",
-    "&:not(:last-child)": {
-      borderBottom: 0,
-    },
-    "&:before": {
-      display: "none",
-    },
-    "&$expanded": {
-      margin: 0,
-      padding: 0,
-    },
-  },
-  expanded: {
+const Accordion = styled(MuiAccordion)`
+  border-bottom: 1px solid rgba(150, 150, 150, .2);
+  width: 200;
+  box-shadow: none;
+  "&:not(:last-child)": {
+    border-bottom: 0,
+  }
+  "&:before": {
+    display: none,
+  }
+  "&$expanded": {
+    margin: 0,
+    padding: 0,
+  }
+  &.Mui-expanded : {
     padding: 1,
-  },
-})(MuiAccordion);
+  }
+`;
 
 function LayerController() {
   const [sourceInfo] = useSourceData();

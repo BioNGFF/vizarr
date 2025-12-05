@@ -3,7 +3,6 @@ import * as zarr from "zarrita";
 import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
 
 import { ZarrPixelSource } from "./ZarrPixelSource";
-import type { OmeColor } from "./layers/label-layer";
 import * as utils from "./utils";
 
 export async function loadWell(
@@ -224,6 +223,8 @@ export async function loadPlate(
     name: plateAttrs.name || "Plate",
     rows: rows.length,
     columns: columns.length,
+    rowNames: rows,
+    columnNames: columns,
   };
   // Us onClick from image config or Open Well in new window
   sourceData.onClick = (info: OnClickData) => {
@@ -266,7 +267,15 @@ export async function loadOmeMultiscales(
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
     meta = await defaultMeta(lowresSource, axis_labels);
   }
-  const loader = data.map((arr) => new ZarrPixelSource(arr, { labels: axis_labels, tileSize }));
+  const physicalSizes = utils.getPhysicalSizes(utils.resolveAttrs(attrs));
+  const loader = data.map(
+    (arr, i) =>
+      new ZarrPixelSource(arr, {
+        labels: axis_labels,
+        tileSize,
+        ...(i === 0 ? { meta: { physicalSizes } } : {}),
+      }),
+  );
   // Set originalSizeZ for all ZarrPixelSource arrays so they can adjust for Z downsampling
   let originalSizeZ = loader[0].shape[axis_labels.indexOf("z")];
   for (const l of loader) {
@@ -312,7 +321,7 @@ async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: strin
 async function resolveOmeLabelsFromMultiscales(grp: zarr.Group<zarr.Readable>): Promise<Array<string>> {
   return zarr
     .open(grp.resolve("labels"), { kind: "group" })
-    .then(({ attrs }) => (attrs.labels ?? []) as Array<string>)
+    .then(({ attrs }) => (utils.resolveAttrs(attrs).labels ?? []) as Array<string>)
     .catch((e) => {
       utils.rethrowUnless(e, zarr.NodeNotFoundError);
       return [];

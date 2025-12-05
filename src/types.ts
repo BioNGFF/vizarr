@@ -31,6 +31,7 @@ declare namespace Ome {
   interface Axis {
     name: string;
     type?: string;
+    unit?: string;
   }
 
   type CoordinateTransformation =

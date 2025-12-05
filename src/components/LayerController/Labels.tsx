@@ -1,5 +1,5 @@
-import { Grid, IconButton, Slider, Typography } from "@material-ui/core";
-import { RadioButtonChecked, RadioButtonUnchecked } from "@material-ui/icons";
+import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
+import { Grid, IconButton, Slider, Typography } from "@mui/material";
 import React from "react";
 
 import { useLayerState, useSourceData } from "../../hooks";
@@ -38,7 +38,7 @@ export default function Labels({ labelIndex }: { labelIndex: number }) {
         </div>
       </Grid>
       <Grid container justifyContent="space-between">
-        <Grid item xs={2}>
+        <Grid size={{ xs: 2 }}>
           <IconButton
             style={{ backgroundColor: "transparent", padding: 0, zIndex: 2 }}
             onClick={() => {
@@ -57,7 +57,7 @@ export default function Labels({ labelIndex }: { labelIndex: number }) {
             {label.on ? <RadioButtonChecked /> : <RadioButtonUnchecked />}
           </IconButton>
         </Grid>
-        <Grid item xs={10}>
+        <Grid size={{ xs: 10 }}>
           <Slider
             value={label.layerProps.opacity}
             onChange={handleOpacityChange}

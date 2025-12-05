@@ -1,4 +1,4 @@
-import { Grid, NativeSelect } from "@material-ui/core";
+import { Grid, NativeSelect } from "@mui/material";
 import React from "react";
 import type { ChangeEvent } from "react";
 import { useSourceData } from "../../hooks";

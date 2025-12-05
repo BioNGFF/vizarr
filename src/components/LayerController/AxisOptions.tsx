@@ -1,16 +1,14 @@
-import { Divider, IconButton, Input, Paper, Popover, Typography } from "@material-ui/core";
-import { MoreHoriz } from "@material-ui/icons";
-import { withStyles } from "@material-ui/styles";
+import { MoreHoriz } from "@mui/icons-material";
+import { Divider, IconButton, Input, Paper, Popover, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 
-const DenseInput = withStyles({
-  root: {
-    width: "5.5em",
-    fontSize: "0.7em",
-  },
-})(Input);
+const DenseInput = styled(Input)`
+  width: 5.5em;
+  font-size: 0.7em;
+`;
 
 interface Props {
   axisIndex: number;

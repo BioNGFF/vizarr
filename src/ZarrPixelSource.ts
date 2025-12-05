@@ -21,6 +21,7 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
   readonly tileSize: number;
   originalSizeZ: number;
   readonly dtype: viv.SupportedDtype;
+  readonly meta?: viv.PixelSourceMeta;
   readonly #arr: zarr.Array<zarr.NumberDataType | zarr.BigintDataType, zarr.Readable>;
   readonly #transform: (
     arr: zarr.TypedArray<zarr.NumberDataType | zarr.BigintDataType>,
@@ -38,13 +39,14 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
 
   constructor(
     arr: zarr.Array<zarr.DataType, zarr.Readable>,
-    options: { labels: viv.Labels<Array<string>>; tileSize: number },
+    options: { labels: viv.Labels<Array<string>>; tileSize: number; meta?: viv.PixelSourceMeta },
   ) {
     assert(arr.is("number") || arr.is("bigint"), `Unsupported viv dtype: ${arr.dtype}`);
     this.#arr = arr;
     this.labels = options.labels;
     this.tileSize = options.tileSize;
     this.originalSizeZ = this.shape[this.labels.indexOf("z")];
+    this.meta = options.meta;
     /**
      * Some `zarrita` data types are not supported by Viv and require casting.
      *

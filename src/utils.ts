@@ -1,12 +1,14 @@
 import { Matrix4 } from "math.gl";
 import * as zarr from "zarrita";
 
+import type * as viv from "@vivjs/types";
+import ZipFileStore from "@zarrita/storage/zip";
 import type { ZarrPixelSource } from "./ZarrPixelSource";
 import type { GridLayerProps } from "./layers/grid-layer";
 import type { LabelLayerProps } from "./layers/label-layer";
 import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-layers";
 import { lru } from "./lru-store";
-import type { ViewState } from "./state";
+import type { ViewState, VizarrLayer } from "./state";
 
 export const MAX_CHANNELS = 6;
 
@@ -36,11 +38,18 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
       ]);
       store = ReferenceStore.fromSpec(json);
     } else {
-      const url = new URL(source);
-      // grab the path and then set the URL to the root
-      path = ensureAbosolutePath(url.pathname);
-      url.pathname = "/";
-      store = new zarr.FetchStore(url.href);
+      // try ZipFileStore first, fallback to FetchStore
+      try {
+        const zipStore = ZipFileStore.fromUrl(source);
+        await zipStore.has("/"); // will throw an error for non-zipped
+        store = zipStore;
+      } catch {
+        const url = new URL(source);
+        // grab the path and then set the URL to the root
+        path = ensureAbsolutePath(url.pathname);
+        url.pathname = "/";
+        store = new zarr.FetchStore(url.href);
+      }
     }
 
     // Wrap remote stores in a cache
@@ -50,7 +59,7 @@ async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Loca
   return zarr.root(source);
 }
 
-function ensureAbosolutePath(path: string): `/${string}` {
+function ensureAbsolutePath(path: string): `/${string}` {
   if (path === "/") return path;
   // @ts-expect-error - path always starts with '/'
   return path.startsWith("/") ? path : `/${path}`;
@@ -160,8 +169,8 @@ export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
       if (typeof axis === "string") {
         return { name: axis, type: getDefaultType(axis) };
       }
-      const { name, type } = axis;
-      return { name, type: type ?? getDefaultType(name) };
+      const { name, type, unit } = axis;
+      return { name, type: type ?? getDefaultType(name), unit };
     });
   }
   return axes;
@@ -590,4 +599,65 @@ export function zip<T extends unknown[]>(...arrays: { [K in keyof T]: ReadonlyAr
     result[i] = arr as T;
   }
   return result;
+}
+
+export function getLayerSize({ props }: VizarrLayer) {
+  const loader = resolveLoaderFromLayerProps(props);
+  const [baseResolution, maxZoom] = Array.isArray(loader) ? [loader[0], loader.length] : [loader, 0];
+  const interleaved = isInterleaved(baseResolution.shape);
+  let [height, width] = baseResolution.shape.slice(interleaved ? -3 : -2);
+  if (isGridLayerProps(props)) {
+    // TODO: Don't hardcode spacer size. Probably best to inspect the deck.gl Layers rather than
+    // the Layer Props.
+    const spacer = 5;
+    height = (height + spacer) * props.rows;
+    width = (width + spacer) * props.columns;
+  }
+  return { height, width, maxZoom };
+}
+
+export function getPhysicalSizes(attrs: zarr.Attributes) {
+  if (isMultiscales(attrs)) {
+    const axes = getNgffAxes(attrs.multiscales);
+    const ct = coordinateTransformationsToMatrix(attrs.multiscales);
+    const matrixIndices = {
+      x: 0,
+      y: 5,
+      z: 10,
+    };
+    const physicalSizes = axes
+      .filter((a) => a.type === "space")
+      .reduce((acc: { [key: string]: viv.PhysicalSize }, { name, unit }: Ome.Axis) => {
+        acc[name] = { size: ct[matrixIndices[name as keyof typeof matrixIndices]], unit: unit ?? "" };
+        return acc;
+      }, {});
+    // @TODO: get t size from multiscales.coordinateTransformations if axis is present
+    return physicalSizes;
+  }
+}
+
+// @TODO: remove after updating deck.gl
+// From deck.gl geo-layers tileset-2d utils
+export function transformBox(bbox: number[], modelMatrix: Matrix4): number[] {
+  const transformedCoords = [
+    // top-left
+    modelMatrix.transformAsPoint([bbox[0], bbox[1]]),
+    // top-right
+    modelMatrix.transformAsPoint([bbox[2], bbox[1]]),
+    // bottom-left
+    modelMatrix.transformAsPoint([bbox[0], bbox[3]]),
+    // bottom-right
+    modelMatrix.transformAsPoint([bbox[2], bbox[3]]),
+  ];
+  const transformedBox = [
+    // Minimum x coord
+    Math.min(...transformedCoords.map((i) => i[0])),
+    // Minimum y coord
+    Math.min(...transformedCoords.map((i) => i[1])),
+    // Max x coord
+    Math.max(...transformedCoords.map((i) => i[0])),
+    // Max y coord
+    Math.max(...transformedCoords.map((i) => i[1])),
+  ];
+  return transformedBox;
 }

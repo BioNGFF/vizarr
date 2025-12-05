@@ -19,6 +19,7 @@ export interface BaseLayerProps {
   selections: number[][];
   modelMatrix: Matrix4;
   contrastLimitsRange: [min: number, max: number][];
+  pickable?: boolean;
   onClick?: (e: Record<string, unknown>) => void;
 }
 

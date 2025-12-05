@@ -2,7 +2,7 @@ import debounce from "just-debounce-it";
 import * as vizarr from "./src/index";
 
 async function main() {
-  console.log(`vizarr v${vizarr.version}: https://github.com/hms-dbmi/vizarr`);
+  console.log(`vizarr v${vizarr.version}: https://github.com/BioNGFF/vizarr`);
   // biome-ignore lint/style/noNonNullAssertion: We know the element exists
   const viewer = await vizarr.createViewer(document.querySelector("#root")!);
   const url = new URL(window.location.href);
@@ -25,7 +25,7 @@ async function main() {
     debounce((update: vizarr.ViewState) => {
       const url = new URL(window.location.href);
       url.searchParams.set("viewState", JSON.stringify(update));
-      window.history.pushState({}, "", decodeURIComponent(url.href));
+      window.history.replaceState(window.history.state, "", decodeURIComponent(url.href));
     }, 200),
   );
 
@@ -43,9 +43,9 @@ async function main() {
 
   const newLocation = decodeURIComponent(url.href);
 
-  // Only update history if the new loacation is different from the current
+  // Only update history if the new location is different from the current
   if (window.location.href !== newLocation) {
-    window.history.pushState(null, "", newLocation);
+    window.history.replaceState(window.history.state, "", newLocation);
   }
 }
 
