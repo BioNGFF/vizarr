@@ -23,7 +23,7 @@ function AddChannelButton() {
     handleClose();
     const channelIndex = +event.target.value;
     const channelSelection = [...source.defaults.selection];
-    if (source.channel_axis) {
+    if (source.channel_axis != null) {
       channelSelection[source.channel_axis] = channelIndex;
     }
 
@@ -42,7 +42,6 @@ function AddChannelButton() {
         return { ...prev, contrast_limits: clims };
       });
     }
-
     setLayer((prev) => {
       const { layerProps } = prev;
       const selections = [...layerProps.selections, channelSelection];
