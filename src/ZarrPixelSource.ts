@@ -8,6 +8,7 @@ type Slice = ReturnType<typeof zarr.slice>;
 
 const X_AXIS_NAME = "x";
 const Y_AXIS_NAME = "y";
+const Z_AXIS_NAME = 'z';
 const RGBA_CHANNEL_AXIS_NAME = "_c";
 
 type VivPixelData = {
@@ -16,7 +17,29 @@ type VivPixelData = {
   height: number;
 };
 
+/**
+ * Configuration options for ZarrPixelSource
+ */
+interface ZarrPixelSourceOptions {
+  /**
+   * Array dimension labels e.g. [x, y, z, c]
+   */
+  labels: viv.Labels<Array<string>>;
+  /**
+   * The size of each tile, in pixels 
+   */
+  tileSize: number;
+  /**
+   * Additional meta options 
+   */
+  meta?: viv.PixelSourceMeta
+}
+
+/**
+  * Class for loading pixel data from a .zarr source 
+  */
 export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
+
   readonly labels: viv.Labels<Array<string>>;
   readonly tileSize: number;
   originalSizeZ: number;
@@ -37,9 +60,14 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     };
   }> = [];
 
+  /**
+   * Create a ZarrPixelSource
+   * @param {zarr.Array} arr - A Zarr array object  
+   * @param {ZarrPixelSourceOptions} options - An object defining options 
+   */
   constructor(
     arr: zarr.Array<zarr.DataType, zarr.Readable>,
-    options: { labels: viv.Labels<Array<string>>; tileSize: number; meta?: viv.PixelSourceMeta },
+    options: ZarrPixelSourceOptions,
   ) {
     assert(arr.is("number") || arr.is("bigint"), `Unsupported viv dtype: ${arr.dtype}`);
     this.#arr = arr;
@@ -86,6 +114,7 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     return this.#arr.shape;
   }
 
+
   async getRaster(options: {
     selection: viv.PixelSourceSelection<Array<string>> | Array<number>;
     signal?: AbortSignal;
@@ -104,6 +133,14 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     // no-op
   }
 
+  hasZIndex(): boolean {
+    return this.labels.includes('z')
+  }
+
+  recalculateZSelection(z: number, zIndex: number): number {
+    return Math.floor((z * this.shape[zIndex]) / this.originalSizeZ);
+  }
+
   async getTile(options: {
     x: number;
     y: number;
@@ -119,10 +156,11 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
       },
     });
     // If we know the original sizeZ, adjust the z index of this array to account for downsampling
+
     let zIndex = this.labels.indexOf("z");
-    if (this.originalSizeZ > 0 && zarrSelection[zIndex] instanceof Number) {
-      let z = zarrSelection[zIndex] as number;
-      zarrSelection[zIndex] = Math.floor((z * this.shape[zIndex]) / this.originalSizeZ);
+    if (this.hasZIndex()) {
+      let currentZSelection = zarrSelection[zIndex] as number;
+      zarrSelection[zIndex] = this.recalculateZSelection(currentZSelection, zIndex)
     }
     return this.#fetchData({
       selection: zarrSelection,
@@ -161,6 +199,7 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
   }
 }
 
+
 function buildZarrSelection(
   baseSelection: Record<string, number> | Array<number>,
   options: {
@@ -193,3 +232,5 @@ function capitalize<T extends string>(s: T): Capitalize<T> {
   // @ts-expect-error - TypeScript can't verify that the return type is correct
   return s[0].toUpperCase() + s.slice(1);
 }
+
+

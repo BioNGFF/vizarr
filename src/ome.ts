@@ -248,6 +248,9 @@ export async function loadPlate(
   return sourceData;
 }
 
+/**
+ * Load a multiscale OME-NGFF image
+ */
 export async function loadOmeMultiscales(
   config: ImageLayerConfig,
   grp: zarr.Group<zarr.Readable>,
