@@ -16,27 +16,17 @@ type VivPixelData = {
   height: number;
 };
 
-/**
- * Configuration options for ZarrPixelSource
- */
+/** Configuration options for ZarrPixelSource */
 interface ZarrPixelSourceOptions {
-  /**
-   * Array dimension labels e.g. [x, y, z, c]
-   */
+  /** Array dimension labels e.g. [x, y, z, c] */
   labels: viv.Labels<Array<string>>;
-  /**
-   * The size of each tile, in pixels 
-   */
+  /** The size of each tile, in pixels */
   tileSize: number;
-  /**
-   * Additional meta options 
-   */
+  /**Additional meta options */
   meta?: viv.PixelSourceMeta
 }
 
-/**
-  * Class for loading pixel data from a .zarr source 
-  */
+/** Class for loading pixel data from a .zarr source */
 export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
 
   readonly labels: viv.Labels<Array<string>>;
