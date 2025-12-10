@@ -8,7 +8,6 @@ type Slice = ReturnType<typeof zarr.slice>;
 
 const X_AXIS_NAME = "x";
 const Y_AXIS_NAME = "y";
-const Z_AXIS_NAME = 'z';
 const RGBA_CHANNEL_AXIS_NAME = "_c";
 
 type VivPixelData = {
