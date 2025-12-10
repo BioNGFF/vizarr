@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
 
 jobs:
 
@@ -19,3 +20,4 @@ jobs:
           run_install: true
       - run: pnpm check
       - run: pnpm lint
+      - run: pnpm test

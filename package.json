@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "lint": "biome ci",
     "fix": "biome check --write",
-    "check": "tsc"
+    "check": "tsc",
+    "test": "vitest"
   },
   "dependencies": {
     "@deck.gl/core": "~9.0.0",
@@ -46,7 +47,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "semantic-release": "^25.0.2",
     "typescript": "^5.8.2",
-    "vite": "^6.2.7"
+    "vite": "^6.2.7",
+    "vitest": "^4.0.15"
   },
   "overrides": {
     "react-is": "^18.3.1"
