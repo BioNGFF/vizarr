@@ -23,12 +23,11 @@ interface ZarrPixelSourceOptions {
   /** The size of each tile, in pixels */
   tileSize: number;
   /**Additional meta options */
-  meta?: viv.PixelSourceMeta
+  meta?: viv.PixelSourceMeta;
 }
 
 /** Class for loading pixel data from a .zarr source */
 export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
-
   readonly labels: viv.Labels<Array<string>>;
   readonly tileSize: number;
   originalSizeZ: number;
@@ -51,13 +50,10 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
 
   /**
    * Create a ZarrPixelSource
-   * @param {zarr.Array} arr - A Zarr array object  
-   * @param {ZarrPixelSourceOptions} options - An object defining options 
+   * @param {zarr.Array} arr - A Zarr array object
+   * @param {ZarrPixelSourceOptions} options - An object defining options
    */
-  constructor(
-    arr: zarr.Array<zarr.DataType, zarr.Readable>,
-    options: ZarrPixelSourceOptions,
-  ) {
+  constructor(arr: zarr.Array<zarr.DataType, zarr.Readable>, options: ZarrPixelSourceOptions) {
     assert(arr.is("number") || arr.is("bigint"), `Unsupported viv dtype: ${arr.dtype}`);
     this.#arr = arr;
     this.labels = options.labels;
@@ -103,7 +99,6 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     return this.#arr.shape;
   }
 
-
   async getRaster(options: {
     selection: viv.PixelSourceSelection<Array<string>> | Array<number>;
     signal?: AbortSignal;
@@ -123,7 +118,7 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
   }
 
   hasZIndex(): boolean {
-    return this.labels.includes('z')
+    return this.labels.includes("z");
   }
 
   recalculateZSelection(z: number, zIndex: number): number {
@@ -149,7 +144,7 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     let zIndex = this.labels.indexOf("z");
     if (this.hasZIndex()) {
       let currentZSelection = zarrSelection[zIndex] as number;
-      zarrSelection[zIndex] = this.recalculateZSelection(currentZSelection, zIndex)
+      zarrSelection[zIndex] = this.recalculateZSelection(currentZSelection, zIndex);
     }
     return this.#fetchData({
       selection: zarrSelection,
@@ -188,7 +183,6 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
   }
 }
 
-
 function buildZarrSelection(
   baseSelection: Record<string, number> | Array<number>,
   options: {
@@ -221,5 +215,3 @@ function capitalize<T extends string>(s: T): Capitalize<T> {
   // @ts-expect-error - TypeScript can't verify that the return type is correct
   return s[0].toUpperCase() + s.slice(1);
 }
-
-
