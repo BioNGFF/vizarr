@@ -248,6 +248,17 @@ export async function loadPlate(
   return sourceData;
 }
 
+function isDownsampledZ(
+  data: Array<zarr.Array<zarr.DataType, zarr.Readable>>,
+  zIndex: number,
+  originalSizeZ: number,
+): boolean {
+  return !data.every((element) => element.shape[zIndex] === originalSizeZ);
+}
+
+/**
+ * Load a multiscale OME-NGFF image
+ */
 export async function loadOmeMultiscales(
   config: ImageLayerConfig,
   grp: zarr.Group<zarr.Readable>,
@@ -267,6 +278,9 @@ export async function loadOmeMultiscales(
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
     meta = await defaultMeta(lowresSource, axis_labels);
   }
+
+  const originalSizeZ = data[0].shape[axis_labels.indexOf("z")];
+  const zDownsampled = isDownsampledZ(data, axis_labels.indexOf("z"), originalSizeZ);
   const physicalSizes = utils.getPhysicalSizes(utils.resolveAttrs(attrs));
   const loader = data.map(
     (arr, i) =>
@@ -274,8 +288,10 @@ export async function loadOmeMultiscales(
         labels: axis_labels,
         tileSize,
         ...(i === 0 ? { meta: { physicalSizes } } : {}),
+        originalSizeZ: zDownsampled ? originalSizeZ : undefined,
       }),
   );
+
   const labels = await resolveOmeLabelsFromMultiscales(grp);
   return {
     loader: loader,
