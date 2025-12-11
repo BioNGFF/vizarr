@@ -123,14 +123,13 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     return this.labels.includes("z");
   }
 
-  /** Recalculate the Z selection for images that are downsampled in the Z axis when the resolution is not the original resolution
+  /** Recalculate the Z selection for images that are downsampled in the Z axis when the selected resolution is not the original one (i.e. highest resolution)
    * @param{number} currentZSelection - The current z selection (i.e. at the original resolution)
    * @param{number} zIndex - The index corresponding to the z-axis in the shape array
    * @returns{number} The new zIndex, adjusting for any changes from the original resolution
    * */
   recalculateZSelection(currentZSelection: number, zIndex: number): number {
     if (this.originalSizeZ && this.originalSizeZ !== this.shape[zIndex]) {
-      console.log("Recalculating z-index");
       return Math.floor((currentZSelection * this.shape[zIndex]) / this.originalSizeZ);
     }
     return currentZSelection;
