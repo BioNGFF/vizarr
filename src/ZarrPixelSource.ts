@@ -24,13 +24,15 @@ interface ZarrPixelSourceOptions {
   tileSize: number;
   /**Additional meta options */
   meta?: viv.PixelSourceMeta;
+  /**The original (e.g. maximum resolution) number of z-slices for images which have been downsampled in the z-index*/
+  originalSizeZ?: number;
 }
 
 /** Class for loading pixel data from a .zarr source */
 export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
   readonly labels: viv.Labels<Array<string>>;
   readonly tileSize: number;
-  originalSizeZ: number;
+  readonly originalSizeZ?: number;
   readonly dtype: viv.SupportedDtype;
   readonly meta?: viv.PixelSourceMeta;
   readonly #arr: zarr.Array<zarr.NumberDataType | zarr.BigintDataType, zarr.Readable>;
@@ -58,7 +60,7 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     this.#arr = arr;
     this.labels = options.labels;
     this.tileSize = options.tileSize;
-    this.originalSizeZ = this.shape[this.labels.indexOf("z")];
+    this.originalSizeZ = options.originalSizeZ;
     this.meta = options.meta;
     /**
      * Some `zarrita` data types are not supported by Viv and require casting.
@@ -121,8 +123,17 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     return this.labels.includes("z");
   }
 
-  recalculateZSelection(z: number, zIndex: number): number {
-    return Math.floor((z * this.shape[zIndex]) / this.originalSizeZ);
+  /** Recalculate the Z selection for images that are downsampled in the Z axis when the resolution is not the original resolution
+   * @param{number} currentZSelection - The current z selection (i.e. at the original resolution)
+   * @param{number} zIndex - The index corresponding to the z-axis in the shape array
+   * @returns{number} The new zIndex, adjusting for any changes from the original resolution
+   * */
+  recalculateZSelection(currentZSelection: number, zIndex: number): number {
+    if (this.originalSizeZ && this.originalSizeZ !== this.shape[zIndex]) {
+      console.log("Recalculating z-index");
+      return Math.floor((currentZSelection * this.shape[zIndex]) / this.originalSizeZ);
+    }
+    return currentZSelection;
   }
 
   async getTile(options: {
