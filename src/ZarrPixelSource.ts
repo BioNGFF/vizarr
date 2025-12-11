@@ -83,10 +83,6 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     }
   }
 
-  setOriginalSizeZ(sizeZ: number) {
-    this.originalSizeZ = sizeZ;
-  }
-
   get #width() {
     const lastIndex = this.shape.length - 1;
     return this.shape[this.labels.indexOf("c") === lastIndex ? lastIndex - 1 : lastIndex];
