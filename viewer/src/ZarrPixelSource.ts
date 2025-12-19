@@ -16,9 +16,23 @@ type VivPixelData = {
   height: number;
 };
 
+/** Configuration options for ZarrPixelSource */
+interface ZarrPixelSourceOptions {
+  /** Array dimension labels e.g. [x, y, z, c] */
+  labels: viv.Labels<Array<string>>;
+  /** The size of each tile, in pixels */
+  tileSize: number;
+  /**Additional meta options */
+  meta?: viv.PixelSourceMeta;
+  /**The original (e.g. maximum resolution) number of z-slices for images which have been downsampled in the z-index*/
+  originalSizeZ?: number;
+}
+
+/** Class for loading pixel data from a .zarr source */
 export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
   readonly labels: viv.Labels<Array<string>>;
   readonly tileSize: number;
+  readonly originalSizeZ?: number;
   readonly dtype: viv.SupportedDtype;
   readonly meta?: viv.PixelSourceMeta;
   readonly #arr: zarr.Array<zarr.NumberDataType | zarr.BigintDataType, zarr.Readable>;
@@ -36,14 +50,17 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     };
   }> = [];
 
-  constructor(
-    arr: zarr.Array<zarr.DataType, zarr.Readable>,
-    options: { labels: viv.Labels<Array<string>>; tileSize: number; meta?: viv.PixelSourceMeta },
-  ) {
+  /**
+   * Create a ZarrPixelSource
+   * @param {zarr.Array} arr - A Zarr array object
+   * @param {ZarrPixelSourceOptions} options - An object defining options
+   */
+  constructor(arr: zarr.Array<zarr.DataType, zarr.Readable>, options: ZarrPixelSourceOptions) {
     assert(arr.is("number") || arr.is("bigint"), `Unsupported viv dtype: ${arr.dtype}`);
     this.#arr = arr;
     this.labels = options.labels;
     this.tileSize = options.tileSize;
+    this.originalSizeZ = options.originalSizeZ;
     this.meta = options.meta;
     /**
      * Some `zarrita` data types are not supported by Viv and require casting.
@@ -98,6 +115,22 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     // no-op
   }
 
+  hasZIndex(): boolean {
+    return this.labels.includes("z");
+  }
+
+  /** Recalculate the Z selection for images that are downsampled in the Z axis when the selected resolution is not the original one (i.e. highest resolution)
+   * @param{number} currentZSelection - The current z selection (i.e. at the original resolution)
+   * @param{number} zIndex - The index corresponding to the z-axis in the shape array
+   * @returns{number} The new zIndex, adjusting for any changes from the original resolution
+   * */
+  recalculateZSelection(currentZSelection: number, zIndex: number): number {
+    if (this.originalSizeZ && this.originalSizeZ !== this.shape[zIndex]) {
+      return Math.floor((currentZSelection * this.shape[zIndex]) / this.originalSizeZ);
+    }
+    return currentZSelection;
+  }
+
   async getTile(options: {
     x: number;
     y: number;
@@ -105,14 +138,22 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     signal?: AbortSignal;
   }): Promise<viv.PixelData> {
     const { x, y, selection, signal } = options;
+    let zarrSelection = buildZarrSelection(selection, {
+      labels: this.labels,
+      slices: {
+        x: zarr.slice(x * this.tileSize, Math.min((x + 1) * this.tileSize, this.#width)),
+        y: zarr.slice(y * this.tileSize, Math.min((y + 1) * this.tileSize, this.#height)),
+      },
+    });
+    // If we know the original sizeZ, adjust the z index of this array to account for downsampling
+
+    let zIndex = this.labels.indexOf("z");
+    if (this.hasZIndex()) {
+      let currentZSelection = zarrSelection[zIndex] as number;
+      zarrSelection[zIndex] = this.recalculateZSelection(currentZSelection, zIndex);
+    }
     return this.#fetchData({
-      selection: buildZarrSelection(selection, {
-        labels: this.labels,
-        slices: {
-          x: zarr.slice(x * this.tileSize, Math.min((x + 1) * this.tileSize, this.#width)),
-          y: zarr.slice(y * this.tileSize, Math.min((y + 1) * this.tileSize, this.#height)),
-        },
-      }),
+      selection: zarrSelection,
       signal,
     });
   }
