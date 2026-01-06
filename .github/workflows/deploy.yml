@@ -37,20 +37,20 @@ jobs:
           git fetch origin main
           git checkout main
           echo "Building main branch output..."
-          pnpm build --outDir dist
+          pnpm build
 
       - name: Build dev branch
         run: |
           git fetch origin dev
           git checkout dev
           echo "Building dev branch output..."
-          pnpm build --outDir dist/dev
-          touch dist/.nojekyll
+          pnpm build
+          touch sites/app/dist/.nojekyll
 
       - name: Upload build output
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: sites/app/dist
 
   deploy:
     runs-on: ubuntu-latest

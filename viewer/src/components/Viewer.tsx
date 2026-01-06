@@ -9,7 +9,7 @@ import { layerAtoms, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
-import type { GrayscaleBitmapLayerPickingInfo } from "../layers/label-layer";
+import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
 
 export default function Viewer() {
@@ -109,16 +109,15 @@ export default function Viewer() {
   };
 
   const { near, far } = React.useMemo(() => {
-    if (!firstLayer) {
+    if (!layers.length) {
       return { near: 0.1, far: 1000 };
     }
 
-    const zs = layers.flatMap((layer) => {
-      const matrix = (layer as VizarrLayer)?.props?.modelMatrix;
-      if (!matrix) {
-        return [];
-      }
-      const { width, height } = getLayerSize(firstLayer);
+    const zs = layers.flatMap((layer: VizarrLayer | null) => {
+      if (!layer || layer instanceof LabelLayer) return [];
+      const { modelMatrix: matrix } = layer?.props || {};
+      if (!matrix) return [];
+      const { width, height } = getLayerSize(layer);
       const corners = [
         [0, 0, 0],
         [width, 0, 0],
@@ -135,7 +134,7 @@ export default function Viewer() {
       near: maxZ ? -10000 * Math.abs(maxZ) : 0.1,
       far: minZ ? 10000 * Math.abs(minZ) : 1000,
     };
-  }, [layers, firstLayer]);
+  }, [layers]);
 
   return (
     <>

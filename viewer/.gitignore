@@ -1,0 +1,8 @@
+node_modules
+.DS_Store
+.venv
+.ipynb_checkpoints
+dist/
+__pycache__
+
+/python/notebooks/*.zarr/

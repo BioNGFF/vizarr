@@ -4,7 +4,7 @@ import React from "react";
 import LayerVisibilityButton from "./LayerVisibilityButton";
 
 import { useSourceData } from "../../hooks";
-import { LayerFitToViewportButton } from "./LayerFitToViewportButton";
+import LayerFitToViewportButton from "./LayerFitToViewportButton";
 
 const DenseAccordionSummary = styled(AccordionSummary)`
   border-bottom: 1px solid rgba(150, 150, 150, .125);
