@@ -37,15 +37,16 @@ jobs:
           git fetch origin main
           git checkout main
           echo "Building main branch output..."
-          pnpm build
+          pnpm i && pnpm build
 
       - name: Build dev branch
         run: |
           git fetch origin dev
           git checkout dev
           echo "Building dev branch output..."
-          pnpm build
-          touch sites/app/dist/.nojekyll
+          pnpm i && pnpm build --outDir dist/dev
+          
+      - run: touch sites/app/dist/.nojekyll
 
       - name: Upload build output
         uses: actions/upload-pages-artifact@v3
