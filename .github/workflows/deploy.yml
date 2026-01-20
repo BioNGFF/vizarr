@@ -46,7 +46,8 @@ jobs:
           echo "Building dev branch output..."
           pnpm i && pnpm build --outDir dist/dev
           
-      - run: touch sites/app/dist/.nojekyll
+      - name: Add .nojekyll
+        run: touch sites/app/dist/.nojekyll
 
       - name: Upload build output
         uses: actions/upload-pages-artifact@v3
