@@ -34,11 +34,13 @@ jobs:
       - name: Build app
         run: pnpm run build
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - name: Generate the package
+        run: tar -czpf dist.tar.gz dist LICENSE
+
+      - name: Release
+        uses: softprops/action-gh-release@v2.2.1
         with:
-          name: build
-          path: dist
+          files: dist.tar.gz
         
       - name: Run Semantic Release
         env:
