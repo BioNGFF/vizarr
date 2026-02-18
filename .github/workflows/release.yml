@@ -35,7 +35,7 @@ jobs:
         run: pnpm run build
 
       - name: Generate the package
-        run: tar -czpf dist.tar.gz dist LICENSE
+        run: tar -czpf dist.tar.gz sites/app/dist LICENSE
 
       - name: Release
         uses: softprops/action-gh-release@v2.2.1
