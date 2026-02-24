@@ -28,7 +28,7 @@ jobs:
         run: pnpm install
 
       - name: Build package
-        run: pnpm run build
+        run: pnpm build:viewer
 
       - name: Configure npm authentication
         run: |
@@ -39,4 +39,4 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish --access public --no-git-checks
+        run: pnpm publish viewer --access public --no-git-checks

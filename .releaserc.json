@@ -12,6 +12,12 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "pnpm -r exec npm version ${nextRelease.version} --no-git-tag-version"
+      }
+    ],
+    [
       "@semantic-release/npm",
       {
         "npmPublish": false
@@ -20,7 +26,7 @@
     [
       "@semantic-release/git",
       {
-        "assets": ["package.json", "package-lock.json", "CHANGELOG.md"],
+        "assets": ["package.json", "viewer/package.json", "sites/app/package.json", "pnpm-lock.yaml", "CHANGELOG.md"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
