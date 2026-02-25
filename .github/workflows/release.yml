@@ -36,11 +36,6 @@ jobs:
 
       - name: Generate the package
         run: tar -czpf dist.tar.gz sites/app/dist LICENSE
-
-      - name: Release
-        uses: softprops/action-gh-release@v2.2.1
-        with:
-          files: dist.tar.gz
         
       - name: Run Semantic Release
         env:
