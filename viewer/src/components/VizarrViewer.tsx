@@ -15,6 +15,11 @@ import {
 import theme from "../theme";
 import Menu from "./Menu";
 import Viewer from "./Viewer";
+import { InfoSnackbar } from './Snackbar'
+import { ErrorSeverity } from "../types";
+import { Info } from "@mui/icons-material";
+import { closeSnackbar } from "notistack";
+import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
 
 export interface VizarrViewerProps {
   sources?: string[];
@@ -27,7 +32,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
   const redirectObj = useAtomValue(redirectObjAtom);
-
+  const setSourceError = useSetAtom(sourceErrorAtom)
   React.useEffect(() => {
     if (initialViewState) {
       setViewStateAtom(initialViewState);
@@ -61,7 +66,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
     async function loadSources() {
       const results = await Promise.allSettled(
         configs.map(async (config, index) => {
-          const sourceData = await createSourceData(config);
+          const sourceData = await createSourceData(config)
           const id = Math.random().toString(36).slice(2);
           if (!sourceData.name) {
             sourceData.name = `image_${index}`;
@@ -70,6 +75,12 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
         }),
       );
       let sourceDatas = [];
+
+      if (!sourceDataValid(results)) {
+        setSourceError(getSourceDataError(results))
+      }
+
+
       for (const res of results) {
         if (res.status === "fulfilled") {
           sourceDatas.push(res.value);
@@ -84,9 +95,10 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
     loadSources();
   }, [configs, setSourceInfo]);
 
+
   return (
     <>
-      {sourceError === null && redirectObj === null && (
+      {redirectObj === null && (
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
           <Menu />
           <Viewer />
@@ -108,7 +120,8 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
             fontSize: "120%",
           }}
         >
-          <p>{`Error: server replied with "${sourceError}" when loading the resource`}</p>
+
+          <p> Sorry, we were unable to load this image due to the following error: <br /> <br /> {sourceError} <br /> <br /> If you believe this is an error with our application, please open an issue: <a href="https://github.com/BioNGFF/vizarr/issues "> here </a></p>
         </Box>
       )}
       {redirectObj !== null && (

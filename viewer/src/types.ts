@@ -36,13 +36,13 @@ declare namespace Ome {
 
   type CoordinateTransformation =
     | {
-        type: "scale";
-        scale: Array<number>;
-      }
+      type: "scale";
+      scale: Array<number>;
+    }
     | {
-        type: "translation";
-        translation: Array<number>;
-      };
+      type: "translation";
+      translation: Array<number>;
+    };
 
   interface Dataset {
     path: string;
@@ -109,4 +109,14 @@ declare namespace Ome {
     | { plate: Plate }
     | { well: Well }
     | { "image-label": ImageLabel; multiscales: Multiscale[] };
+}
+
+export enum ErrorSeverity {
+  WARNING = 0,
+  ERROR = 1
+}
+
+export interface ErrorDetails {
+  message: string;
+  level: ErrorSeverity
 }

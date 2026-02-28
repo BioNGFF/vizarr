@@ -1,15 +1,18 @@
+import { useSetAtom } from "jotai/react";
 import QuickLRU from "quick-lru";
 
 import type * as zarr from "zarrita";
+import { sourceErrorAtom } from "./state";
+import { ErrorSeverity } from "./types";
 
 type RangeQuery =
   | {
-      offset: number;
-      length: number;
-    }
+    offset: number;
+    length: number;
+  }
   | {
-      suffixLength: number;
-    };
+    suffixLength: number;
+  };
 
 function normalizeKey(key: string, range?: RangeQuery) {
   if (!range) return key;
@@ -28,16 +31,13 @@ function sanitizeKey(key: `/${string}`): `/${string}` {
 export function lru<S extends zarr.Readable>(store: S, maxSize = 100) {
   const cache = new QuickLRU<string, Promise<Uint8Array | undefined>>({ maxSize });
   let getRange = store.getRange ? store.getRange.bind(store) : undefined;
-  function get(...args: Parameters<S["get"]>) {
+  async function get(...args: Parameters<S["get"]>) {
     const [key, opts] = args;
     const cacheKey = normalizeKey(key);
     const cached = cache.get(cacheKey);
     if (cached) return cached;
     const sanitizedKey = sanitizeKey(key);
-    const result = Promise.resolve(store.get(sanitizedKey, opts)).catch((err) => {
-      cache.delete(cacheKey);
-      throw err;
-    });
+    const result = Promise.resolve(store.get(sanitizedKey, opts))
     cache.set(cacheKey, result);
     return result;
   }

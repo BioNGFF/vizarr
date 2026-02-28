@@ -26,7 +26,7 @@ export const RGB = [COLORS.red, COLORS.green, COLORS.blue];
 export const CYMRGB = Object.values(COLORS).slice(0, MAX_CHANNELS);
 export const OME_VALIDATOR_URL = "https://ome.github.io/ome-ngff-validator/";
 
-async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Location<zarr.Readable>> {
+export async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Location<zarr.Readable>> {
   if (typeof source === "string") {
     let store: zarr.Readable;
     let path: `/${string}` = "/";
@@ -103,7 +103,7 @@ export async function loadMultiscales(
     // This is just missing from zarrita types, but it is ok and
     // avoids making unecessary requests for v2 (see: https://github.com/manzt/zarrita.js/blob/7edffbeefb0eb877df48f54c7e8def4219c69c59/packages/zarrita/CHANGELOG.md?plain=1#L214)
     datasets.map(({ path }) => zarr.open(grp.resolve(path), { kind: "array", attrs: false } as { kind: "array" })),
-  );
+  )
 }
 
 export function hexToRGB(hex: string): [r: number, g: number, b: number] {

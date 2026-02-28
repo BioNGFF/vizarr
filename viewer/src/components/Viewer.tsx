@@ -5,12 +5,14 @@ import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { useAxisNavigation } from "../hooks/useAxisNavigation";
-import { layerAtoms, viewportAtom } from "../state";
+import { layerAtoms, sourceErrorAtom, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
 import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
+import { useSetAtom } from "jotai";
+import { ErrorSeverity } from "../types";
 
 export default function Viewer() {
   const deckRef = React.useRef<DeckGLRef>(null);
@@ -18,7 +20,6 @@ export default function Viewer() {
   const [viewState, setViewState] = useViewState();
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
-
   const axisNavigationSnackbar = useAxisNavigation(deckRef, viewport);
 
   const resetViewState = React.useCallback(
@@ -43,6 +44,7 @@ export default function Viewer() {
   React.useEffect(() => {
     if (!viewport && deckRef.current?.deck) {
       setViewport(deckRef.current.deck);
+
     }
     if (viewport && firstLayer) {
       if (!viewState) {
