@@ -10,6 +10,7 @@ import {
   redirectObjAtom,
   sourceErrorAtom,
   sourceInfoAtom,
+  sourceWarningAtom,
   viewStateAtom,
 } from "../state";
 import theme from "../theme";
@@ -33,6 +34,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   const sourceError = useAtomValue(sourceErrorAtom);
   const redirectObj = useAtomValue(redirectObjAtom);
   const setSourceError = useSetAtom(sourceErrorAtom)
+  const sourceWarning = useAtomValue(sourceWarningAtom)
   React.useEffect(() => {
     if (initialViewState) {
       setViewStateAtom(initialViewState);
@@ -124,6 +126,16 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
           <p> Sorry, we were unable to load this image due to the following error: <br /> <br /> {sourceError} <br /> <br /> If you believe this is an error with our application, please open an issue: <a href="https://github.com/BioNGFF/vizarr/issues "> here </a></p>
         </Box>
       )}
+      {sourceWarning.length &&
+        sourceWarning.map((warning) => {
+          return (
+            <InfoSnackbar
+              message={warning}
+            ></InfoSnackbar>
+          )
+        })
+
+      }
       {redirectObj !== null && (
         <Box
           sx={{

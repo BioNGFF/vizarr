@@ -30,3 +30,4 @@ export function sourceDataValid(sourceData: any[]): boolean {
 export function getSourceDataError(sourceData: any[]): string {
   return sourceData[0].reason.message
 }
+

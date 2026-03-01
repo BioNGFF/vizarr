@@ -146,6 +146,12 @@ export function getAxisLabels(
   return axis_labels as [...string[], "y", "x"];
 }
 
+
+export function getDefaultChannelLabels(nChannels: number): string[] {
+  // e.g. ['channel_0', 'channel_1']
+  return range(nChannels).map((i) => `channel_${i}`)
+}
+
 export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
   // Returns axes in the latest v0.4+ format.
   // defaults for v0.1 & v0.2
@@ -660,4 +666,9 @@ export function transformBox(bbox: number[], modelMatrix: Matrix4): number[] {
     Math.max(...transformedCoords.map((i) => i[1])),
   ];
   return transformedBox;
+}
+
+export function arraysIdentical(arr1: any[], arr2: any[]): boolean {
+  return (arr1.length == arr2.length &&
+    arr1.every((element, index) => element == arr2[index]))
 }

@@ -2,16 +2,7 @@ import { ErrorSeverity, type ErrorDetails } from "../types";
 import { SnackbarProvider, closeSnackbar, enqueueSnackbar, type SnackbarKey } from "notistack";
 import React from "react";
 
-function mapSeverity(severity: ErrorSeverity) {
-  switch (severity) {
-    case ErrorSeverity.WARNING:
-      return 'warning'
-    case ErrorSeverity.ERROR:
-      return 'error'
-  }
-}
-
-export function InfoSnackbar(props: { errorDetails: ErrorDetails }) {
+export function InfoSnackbar(props: { message: string }) {
 
   const hideSnackbar = snackbarId => (
     <>
@@ -23,7 +14,7 @@ export function InfoSnackbar(props: { errorDetails: ErrorDetails }) {
 
 
   React.useEffect(() => {
-    enqueueSnackbar(props.errorDetails.message, { action: hideSnackbar })
+    enqueueSnackbar(props.message, { action: hideSnackbar })
   })
 
   return (
