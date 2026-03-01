@@ -1,14 +1,13 @@
 import { MoreHoriz, Remove } from "@mui/icons-material";
 import { Divider, IconButton, Input, NativeSelect, Paper, Popover, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useSetAtom } from "jotai";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
-import ColorPalette from "./ColorPalette";
-import { useSetAtom } from "jotai";
 import { sourceWarningAtom } from "../../state";
 import { arraysIdentical, getDefaultChannelLabels } from "../../utils";
-
+import ColorPalette from "./ColorPalette";
 
 const DenseInput = styled(Input)`
   width: 5.5em;
@@ -24,15 +23,14 @@ function ChannelOptions({ channelIndex }: Props) {
   const [layer, setLayer] = useLayerState();
   const [anchorEl, setAnchorEl] = useState<null | Element>(null);
   const { channel_axis, names } = sourceData;
-  const setSourceWarning = useSetAtom(sourceWarningAtom)
-  const defaultNames = getDefaultChannelLabels(names.length)
+  const setSourceWarning = useSetAtom(sourceWarningAtom);
+  const defaultNames = getDefaultChannelLabels(names.length);
 
   React.useEffect(() => {
     if (arraysIdentical(names, defaultNames)) {
-      setSourceWarning(prev => [...prev, 'Channel metadata either does not exist or was not loaded correctly.'])
+      setSourceWarning((prev) => [...prev, "Channel metadata either does not exist or was not loaded correctly."]);
     }
-
-  }, [])
+  }, []);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);

@@ -103,7 +103,7 @@ export async function loadMultiscales(
     // This is just missing from zarrita types, but it is ok and
     // avoids making unecessary requests for v2 (see: https://github.com/manzt/zarrita.js/blob/7edffbeefb0eb877df48f54c7e8def4219c69c59/packages/zarrita/CHANGELOG.md?plain=1#L214)
     datasets.map(({ path }) => zarr.open(grp.resolve(path), { kind: "array", attrs: false } as { kind: "array" })),
-  )
+  );
 }
 
 export function hexToRGB(hex: string): [r: number, g: number, b: number] {
@@ -146,10 +146,9 @@ export function getAxisLabels(
   return axis_labels as [...string[], "y", "x"];
 }
 
-
 export function getDefaultChannelLabels(nChannels: number): string[] {
   // e.g. ['channel_0', 'channel_1']
-  return range(nChannels).map((i) => `channel_${i}`)
+  return range(nChannels).map((i) => `channel_${i}`);
 }
 
 export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
@@ -669,6 +668,5 @@ export function transformBox(bbox: number[], modelMatrix: Matrix4): number[] {
 }
 
 export function arraysIdentical(arr1: any[], arr2: any[]): boolean {
-  return (arr1.length == arr2.length &&
-    arr1.every((element, index) => element == arr2[index]))
+  return arr1.length == arr2.length && arr1.every((element, index) => element == arr2[index]);
 }

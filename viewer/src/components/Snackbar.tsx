@@ -1,32 +1,32 @@
-import { ErrorSeverity, type ErrorDetails } from "../types";
-import { SnackbarProvider, closeSnackbar, enqueueSnackbar, type SnackbarKey } from "notistack";
+import { type SnackbarKey, SnackbarProvider, closeSnackbar, enqueueSnackbar } from "notistack";
 import React from "react";
+import { type ErrorDetails, ErrorSeverity } from "../types";
 
 export function InfoSnackbar(props: { message: string }) {
-
-  const hideSnackbar = snackbarId => (
+  const hideSnackbar = (snackbarId) => (
     <>
-      <button onClick={() => { closeSnackbar(snackbarId) }}>
+      <button
+        onClick={() => {
+          closeSnackbar(snackbarId);
+        }}
+      >
         Dismiss
       </button>
     </>
   );
 
-
   React.useEffect(() => {
-    enqueueSnackbar(props.message, { action: hideSnackbar })
-  })
+    enqueueSnackbar(props.message, { action: hideSnackbar });
+  });
 
   return (
     <div>
       <SnackbarProvider
-        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: "right", vertical: "top" }}
         autoHideDuration={null}
-        variant={'warning'}
+        variant={"warning"}
         preventDuplicate={true}
       ></SnackbarProvider>
-    </div >
-  )
+    </div>
+  );
 }
-
-

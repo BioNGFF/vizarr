@@ -265,7 +265,7 @@ export async function loadOmeMultiscales(
   attrs: { multiscales: Ome.Multiscale[] },
 ): Promise<SourceData> {
   const { name, opacity = 1, colormap = "" } = config;
-  const data = await utils.loadMultiscales(grp, attrs.multiscales)
+  const data = await utils.loadMultiscales(grp, attrs.multiscales);
   const axes = utils.getNgffAxes(attrs.multiscales);
   const axis_labels = utils.getNgffAxisLabels(axes);
   const tileSize = utils.guessTileSize(data[0]);

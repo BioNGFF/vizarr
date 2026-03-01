@@ -9,9 +9,9 @@ import { layerAtoms, sourceErrorAtom, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
+import { useSetAtom } from "jotai";
 import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
-import { useSetAtom } from "jotai";
 import { ErrorSeverity } from "../types";
 
 export default function Viewer() {
@@ -44,7 +44,6 @@ export default function Viewer() {
   React.useEffect(() => {
     if (!viewport && deckRef.current?.deck) {
       setViewport(deckRef.current.deck);
-
     }
     if (viewport && firstLayer) {
       if (!viewState) {

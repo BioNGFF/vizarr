@@ -1,7 +1,10 @@
+import { Info } from "@mui/icons-material";
 import { ThemeProvider } from "@mui/material";
 import { Box, Link, Typography } from "@mui/material";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
+import { closeSnackbar } from "notistack";
 import React from "react";
+import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext } from "../hooks";
 import { createSourceData } from "../io";
 import {
@@ -14,13 +17,10 @@ import {
   viewStateAtom,
 } from "../state";
 import theme from "../theme";
-import Menu from "./Menu";
-import Viewer from "./Viewer";
-import { InfoSnackbar } from './Snackbar'
 import { ErrorSeverity } from "../types";
-import { Info } from "@mui/icons-material";
-import { closeSnackbar } from "notistack";
-import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
+import Menu from "./Menu";
+import { InfoSnackbar } from "./Snackbar";
+import Viewer from "./Viewer";
 
 export interface VizarrViewerProps {
   sources?: string[];
@@ -33,8 +33,8 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
   const redirectObj = useAtomValue(redirectObjAtom);
-  const setSourceError = useSetAtom(sourceErrorAtom)
-  const sourceWarning = useAtomValue(sourceWarningAtom)
+  const setSourceError = useSetAtom(sourceErrorAtom);
+  const sourceWarning = useAtomValue(sourceWarningAtom);
   React.useEffect(() => {
     if (initialViewState) {
       setViewStateAtom(initialViewState);
@@ -68,7 +68,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
     async function loadSources() {
       const results = await Promise.allSettled(
         configs.map(async (config, index) => {
-          const sourceData = await createSourceData(config)
+          const sourceData = await createSourceData(config);
           const id = Math.random().toString(36).slice(2);
           if (!sourceData.name) {
             sourceData.name = `image_${index}`;
@@ -79,9 +79,8 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
       let sourceDatas = [];
 
       if (!sourceDataValid(results)) {
-        setSourceError(getSourceDataError(results))
+        setSourceError(getSourceDataError(results));
       }
-
 
       for (const res of results) {
         if (res.status === "fulfilled") {
@@ -96,7 +95,6 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
 
     loadSources();
   }, [configs, setSourceInfo]);
-
 
   return (
     <>
@@ -122,20 +120,18 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
             fontSize: "120%",
           }}
         >
-
-          <p> Sorry, we were unable to load this image due to the following error: <br /> <br /> {sourceError} <br /> <br /> If you believe this is an error with our application, please open an issue: <a href="https://github.com/BioNGFF/vizarr/issues "> here </a></p>
+          <p>
+            {" "}
+            Sorry, we were unable to load this image due to the following error: <br /> <br /> {sourceError} <br />{" "}
+            <br /> If you believe this is an error with our application, please open an issue:{" "}
+            <a href="https://github.com/BioNGFF/vizarr/issues "> here </a>
+          </p>
         </Box>
       )}
       {sourceWarning.length &&
         sourceWarning.map((warning) => {
-          return (
-            <InfoSnackbar
-              message={warning}
-            ></InfoSnackbar>
-          )
-        })
-
-      }
+          return <InfoSnackbar message={warning}></InfoSnackbar>;
+        })}
       {redirectObj !== null && (
         <Box
           sx={{
