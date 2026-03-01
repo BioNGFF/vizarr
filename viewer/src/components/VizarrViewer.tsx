@@ -2,7 +2,6 @@ import { Info } from "@mui/icons-material";
 import { ThemeProvider } from "@mui/material";
 import { Box, Link, Typography } from "@mui/material";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
-import { closeSnackbar } from "notistack";
 import React from "react";
 import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext } from "../hooks";
@@ -17,7 +16,6 @@ import {
   viewStateAtom,
 } from "../state";
 import theme from "../theme";
-import { ErrorSeverity } from "../types";
 import Menu from "./Menu";
 import { InfoSnackbar } from "./Snackbar";
 import Viewer from "./Viewer";
@@ -79,7 +77,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
       let sourceDatas = [];
 
       if (!sourceDataValid(results)) {
-        setSourceError(getSourceDataError(results));
+        setSourceError(writeUserErrorMessage(getSourceDataError(results)));
       }
 
       for (const res of results) {
@@ -95,7 +93,6 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
 
     loadSources();
   }, [configs, setSourceInfo]);
-
   return (
     <>
       {redirectObj === null && (
@@ -129,8 +126,8 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
         </Box>
       )}
       {sourceWarning.length &&
-        sourceWarning.map((warning) => {
-          return <InfoSnackbar message={warning}></InfoSnackbar>;
+        sourceWarning.map((warning, index) => {
+          return <InfoSnackbar message={warning} key={index}></InfoSnackbar>;
         })}
       {redirectObj !== null && (
         <Box

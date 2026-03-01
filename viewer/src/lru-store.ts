@@ -1,18 +1,15 @@
-import { useSetAtom } from "jotai/react";
 import QuickLRU from "quick-lru";
 
 import type * as zarr from "zarrita";
-import { sourceErrorAtom } from "./state";
-import { ErrorSeverity } from "./types";
 
 type RangeQuery =
   | {
-      offset: number;
-      length: number;
-    }
+    offset: number;
+    length: number;
+  }
   | {
-      suffixLength: number;
-    };
+    suffixLength: number;
+  };
 
 function normalizeKey(key: string, range?: RangeQuery) {
   if (!range) return key;

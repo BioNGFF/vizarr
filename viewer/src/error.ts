@@ -27,6 +27,7 @@ export function sourceDataValid(sourceData: any[]): boolean {
   return true;
 }
 
-export function getSourceDataError(sourceData: any[]): string {
-  return sourceData[0].reason.message;
+export function getSourceDataError(sourceData: any[]): Error {
+  return sourceData[0].reason
+
 }

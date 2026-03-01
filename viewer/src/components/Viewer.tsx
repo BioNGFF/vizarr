@@ -12,7 +12,6 @@ import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
 import { useSetAtom } from "jotai";
 import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
-import { ErrorSeverity } from "../types";
 
 export default function Viewer() {
   const deckRef = React.useRef<DeckGLRef>(null);

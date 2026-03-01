@@ -1,6 +1,5 @@
 import { type SnackbarKey, SnackbarProvider, closeSnackbar, enqueueSnackbar } from "notistack";
 import React from "react";
-import { type ErrorDetails, ErrorSeverity } from "../types";
 
 export function InfoSnackbar(props: { message: string }) {
   const hideSnackbar = (snackbarId) => (
