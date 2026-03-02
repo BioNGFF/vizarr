@@ -1,11 +1,10 @@
 {
-  "name": "@biongff/vizarr",
+  "name": "biongff-monorepo",
   "version": "1.1.1",
-  "type": "module",
+  "author": "BioNGFF",
+  "license": "MIT",
   "scripts": {
-    "dev": "vite",
-    "build": "npm run check && vite build",
-    "preview": "vite preview",
+    "dev": "pnpm --filter app dev",
     "lint": "biome ci",
     "fix": "biome check --write",
     "check": "tsc",
@@ -31,12 +30,17 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-is": "18.3.1",
-    "zarrita": "0.5.0"
+    "zarrita": "0.5.0",
+    "check": "pnpm build:viewer && pnpm -r run check",
+    "build:viewer": "pnpm --filter vizarr build",
+    "build:app": "pnpm --filter app build",
+    "build": "pnpm build:viewer && pnpm build:app"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/npm": "^13.1.1",
@@ -49,9 +53,6 @@
     "typescript": "^5.8.2",
     "vite": "^6.2.7",
     "vitest": "^4.0.15"
-  },
-  "overrides": {
-    "react-is": "^18.3.1"
   },
   "packageManager": "pnpm@9.5.0",
   "pnpm": {

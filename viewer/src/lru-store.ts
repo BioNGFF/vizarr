@@ -19,7 +19,10 @@ function normalizeKey(key: string, range?: RangeQuery) {
 
 // For namespace keys
 function sanitizeKey(key: `/${string}`): `/${string}` {
-  return `/.${key}`;
+  if (key.split("/")[1]?.includes(":")) {
+    return `/.${key}`;
+  }
+  return key;
 }
 
 export function lru<S extends zarr.Readable>(store: S, maxSize = 100) {
