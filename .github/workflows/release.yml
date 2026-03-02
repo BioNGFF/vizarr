@@ -31,6 +31,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build app
+        run: pnpm run build
+
+      - name: Generate the package
+        run: tar -czpf dist.tar.gz sites/app/dist LICENSE
+        
       - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
