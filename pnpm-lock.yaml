@@ -58,6 +58,9 @@ importers:
       vite:
         specifier: ^6.2.7
         version: 6.2.7(@types/node@24.3.0)
+      vitest:
+        specifier: ^4.0.15
+        version: 4.0.15(@types/node@24.3.0)
 
   sites/app:
     dependencies:
@@ -183,15 +186,9 @@ importers:
       vite:
         specifier: ^6.2.7
         version: 6.2.7(@types/node@24.3.0)
-<<<<<<< HEAD
-      vitest:
-        specifier: ^4.0.15
-        version: 4.0.15(@types/node@24.3.0)
-=======
       vite-plugin-dts:
         specifier: ^4.5.4
         version: 4.5.4(@types/node@24.3.0)(rollup@4.40.1)(typescript@5.8.2)(vite@6.2.7(@types/node@24.3.0))
->>>>>>> dev
 
 packages:
 
@@ -219,6 +216,7 @@ packages:
 
   '@arcgis/lumina@4.33.17':
     resolution: {integrity: sha512-BFMe3epUVMuCqYvXgRXqRq9ocU2P1yxSMP2Hx16KnvShDLxqSuADewNTfx+TFqnE5FZZqlMZPZJNeRMnS938vg==}
+    deprecated: This version is no longer supported. Upgrade to @latest
 
   '@babel/code-frame@7.26.2':
     resolution: {integrity: sha512-RJlIHRueQgwWitWgF8OdFYGZX328Ax5BCemNGlqHfplnRT9ESi8JkFlvaVYbS+UubVY6dpv87Fs2u5M29iNFVQ==}
@@ -2026,13 +2024,11 @@ packages:
     resolution: {integrity: sha512-cB1Sw9EQjtW4mtT7eFBjn/6VaaIWNTjmTd2asnnEyuZk1xVSFRMCfLZSBSjZM7ZarDcVu5WIjOP0t0MYVu4hVQ==}
     deprecated: Use @arcgis/core instead.
 
-<<<<<<< HEAD
-  estree-walker@3.0.3:
-    resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
-=======
   estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
->>>>>>> dev
+
+  estree-walker@3.0.3:
+    resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
 
   eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
@@ -2049,14 +2045,12 @@ packages:
     resolution: {integrity: sha512-jpWzZ1ZhwUmeWRhS7Qv3mhpOhLfwI+uAX4e5fOcXqwMR7EcJ0pj2kV1CVzHVMX/LphnKWD3LObjZCoJ71lKpHw==}
     engines: {node: ^18.19.0 || >=20.5.0}
 
-<<<<<<< HEAD
   expect-type@1.3.0:
     resolution: {integrity: sha512-knvyeauYhqjOYvQ66MznSMs83wmHrCycNEN6Ao+2AeYEfxUIkuiVxdEa1qlGEPK+We3n0THiDciYSsCcgW/DoA==}
     engines: {node: '>=12.0.0'}
-=======
+
   exsolve@1.0.8:
     resolution: {integrity: sha512-LmDxfWXwcTArk8fUEnOfSZpHOJ6zOMUJKOtFLFqJLoKJetuQG874Uc7/Kki7zFLzYybmZhp1M7+98pfMqeX8yA==}
->>>>>>> dev
 
   fast-content-type-parse@3.0.0:
     resolution: {integrity: sha512-ZvLdcY8P+N8mGQJahJV5G4U88CSvT1rP8ApL6uETe88MBXrBHAkZlSEySdUlyztF7ccb+Znos3TFqaepHxdhBg==}
@@ -3451,7 +3445,6 @@ packages:
       yaml:
         optional: true
 
-<<<<<<< HEAD
   vitest@4.0.15:
     resolution: {integrity: sha512-n1RxDp8UJm6N0IbJLQo+yzLZ2sQCDyl1o0LeugbPWf8+8Fttp29GghsQBjYJVmWq3gBFfe9Hs1spR44vovn2wA==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
@@ -3485,10 +3478,9 @@ packages:
         optional: true
       jsdom:
         optional: true
-=======
+
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
->>>>>>> dev
 
   web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
@@ -5767,13 +5759,11 @@ snapshots:
 
   esri-loader@3.7.0: {}
 
-<<<<<<< HEAD
+  estree-walker@2.0.2: {}
+
   estree-walker@3.0.3:
     dependencies:
       '@types/estree': 1.0.7
-=======
-  estree-walker@2.0.2: {}
->>>>>>> dev
 
   eventemitter3@5.0.1: {}
 
@@ -5816,11 +5806,9 @@ snapshots:
       strip-final-newline: 4.0.0
       yoctocolors: 2.1.2
 
-<<<<<<< HEAD
   expect-type@1.3.0: {}
-=======
+
   exsolve@1.0.8: {}
->>>>>>> dev
 
   fast-content-type-parse@3.0.0: {}
 
@@ -6992,7 +6980,6 @@ snapshots:
       '@types/node': 24.3.0
       fsevents: 2.3.3
 
-<<<<<<< HEAD
   vitest@4.0.15(@types/node@24.3.0):
     dependencies:
       '@vitest/expect': 4.0.15
@@ -7029,9 +7016,8 @@ snapshots:
       - terser
       - tsx
       - yaml
-=======
+
   vscode-uri@3.1.0: {}
->>>>>>> dev
 
   web-streams-polyfill@3.3.3: {}
 
