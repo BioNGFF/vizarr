@@ -23,6 +23,8 @@ export interface GridLayerProps
   loaders: GridLoader[];
   rows: number;
   columns: number;
+  rowLabels?: string[];
+  columnLabels?: string[];
   spacer?: number;
   text?: boolean;
   concurrency?: number;
@@ -139,12 +141,23 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
     }
     const spacer = this.props.spacer || 0;
     const { width, height } = this.#state;
+    if (width === 0 || height === 0) {
+      return info;
+    }
     const [x, y] = info.coordinate;
     const row = Math.floor(y / (height + spacer));
     const column = Math.floor(x / (width + spacer));
+    const { rows, columns, rowLabels, columnLabels } = this.props;
+    if (row < 0 || column < 0 || row >= rows || column >= columns) {
+      return info;
+    }
     return {
       ...info,
       gridCoord: { row, column },
+      gridLabels: {
+        row: rowLabels?.[row],
+        column: columnLabels?.[column],
+      },
     };
   }
 
