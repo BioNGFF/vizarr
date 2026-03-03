@@ -291,7 +291,6 @@ export async function loadOmeMultiscales(
         originalSizeZ: zDownsampled ? originalSizeZ : undefined,
       }),
   );
-
   const labels = await resolveOmeLabelsFromMultiscales(grp);
   return {
     loader: loader,

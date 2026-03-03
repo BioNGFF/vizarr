@@ -60,7 +60,7 @@ async function loadMultiChannel(
     name,
     channel_axis: channelAxis,
     colors,
-    names: names ?? utils.range(n).map((i) => `channel_${i}`),
+    names: names ?? utils.getDefaultChannelLabels(n),
     contrast_limits: contrastLimits,
     visibilities,
     model_matrix: utils.parseMatrix(model_matrix),
@@ -155,6 +155,7 @@ function getAxisLabelsAndChannelAxis(
   }
 
   // create dummy axis labels if not provided and try to guess channel_axis if missing
+
   const labels = maybeAxisLabels ?? utils.getAxisLabels(arr);
   const channel_axis = maybeChannelAxis ?? labels.indexOf("c");
   return { labels, channel_axis };
