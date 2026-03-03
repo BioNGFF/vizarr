@@ -1,5 +1,22 @@
 # Changelog
 
+# [1.2.0](https://github.com/BioNGFF/vizarr/compare/v1.1.1...v1.2.0) (2026-03-03)
+
+
+### Bug Fixes
+
+* add install to deploy workflow and output dev to dist/dev ([8b98cc8](https://github.com/BioNGFF/vizarr/commit/8b98cc81902f50418fe0d00069107c74a7e745fc))
+* avoid recursive copy ([dc0e389](https://github.com/BioNGFF/vizarr/commit/dc0e3894211afe6c45b9dcbf0cf12c164284def1))
+* invert scroll direction for z / t ([160a75c](https://github.com/BioNGFF/vizarr/commit/160a75c41e413790038351e6bbe21eb6d5d2ff3c))
+* move check for colon in path to lru ([9421773](https://github.com/BioNGFF/vizarr/commit/9421773534272718cd818f38e287ec582aba9ec2))
+* only use arrow keys for z / t axis scrolling when z / t keys are pressed ([13ed460](https://github.com/BioNGFF/vizarr/commit/13ed46002d5e3a0825af56ea55e7f1da6cab9439))
+* wells are selectable again from plate view. add: well id is shown when hovering in plate view ([23803f2](https://github.com/BioNGFF/vizarr/commit/23803f2fdd906eac70f0a46ef8dfcb2d27c59fef))
+
+
+### Features
+
+* update logos ([58c0dd8](https://github.com/BioNGFF/vizarr/commit/58c0dd85ce1ea3b06db512955849f5495c6da2e5))
+
 ## [1.1.1](https://github.com/BioNGFF/vizarr/compare/v1.1.0...v1.1.1) (2025-11-14)
 
 
