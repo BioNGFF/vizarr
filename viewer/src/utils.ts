@@ -399,14 +399,21 @@ export function typedEmitter<T>() {
  *
  * TODO: We should use zod to handle this
  */
+
 export function resolveAttrs(attrs: zarr.Attributes): zarr.Attributes {
+  if ("omero" in attrs && "ome" in attrs) {
+    return {
+      "version": attrs.ome.version,
+      "multiscales": attrs.ome.multiscales,
+      "omero": { "channels": attrs.omero.channels, "id": 1, "rdefs": { "defaultT": 0, "defaultZ": 118, "model": "color" } }
+    }
+  }
   if ("ome" in attrs) {
     // @ts-expect-error - handles v0.5
     return attrs.ome;
   }
   return attrs;
 }
-
 /**
  * Error thrown when an assertion fails.
  */
