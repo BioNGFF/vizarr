@@ -1,4 +1,4 @@
-name: Node CI
+name: Build & Test
 
 on:
   push:
@@ -8,9 +8,7 @@ on:
       - dev
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
