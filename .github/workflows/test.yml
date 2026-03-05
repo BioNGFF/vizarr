@@ -16,6 +16,16 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: true
+      # Typecheck
       - run: pnpm check
+      # Lint
       - run: pnpm lint
-      - run: pnpm test
+      # Run tests with coverage
+      - run: pnpm test -- --coverage
+      # Upload coverage to Codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: true
