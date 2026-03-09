@@ -19,7 +19,8 @@
     "dev": "vite",
     "build": "npm run check && vite build",
     "preview": "vite preview",
-    "check": "tsc"
+    "check": "tsc",
+    "test": "vitest"
   },
   "dependencies": {
     "@deck.gl/core": "~9.0.0",
@@ -29,6 +30,7 @@
     "@vivjs/types": "~0.17.0",
     "@zarrita/storage": "0.1.4",
     "deck.gl": "~9.0.0",
+    "http-server": "^14.1.1",
     "jotai": "^1.0.0",
     "math.gl": "^4.1.0",
     "notistack": "^3.0.2",
