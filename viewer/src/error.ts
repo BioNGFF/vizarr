@@ -1,6 +1,6 @@
 import { AssertionError } from "./utils";
 
-export const errorToMessageMapping = {
+export const errorToMessageMapping: Record<string, string> = {
   "Store does not support range requests": "Sharded .ozx files are not currently supported.",
   "Failed to fetch": "An error occurred while trying to fetch the file from the server - this is likely a CORs issue.",
   "Node not found: v3 array or group":

@@ -404,9 +404,9 @@ export function typedEmitter<T>() {
 export function resolveAttrs(attrs: zarr.Attributes): zarr.Attributes {
   if ("omero" in attrs && "ome" in attrs) {
     return {
-      "version": attrs.ome.version,
-      "multiscales": attrs.ome.multiscales,
-      "omero": { "channels": attrs.omero.channels }
+      "version": typeof attrs.ome === 'object' && attrs.ome !== null && 'version' in attrs.ome ? attrs.ome.version : '',
+      "multiscales": typeof attrs.ome === 'object' && attrs.ome !== null && 'multiscales' in attrs.ome ? attrs.ome.multiscales : {},
+      "omero": { "channels": typeof attrs.omero === 'object' && attrs.omero !== null && 'channels' in attrs.omero ? attrs.omero.channels : {} }
     }
   }
   if ("ome" in attrs) {

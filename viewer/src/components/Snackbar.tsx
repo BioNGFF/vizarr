@@ -2,7 +2,7 @@ import { type SnackbarKey, SnackbarProvider, closeSnackbar, enqueueSnackbar } fr
 import React from "react";
 
 export function InfoSnackbar(props: { message: string }) {
-  const hideSnackbar = (snackbarId) => (
+  const hideSnackbar = (snackbarId: SnackbarKey) => (
     <>
       <button
         onClick={() => {
