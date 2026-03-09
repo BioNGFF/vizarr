@@ -28,7 +28,7 @@ function sanitizeKey(key: `/${string}`): `/${string}` {
 export function lru<S extends zarr.Readable>(store: S, maxSize = 100) {
   const cache = new QuickLRU<string, Promise<Uint8Array | undefined>>({ maxSize });
   let getRange = store.getRange ? store.getRange.bind(store) : undefined;
-  async function get(...args: Parameters<S["get"]>) {
+  function get(...args: Parameters<S["get"]>) {
     const [key, opts] = args;
     const cacheKey = normalizeKey(key);
     const cached = cache.get(cacheKey);

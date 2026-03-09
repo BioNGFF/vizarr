@@ -12,7 +12,6 @@ async function loadSingleChannel(config: SingleChannelConfig, data: Array<ZarrPi
   const lowres = data[data.length - 1];
   const selection = Array(data[0].shape.length).fill(0);
   const limits = contrast_limits ?? (await (() => utils.calcDataRange(lowres, selection))());
-  debugger;
   return {
     loader: data,
     name,
