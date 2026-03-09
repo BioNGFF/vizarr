@@ -8,9 +8,6 @@ patchedDependencies:
   '@vivjs/loaders@0.17.2':
     hash: auxsjwuajoz3k5rha2oxpwrlfm
     path: patches/@vivjs__loaders@0.17.2.patch
-  '@zarrita/storage@0.1.3':
-    hash: hop7cdvmqs2xryvlnpbecz5opq
-    path: patches/@zarrita__storage@0.1.3.patch
 
 importers:
 
@@ -141,13 +138,8 @@ importers:
         specifier: ~0.17.0
         version: 0.17.2
       '@zarrita/storage':
-<<<<<<< HEAD
         specifier: 0.1.4
         version: 0.1.4
-=======
-        specifier: 0.1.3
-        version: 0.1.3(patch_hash=hop7cdvmqs2xryvlnpbecz5opq)
->>>>>>> error-handling
       deck.gl:
         specifier: ~9.0.0
         version: 9.0.41(@arcgis/core@4.32.8(@lit/context@1.1.6))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -178,6 +170,12 @@ importers:
       zarrita:
         specifier: 0.5.0
         version: 0.5.0
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+      zod-ome-ngff:
+        specifier: ^0.3.0
+        version: 0.3.0(zod@4.3.6)
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
@@ -222,11 +220,6 @@ packages:
   '@arcgis/core@4.32.8':
     resolution: {integrity: sha512-TyDh2FFWLUfyDf1h3DsHQjvNdXMzmtnstRM3hkMdKl0yKOVsiQEc9ErkC2YllQf3wgoY76O5bz8vDvqzzc5Zcg==}
 
-<<<<<<< HEAD
-  '@arcgis/lumina@4.33.17':
-    resolution: {integrity: sha512-BFMe3epUVMuCqYvXgRXqRq9ocU2P1yxSMP2Hx16KnvShDLxqSuADewNTfx+TFqnE5FZZqlMZPZJNeRMnS938vg==}
-    deprecated: This version is no longer supported. Upgrade to @latest
-=======
   '@arcgis/lumina@4.34.9':
     resolution: {integrity: sha512-efqO+SwR+1IYf29AATh1l2FUeypRyRINTBNkaJY+KkaFe+8gqSJ45qOmputhyzF5WTRDb7WhOYgnChjp6VYPpA==}
     peerDependencies:
@@ -238,7 +231,6 @@ packages:
 
   '@arcgis/toolkit@4.34.9':
     resolution: {integrity: sha512-wFST+eVnCwmg9NyICVyn9bsBnR+TlWklsGqG3L7xqSTgfXo6TuCThE7wtTb8xWxsTBkGvImqMUgpgLuwQuTQ1g==}
->>>>>>> error-handling
 
   '@babel/code-frame@7.26.2':
     resolution: {integrity: sha512-RJlIHRueQgwWitWgF8OdFYGZX328Ax5BCemNGlqHfplnRT9ESi8JkFlvaVYbS+UubVY6dpv87Fs2u5M29iNFVQ==}
@@ -1994,13 +1986,11 @@ packages:
   error-ex@1.3.4:
     resolution: {integrity: sha512-sqQamAnR14VgCr1A618A3sGrygcpK+HEbenA/HiEAkkUwcZIIB/tgWqHFxWgOyDh4nB4JCRimh79dR5Ywc9MDQ==}
 
-<<<<<<< HEAD
   es-module-lexer@1.7.0:
     resolution: {integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==}
-=======
+
   es-toolkit@1.44.0:
     resolution: {integrity: sha512-6penXeZalaV88MM3cGkFZZfOoLGWshWWfdy0tWw/RlVVyhvMaWSBTOvXNeiW3e5FwdS5ePW0LGEu17zT139ktg==}
->>>>>>> error-handling
 
   esbuild@0.25.3:
     resolution: {integrity: sha512-qKA6Pvai73+M2FtftpNKRxJ78GIjmFXFxd/1DVBqGo/qNhLSfv+G12n9pNoWdytJC8U00TrViOwpjT0zgqQS8Q==}
@@ -3556,8 +3546,17 @@ packages:
   zarrita@0.5.0:
     resolution: {integrity: sha512-wyvnnzeXh9rBCZxsn6GEW4oXDv3LD2f4KSJ6LLFjYaMNtmAtaSt3qEO3fHuuq0VZWUGb8cjTYDEtwJTa09wp6g==}
 
+  zod-ome-ngff@0.3.0:
+    resolution: {integrity: sha512-dMTnodetLuZ6WRHgJzsZivODS5D7orc22NwyxEKhedXafr0Bu8briSW9TmcWa15kHysSLpP+6PaRfuJVBR3nMQ==}
+    engines: {pnpm: ^9.0.0}
+    peerDependencies:
+      zod: ^3.0.0
+
   zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
   zstd-codec@0.1.5:
     resolution: {integrity: sha512-v3fyjpK8S/dpY/X5WxqTK3IoCnp/ZOLxn144GZVlNUjtwAchzrVo03h+oMATFhCIiJ5KTr4V3vDQQYz4RU684g==}
@@ -5272,11 +5271,7 @@ snapshots:
 
   '@webcomponents/shadycss@1.11.2': {}
 
-<<<<<<< HEAD
   '@zarrita/storage@0.1.4':
-=======
-  '@zarrita/storage@0.1.3(patch_hash=hop7cdvmqs2xryvlnpbecz5opq)':
->>>>>>> error-handling
     dependencies:
       reference-spec-reader: 0.2.0
       unzipit: 1.4.3
@@ -5679,11 +5674,9 @@ snapshots:
     dependencies:
       is-arrayish: 0.2.1
 
-<<<<<<< HEAD
   es-module-lexer@1.7.0: {}
-=======
+
   es-toolkit@1.44.0: {}
->>>>>>> error-handling
 
   esbuild@0.25.3:
     optionalDependencies:
@@ -7051,14 +7044,16 @@ snapshots:
 
   zarrita@0.5.0:
     dependencies:
-<<<<<<< HEAD
       '@zarrita/storage': 0.1.4
-=======
-      '@zarrita/storage': 0.1.3(patch_hash=hop7cdvmqs2xryvlnpbecz5opq)
->>>>>>> error-handling
       numcodecs: 0.3.2
 
+  zod-ome-ngff@0.3.0(zod@4.3.6):
+    dependencies:
+      zod: 4.3.6
+
   zod@3.24.2: {}
+
+  zod@4.3.6: {}
 
   zstd-codec@0.1.5:
     optional: true

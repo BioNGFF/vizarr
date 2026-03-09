@@ -12,6 +12,7 @@ async function loadSingleChannel(config: SingleChannelConfig, data: Array<ZarrPi
   const lowres = data[data.length - 1];
   const selection = Array(data[0].shape.length).fill(0);
   const limits = contrast_limits ?? (await (() => utils.calcDataRange(lowres, selection))());
+  debugger;
   return {
     loader: data,
     name,
@@ -48,13 +49,11 @@ async function loadMultiChannel(
       );
     }
   }
-
   visibilities = visibilities || utils.getDefaultVisibilities(n);
   colors = colors || utils.getDefaultColors(n, visibilities);
 
   const contrastLimits =
     contrast_limits ?? (await (() => utils.calcConstrastLimits(data[data.length - 1], channelAxis, visibilities))());
-
   return {
     loader: data,
     name,
@@ -77,10 +76,8 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
   const node = await utils.open(config.source);
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
-
   if (node instanceof zarr.Group) {
     let attrs = utils.resolveAttrs(node.attrs);
-
     if (utils.isOmePlate(attrs)) {
       return loadPlate(config, node, attrs.plate);
     }

@@ -9,6 +9,7 @@ import type { LabelLayerProps } from "./layers/label-layer";
 import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-layers";
 import { lru } from "./lru-store";
 import type { ViewState, VizarrLayer } from "./state";
+import * as z from "zod";
 
 export const MAX_CHANNELS = 6;
 
@@ -405,7 +406,7 @@ export function resolveAttrs(attrs: zarr.Attributes): zarr.Attributes {
     return {
       "version": attrs.ome.version,
       "multiscales": attrs.ome.multiscales,
-      "omero": { "channels": attrs.omero.channels, "id": 1, "rdefs": { "defaultT": 0, "defaultZ": 118, "model": "color" } }
+      "omero": { "channels": attrs.omero.channels }
     }
   }
   if ("ome" in attrs) {

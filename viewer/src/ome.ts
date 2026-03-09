@@ -278,7 +278,6 @@ export async function loadOmeMultiscales(
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
     meta = await defaultMeta(lowresSource, axis_labels);
   }
-
   const originalSizeZ = data[0].shape[axis_labels.indexOf("z")];
   const zDownsampled = isDownsampledZ(data, axis_labels.indexOf("z"), originalSizeZ);
   const physicalSizes = utils.getPhysicalSizes(utils.resolveAttrs(attrs));
@@ -378,7 +377,7 @@ function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]):
   channels.forEach((c, index) => {
     colors.push(c.color);
     contrast_limits.push([c.window.start, c.window.end]);
-    visibilities.push(c.active);
+    visibilities.push(true);
     names.push(c.label || `${index}`);
   });
 
