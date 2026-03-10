@@ -28,8 +28,8 @@ export function sourceDataValid(sourceData: Array<PromiseSettledResult<SourceDat
 }
 
 export function getSourceDataError(sourceData: Array<PromiseSettledResult<SourceData>>): Error {
-  if ('reason' in sourceData[0]) {
+  if ("reason" in sourceData[0]) {
     return sourceData[0].reason;
   }
-  return Error('An unknown error occurred.')
+  return Error("An unknown error occurred.");
 }
