@@ -1,0 +1,2 @@
+URL,Version,Multiscale,Multichannel,Wells,Fields,.ozx,bioformats2raw,Labels,Vizarr-readable,Validator-readable,Neuroglancer-readable,Automated test,
+https://ome-zarr-scivis.s3.us-east-1.amazonaws.com/v0.5/96x2-ozx/kingsnake.ozx,0.5,Yes,No,No,No,Yes,No,No,Yes,No,Yes,Yes,
