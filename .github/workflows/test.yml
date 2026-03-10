@@ -20,4 +20,4 @@ jobs:
           run_install: true
       - run: pnpm check
       - run: pnpm lint
-      - run: pnpm test
+      - run: cd viewer && pnpm test
