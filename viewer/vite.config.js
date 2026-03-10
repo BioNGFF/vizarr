@@ -25,7 +25,7 @@ export default defineConfig({
     },
   },
   test: {
-    env: loadEnv('', '', ''),
-    setupFiles: 'tests/setup.js'
-  }
+    env: loadEnv("", "", ""),
+    setupFiles: "tests/setup.js",
+  },
 });

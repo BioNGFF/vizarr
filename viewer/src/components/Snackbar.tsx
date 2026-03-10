@@ -25,7 +25,7 @@ export function InfoSnackbar(props: { message: string }) {
         autoHideDuration={null}
         variant={"warning"}
         preventDuplicate={true}
-      ></SnackbarProvider>
+      />
     </div>
   );
 }

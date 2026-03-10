@@ -30,7 +30,7 @@ function ChannelOptions({ channelIndex }: Props) {
     if (arraysIdentical(names, defaultNames)) {
       setSourceWarning((prev) => [...prev, "Channel metadata either does not exist or was not loaded correctly."]);
     }
-  }, []);
+  }, [setSourceWarning, names, defaultNames]);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);

@@ -92,7 +92,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
     }
 
     loadSources();
-  }, [configs, setSourceInfo]);
+  }, [configs, setSourceInfo, setSourceError]);
   return (
     <>
       {redirectObj === null && (
@@ -127,7 +127,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
       )}
       {sourceWarning.length &&
         sourceWarning.map((warning, index) => {
-          return <InfoSnackbar message={warning} key={index}></InfoSnackbar>;
+          return <InfoSnackbar message={warning} key={index} />;
         })}
       {redirectObj !== null && (
         <Box

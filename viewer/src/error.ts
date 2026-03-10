@@ -1,4 +1,6 @@
 import { AssertionError } from "./utils";
+import { type SourceData } from "./state";
+
 
 export const errorToMessageMapping: Record<string, string> = {
   "Store does not support range requests": "Sharded .ozx files are not currently supported.",
@@ -21,6 +23,7 @@ export function writeUserErrorMessage(error: Error) {
 }
 
 export function sourceDataValid(sourceData: any[]): boolean {
+  debugger;
   if (sourceData.every((value) => value.status === "rejected")) {
     return false;
   }
@@ -28,6 +31,5 @@ export function sourceDataValid(sourceData: any[]): boolean {
 }
 
 export function getSourceDataError(sourceData: any[]): Error {
-  return sourceData[0].reason
-
+  return sourceData[0].reason;
 }

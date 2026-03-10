@@ -4,12 +4,12 @@ import type * as zarr from "zarrita";
 
 type RangeQuery =
   | {
-    offset: number;
-    length: number;
-  }
+      offset: number;
+      length: number;
+    }
   | {
-    suffixLength: number;
-  };
+      suffixLength: number;
+    };
 
 function normalizeKey(key: string, range?: RangeQuery) {
   if (!range) return key;

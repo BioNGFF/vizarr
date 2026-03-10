@@ -3,13 +3,13 @@ import * as zarr from "zarrita";
 
 import type * as viv from "@vivjs/types";
 import ZipFileStore from "@zarrita/storage/zip";
+import * as z from "zod";
 import type { ZarrPixelSource } from "./ZarrPixelSource";
 import type { GridLayerProps } from "./layers/grid-layer";
 import type { LabelLayerProps } from "./layers/label-layer";
 import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-layers";
 import { lru } from "./lru-store";
 import type { ViewState, VizarrLayer } from "./state";
-import * as z from "zod";
 
 export const MAX_CHANNELS = 6;
 
@@ -404,10 +404,16 @@ export function typedEmitter<T>() {
 export function resolveAttrs(attrs: zarr.Attributes): zarr.Attributes {
   if ("omero" in attrs && "ome" in attrs) {
     return {
-      "version": typeof attrs.ome === 'object' && attrs.ome !== null && 'version' in attrs.ome ? attrs.ome.version : '',
-      "multiscales": typeof attrs.ome === 'object' && attrs.ome !== null && 'multiscales' in attrs.ome ? attrs.ome.multiscales : {},
-      "omero": { "channels": typeof attrs.omero === 'object' && attrs.omero !== null && 'channels' in attrs.omero ? attrs.omero.channels : {} }
-    }
+      version: typeof attrs.ome === "object" && attrs.ome !== null && "version" in attrs.ome ? attrs.ome.version : "",
+      multiscales:
+        typeof attrs.ome === "object" && attrs.ome !== null && "multiscales" in attrs.ome ? attrs.ome.multiscales : {},
+      omero: {
+        channels:
+          typeof attrs.omero === "object" && attrs.omero !== null && "channels" in attrs.omero
+            ? attrs.omero.channels
+            : {},
+      },
+    };
   }
   if ("ome" in attrs) {
     // @ts-expect-error - handles v0.5
@@ -675,6 +681,6 @@ export function transformBox(bbox: number[], modelMatrix: Matrix4): number[] {
   return transformedBox;
 }
 
-export function arraysIdentical(arr1: any[], arr2: any[]): boolean {
-  return arr1.length == arr2.length && arr1.every((element, index) => element == arr2[index]);
+export function arraysIdentical(arr1: [], arr2: []): boolean {
+  return arr1.length === arr2.length && arr1.every((element, index) => element === arr2[index]);
 }
