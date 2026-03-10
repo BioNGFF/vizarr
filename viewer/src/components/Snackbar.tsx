@@ -5,6 +5,7 @@ export function InfoSnackbar(props: { message: string }) {
   const hideSnackbar = (snackbarId: SnackbarKey) => (
     <>
       <button
+        type={"button"}
         onClick={() => {
           closeSnackbar(snackbarId);
         }}

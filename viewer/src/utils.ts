@@ -394,7 +394,6 @@ export function typedEmitter<T>() {
     },
   };
 }
-
 /**
  * Extracts the OME metadata from the zarr attributes
  *
@@ -681,6 +680,6 @@ export function transformBox(bbox: number[], modelMatrix: Matrix4): number[] {
   return transformedBox;
 }
 
-export function arraysIdentical(arr1: [], arr2: []): boolean {
+export function arraysIdentical(arr1: Array<string | number>, arr2: Array<string | number>): boolean {
   return arr1.length === arr2.length && arr1.every((element, index) => element === arr2[index]);
 }

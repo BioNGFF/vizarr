@@ -1,6 +1,5 @@
 import { type Atom, atom } from "jotai";
 import { atomFamily, splitAtom, waitForAll } from "jotai/utils";
-import type { ErrorDetails } from "./types";
 import { RedirectError, rethrowUnless } from "./utils";
 
 import type { Deck, Layer } from "deck.gl";

@@ -2,7 +2,7 @@ import { Info } from "@mui/icons-material";
 import { ThemeProvider } from "@mui/material";
 import { Box, Link, Typography } from "@mui/material";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
-import React from "react";
+import React, { useId } from "react";
 import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext } from "../hooks";
 import { createSourceData } from "../io";
@@ -127,7 +127,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
       )}
       {sourceWarning.length &&
         sourceWarning.map((warning, index) => {
-          return <InfoSnackbar message={warning} key={index} />;
+          return <InfoSnackbar message={warning} key={useId()} />;
         })}
       {redirectObj !== null && (
         <Box

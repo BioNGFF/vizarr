@@ -1,6 +1,5 @@
+import type { SourceData } from "./state";
 import { AssertionError } from "./utils";
-import { type SourceData } from "./state";
-
 
 export const errorToMessageMapping: Record<string, string> = {
   "Store does not support range requests": "Sharded .ozx files are not currently supported.",
@@ -17,19 +16,20 @@ export function writeUserErrorMessage(error: Error) {
   //Error raised externally
   if (Object.keys(errorToMessageMapping).includes(error.message)) {
     return errorToMessageMapping[error.message];
-  } else {
-    return "An unknown error occurred.";
   }
+  return "An unknown error occurred.";
 }
 
-export function sourceDataValid(sourceData: any[]): boolean {
-  debugger;
+export function sourceDataValid(sourceData: Array<PromiseSettledResult<SourceData>>): boolean {
   if (sourceData.every((value) => value.status === "rejected")) {
     return false;
   }
   return true;
 }
 
-export function getSourceDataError(sourceData: any[]): Error {
-  return sourceData[0].reason;
+export function getSourceDataError(sourceData: Array<PromiseSettledResult<SourceData>>): Error {
+  if ('reason' in sourceData[0]) {
+    return sourceData[0].reason;
+  }
+  return Error('An unknown error occurred.')
 }
