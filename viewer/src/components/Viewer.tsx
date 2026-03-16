@@ -20,7 +20,6 @@ export default function Viewer() {
   const firstLayer = layers[0] as VizarrLayer;
 
   const axisNavigationSnackbar = useAxisNavigation(deckRef, viewport);
-
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
       const { deck } = deckRef.current || {};
