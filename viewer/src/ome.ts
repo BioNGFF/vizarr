@@ -364,6 +364,22 @@ async function defaultMeta(loader: ZarrPixelSource, axis_labels: string[]): Prom
   };
 }
 
+function setVisibilities(channels: Ome.Channel[]): boolean[] {
+  const visibilities: boolean[] = []
+  if (!channels.some((channel) => {
+    'active' in channel
+  })) {
+    channels.forEach((channel) => {
+      visibilities.push(true)
+    })
+  } else {
+    channels.forEach((channel) => {
+      visibilities.push(channel.active)
+    })
+  }
+  return (visibilities)
+}
+
 function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]): Meta {
   const t = rdefs?.defaultT ?? 0;
   const z = rdefs?.defaultZ ?? 0;
@@ -371,13 +387,12 @@ function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]):
 
   const colors: string[] = [];
   const contrast_limits: [min: number, max: number][] = [];
-  const visibilities: boolean[] = [];
+  const visibilities: boolean[] = setVisibilities(channels)
   const names: string[] = [];
 
   channels.forEach((c, index) => {
     colors.push(c.color);
     contrast_limits.push([c.window.start, c.window.end]);
-    visibilities.push(true);
     names.push(c.label || `${index}`);
   });
 
