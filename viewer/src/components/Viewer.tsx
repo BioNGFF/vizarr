@@ -18,7 +18,8 @@ export default function Viewer() {
   const [viewState, setViewState] = useViewState();
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
-  const axisNavigationSnackbar = useAxisNavigation(deckRef, viewport);
+
+  const axisNavigationSnackbar = useAxisNavigation(deckRef);
 
   // ---- Plugin extension system ----
   const extensions = useAtomValue(deckExtensionsAtom);
@@ -44,7 +45,8 @@ export default function Viewer() {
 
   React.useEffect(() => {
     if (!viewport && deckRef.current?.deck) {
-      setViewport(deckRef.current.deck);
+      const d = deckRef.current.deck;
+      setViewport({ width: d.width, height: d.height });
     }
     if (viewport && firstLayer) {
       if (!viewState) {
@@ -209,7 +211,10 @@ export default function Viewer() {
         onClick={handleClick}
         onHover={handleHover}
         getCursor={getCursor}
-        onDeviceInitialized={() => setViewport(deckRef.current?.deck || null)}
+        onDeviceInitialized={() => {
+          const d = deckRef.current?.deck;
+          setViewport(d ? { width: d.width, height: d.height } : null);
+        }}
       />
       {axisNavigationSnackbar}
     </>

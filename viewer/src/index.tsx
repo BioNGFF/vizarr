@@ -11,6 +11,7 @@ export type { ViewState, ImageLayerConfig } from "./state";
 
 // Plugin extension system
 export { deckExtensionsAtom, viewportAtom } from "./state";
+export type { ViewportSize } from "./state";
 export type { DeckExtension, OverlayPolygon } from "./state";
 
 // Z-axis and image-bounds utilities
