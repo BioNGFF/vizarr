@@ -365,19 +365,21 @@ async function defaultMeta(loader: ZarrPixelSource, axis_labels: string[]): Prom
 }
 
 function setVisibilities(channels: Ome.Channel[]): boolean[] {
-  const visibilities: boolean[] = []
-  if (!channels.some((channel) => {
-    'active' in channel
-  })) {
-    channels.forEach((channel) => {
-      visibilities.push(true)
+  const visibilities: boolean[] = [];
+  if (
+    !channels.some((channel) => {
+      "active" in channel;
     })
+  ) {
+    for (const channel of channels) {
+      visibilities.push(true);
+    }
   } else {
-    channels.forEach((channel) => {
-      visibilities.push(channel.active)
-    })
+    for (const channel of channels) {
+      visibilities.push(channel.active);
+    }
   }
-  return (visibilities)
+  return visibilities;
 }
 
 function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]): Meta {
@@ -387,7 +389,7 @@ function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]):
 
   const colors: string[] = [];
   const contrast_limits: [min: number, max: number][] = [];
-  const visibilities: boolean[] = setVisibilities(channels)
+  const visibilities: boolean[] = setVisibilities(channels);
   const names: string[] = [];
 
   channels.forEach((c, index) => {
