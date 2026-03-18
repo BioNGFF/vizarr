@@ -215,6 +215,9 @@ export default function Viewer() {
           const d = deckRef.current?.deck;
           setViewport(d ? { width: d.width, height: d.height } : null);
         }}
+        onResize={({ width, height }: { width: number; height: number }) =>
+          setViewport({ width, height })
+        }
       />
       {axisNavigationSnackbar}
     </>

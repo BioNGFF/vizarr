@@ -68,7 +68,12 @@ function RoiSelector() {
       width: viewport.width,
       height: viewport.height,
     });
-    if (hasZAxis) setZSlice(b.z1);
+    if (hasZAxis && zInfo) {
+      // Only jump Z if the current slice is outside the ROI's Z range.
+      if (zInfo.zValue < b.z1 || zInfo.zValue > b.z2) {
+        setZSlice(b.z1);
+      }
+    }
     if (!roi.visible) {
       // reuse the atom setter via handleToggleVisibility — ROI is currently hidden
       handleToggleVisibility(roi.id);
