@@ -17,6 +17,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   useViewState,
   currentZInfoAtom,
+  currentImageBoundsAtom,
   viewportAtom,
   setZSliceAtom,
 } from "@biongff/vizarr";
@@ -26,6 +27,7 @@ import {
   savedRoisAtom,
   pendingRoiAtom,
   normalizeRoiBounds,
+  clampToBounds,
   nextAvailableColor,
   type SavedRoi,
 } from "./state";
@@ -78,6 +80,7 @@ function RoiSelector() {
 
   // -------- Z-axis info from first layer --------
   const zInfo = useAtomValue(currentZInfoAtom);
+  const imageBounds = useAtomValue(currentImageBoundsAtom);
   const hasZAxis = zInfo !== null;
 
   // -------- draw-on-image state --------
@@ -100,7 +103,8 @@ function RoiSelector() {
       return;
     }
     if (pendingRoi) {
-      const b = normalizeRoiBounds(pendingRoi);
+      const bn = normalizeRoiBounds(pendingRoi);
+      const b = imageBounds ? clampToBounds(bn, imageBounds) : bn;
       setX1(String(b.x1));
       setY1(String(b.y1));
       setX2(String(b.x2));
@@ -193,7 +197,7 @@ function RoiSelector() {
     const nz1 = z1 !== "" ? Number(z1) : pendingRoi.z1;
     const nz2 = z2 !== "" ? Number(z2) : pendingRoi.z2;
     const raw = { corner1: [nx1, ny1] as [number, number], corner2: [nx2, ny2] as [number, number], z1: nz1, z2: nz2 };
-    const b = normalizeRoiBounds(raw);
+    const b = imageBounds ? clampToBounds(normalizeRoiBounds(raw), imageBounds) : normalizeRoiBounds(raw);
     setSavedRois((prev) => [
       ...prev,
       {
@@ -235,7 +239,8 @@ function RoiSelector() {
     if (isDrawing) setRoiDrawState(null);
     editOriginal.current = { ...roi };
     setEditingRoiId(roi.id);
-    const b = normalizeRoiBounds(roi);
+    const bn = normalizeRoiBounds(roi);
+    const b = imageBounds ? clampToBounds(bn, imageBounds) : bn;
     setX1(String(b.x1));
     setY1(String(b.y1));
     setX2(String(b.x2));
@@ -366,24 +371,30 @@ function RoiSelector() {
           <Grid container spacing={1} sx={{ mb: 1 }}>
             <Grid size={{ xs: 6 }}>
               <TextField
-                label="x₁"
+                label={imageBounds ? `x₁ (0–${imageBounds.xMax})` : "x₁"}
                 size="small"
                 type="number"
                 value={x1}
                 onChange={(e) => onX1Change(e.target.value)}
                 fullWidth
-                slotProps={{ input: { sx: { color: "#fff", fontSize: 12 } } }}
+                slotProps={{
+                  input: { sx: { color: "#fff", fontSize: 12 } },
+                  htmlInput: { min: 0, max: imageBounds?.xMax },
+                }}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
               <TextField
-                label="y₁"
+                label={imageBounds ? `y₁ (0–${imageBounds.yMax})` : "y₁"}
                 size="small"
                 type="number"
                 value={y1}
                 onChange={(e) => onY1Change(e.target.value)}
                 fullWidth
-                slotProps={{ input: { sx: { color: "#fff", fontSize: 12 } } }}
+                slotProps={{
+                  input: { sx: { color: "#fff", fontSize: 12 } },
+                  htmlInput: { min: 0, max: imageBounds?.yMax },
+                }}
               />
             </Grid>
           </Grid>
@@ -395,24 +406,30 @@ function RoiSelector() {
           <Grid container spacing={1} sx={{ mb: 1 }}>
             <Grid size={{ xs: 6 }}>
               <TextField
-                label="x₂"
+                label={imageBounds ? `x₂ (0–${imageBounds.xMax})` : "x₂"}
                 size="small"
                 type="number"
                 value={x2}
                 onChange={(e) => onX2Change(e.target.value)}
                 fullWidth
-                slotProps={{ input: { sx: { color: "#fff", fontSize: 12 } } }}
+                slotProps={{
+                  input: { sx: { color: "#fff", fontSize: 12 } },
+                  htmlInput: { min: 0, max: imageBounds?.xMax },
+                }}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
               <TextField
-                label="y₂"
+                label={imageBounds ? `y₂ (0–${imageBounds.yMax})` : "y₂"}
                 size="small"
                 type="number"
                 value={y2}
                 onChange={(e) => onY2Change(e.target.value)}
                 fullWidth
-                slotProps={{ input: { sx: { color: "#fff", fontSize: 12 } } }}
+                slotProps={{
+                  input: { sx: { color: "#fff", fontSize: 12 } },
+                  htmlInput: { min: 0, max: imageBounds?.yMax },
+                }}
               />
             </Grid>
           </Grid>

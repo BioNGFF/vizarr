@@ -13,7 +13,7 @@ export type { ViewState, ImageLayerConfig } from "./state";
 export { deckExtensionsAtom, viewportAtom } from "./state";
 export type { DeckExtension, OverlayPolygon } from "./state";
 
-// Z-axis utilities
-export { currentZInfoAtom, setZSliceAtom } from "./state";
+// Z-axis and image-bounds utilities
+export { currentZInfoAtom, setZSliceAtom, currentImageBoundsAtom } from "./state";
 
 export { useViewState, ViewStateContext } from "./hooks";

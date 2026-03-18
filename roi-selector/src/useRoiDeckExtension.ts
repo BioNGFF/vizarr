@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   currentZInfoAtom,
+  currentImageBoundsAtom,
   deckExtensionsAtom,
   type OverlayPolygon,
 } from "@biongff/vizarr";
@@ -28,6 +29,7 @@ export function useRoiDeckExtension() {
   const savedRois = useAtomValue(savedRoisAtom);
   const [pendingRoi, setPendingRoi] = useAtom(pendingRoiAtom);
   const zInfo = useAtomValue(currentZInfoAtom);
+  const imageBounds = useAtomValue(currentImageBoundsAtom);
   const currentZ = zInfo?.zValue ?? null;
 
   const nextRoiColor = nextAvailableColor(savedRois);
@@ -90,22 +92,29 @@ export function useRoiDeckExtension() {
     return result;
   }, [savedRois, pendingRoi, nextRoiColor, currentZ, roiCorner1, roiMousePos]);
 
-  // ---- Click handler (place ROI corners) ----
+  // ---- Click handler (place ROI corners, clamped to image bounds) ----
   const onClick = useCallback(
     (coordinate: [number, number]): boolean => {
       if (!isDrawing) return false;
 
-      const [x, y] = coordinate;
+      const [rawX, rawY] = coordinate;
+      const clampXY = (v: number, max: number) => Math.max(0, Math.min(Math.round(v), max));
+      const x = imageBounds ? clampXY(rawX, imageBounds.xMax) : Math.round(rawX);
+      const y = imageBounds ? clampXY(rawY, imageBounds.yMax) : Math.round(rawY);
+      const clampZ = (z: number) =>
+        imageBounds?.zMax !== null && imageBounds?.zMax !== undefined
+          ? Math.max(0, Math.min(z, imageBounds.zMax))
+          : z;
 
       if (roiDrawState === "waiting-first") {
-        const z1 = zInfo?.zValue ?? 0;
-        setRoiDrawState({ corner1: [Math.round(x), Math.round(y)], z1 });
+        const z1 = clampZ(zInfo?.zValue ?? 0);
+        setRoiDrawState({ corner1: [x, y], z1 });
         return true;
       }
 
       if (roiDrawState && typeof roiDrawState === "object" && "corner1" in roiDrawState) {
-        const corner2: [number, number] = [Math.round(x), Math.round(y)];
-        const z2 = zInfo?.zValue ?? 0;
+        const corner2: [number, number] = [x, y];
+        const z2 = clampZ(zInfo?.zValue ?? 0);
         setPendingRoi({
           corner1: roiDrawState.corner1,
           corner2,
@@ -118,7 +127,7 @@ export function useRoiDeckExtension() {
 
       return false;
     },
-    [isDrawing, roiDrawState, setRoiDrawState, setPendingRoi, zInfo],
+    [isDrawing, roiDrawState, setRoiDrawState, setPendingRoi, zInfo, imageBounds],
   );
 
   // ---- Hover handler (track mouse for preview rectangle) ----

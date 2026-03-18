@@ -162,6 +162,28 @@ export const currentZInfoAtom = atom((get) => {
 });
 
 /**
+ * Derived atom that exposes the spatial X/Y (and optionally Z) size of the
+ * first loaded source. This is the authoritative bound for ROI coordinates.
+ * Returns null when no source has been loaded yet, or when x/y axes cannot
+ * be found in the axis labels.
+ */
+export const currentImageBoundsAtom = atom((get) => {
+  const sources = get(sourceInfoAtom);
+  if (sources.length === 0) return null;
+  const source = sources[0];
+  const loader = source.loader[0];
+  const xAxisIndex = source.axis_labels.indexOf("x");
+  const yAxisIndex = source.axis_labels.indexOf("y");
+  if (xAxisIndex === -1 || yAxisIndex === -1) return null;
+  const zAxisIndex = source.axis_labels.indexOf("z");
+  return {
+    xMax: loader.shape[xAxisIndex] - 1,
+    yMax: loader.shape[yAxisIndex] - 1,
+    zMax: zAxisIndex !== -1 ? loader.shape[zAxisIndex] - 1 : null,
+  };
+});
+
+/**
  * Write-only atom that sets the Z-axis slice for all loaded sources.
  * Pass a z index number and it will update every source's selection.
  */

@@ -47,7 +47,7 @@ export interface NormalizedBounds {
  * Normalize a ROI's coordinates so that (x1,y1) is the top-left and
  * (x2,y2) is the bottom-right, with z1 ≤ z2.
  *
- * Works for both SavedRoi and PendingRoi.
+ * Works for both `SavedRoi` and `PendingRoi` obj.
  */
 export function normalizeRoiBounds(roi: { corner1: [number, number]; corner2: [number, number]; z1: number; z2: number }): NormalizedBounds {
   return {
@@ -60,7 +60,30 @@ export function normalizeRoiBounds(roi: { corner1: [number, number]; corner2: [n
   };
 }
 
-/** Color palette (RGB) cycled through for multi-ROI overlays. */
+/** Spatial dimensions of the loaded image, used for bounds clamping. */
+export interface ImageBounds {
+  xMax: number;
+  yMax: number;
+  zMax: number | null;
+}
+
+/**
+ * Clamp a normalized ROI to the image boundaries so coordinates stay within
+ * [0, xMax] × [0, yMax] (and [0, zMax] when a Z axis is present).
+ */
+export function clampToBounds(b: NormalizedBounds, image: ImageBounds): NormalizedBounds {
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+  return {
+    x1: clamp(b.x1, 0, image.xMax),
+    y1: clamp(b.y1, 0, image.yMax),
+    x2: clamp(b.x2, 0, image.xMax),
+    y2: clamp(b.y2, 0, image.yMax),
+    z1: image.zMax !== null ? clamp(b.z1, 0, image.zMax) : b.z1,
+    z2: image.zMax !== null ? clamp(b.z2, 0, image.zMax) : b.z2,
+  };
+}
+
+/* Color palette (RGB) cycled through for multi-ROI overlays. */
 export const ROI_COLORS: [number, number, number][] = [
   [255, 100, 100], // red
   [100, 180, 255], // blue
@@ -80,7 +103,7 @@ export const ROI_COLORS: [number, number, number][] = [
   [100, 200, 200], // cyan
 ];
 
-/**
+/*
  * Pick the first color from `ROI_COLORS` that isn't already used by any
  * existing ROI. Falls back to cycling if all colors are taken.
  */
