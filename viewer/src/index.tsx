@@ -9,7 +9,11 @@ export type { VizarrViewer } from "./api";
 
 export type { ViewState, ImageLayerConfig } from "./state";
 
-// ROI-related atoms & hooks — used by the @biongff/roi-selector plugin
-export { roiDrawStateAtom, currentZInfoAtom, viewportAtom, savedRoisAtom, pendingRoiAtom, ROI_COLORS, setZSliceAtom } from "./state";
-export type { RoiDrawState, SavedRoi, PendingRoi } from "./state";
+// Plugin extension system
+export { deckExtensionsAtom, viewportAtom } from "./state";
+export type { DeckExtension, OverlayPolygon } from "./state";
+
+// Z-axis utilities
+export { currentZInfoAtom, setZSliceAtom } from "./state";
+
 export { useViewState, ViewStateContext } from "./hooks";

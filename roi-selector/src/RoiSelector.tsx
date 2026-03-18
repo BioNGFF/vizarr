@@ -17,14 +17,20 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   useViewState,
   currentZInfoAtom,
-  roiDrawStateAtom,
   viewportAtom,
+  setZSliceAtom,
+} from "@biongff/vizarr";
+
+import {
+  roiDrawStateAtom,
   savedRoisAtom,
   pendingRoiAtom,
-  ROI_COLORS,
-  setZSliceAtom,
+  normalizeRoiBounds,
+  nextAvailableColor,
   type SavedRoi,
-} from "@biongff/vizarr";
+} from "./state";
+
+import { useRoiDeckExtension } from "./useRoiDeckExtension";
 
 /**
  * RoiSelector — a collapsible panel that lets you:
@@ -49,6 +55,9 @@ import {
  * full image extent.
  */
 function RoiSelector() {
+  // ---- Register deck.gl extension (overlays, click/hover handlers) ----
+  useRoiDeckExtension();
+
   // -------- local UI state --------
   const [open, setOpen] = useState(false);
   const [roiMenuOpen, setRoiMenuOpen] = useState(false);
@@ -91,53 +100,66 @@ function RoiSelector() {
       return;
     }
     if (pendingRoi) {
-      const { corner1, corner2, z1: pz1, z2: pz2 } = pendingRoi;
-      setX1(String(Math.min(corner1[0], corner2[0])));
-      setY1(String(Math.min(corner1[1], corner2[1])));
-      setX2(String(Math.max(corner1[0], corner2[0])));
-      setY2(String(Math.max(corner1[1], corner2[1])));
-      setZ1(String(Math.min(pz1, pz2)));
-      setZ2(String(Math.max(pz1, pz2)));
+      const b = normalizeRoiBounds(pendingRoi);
+      setX1(String(b.x1));
+      setY1(String(b.y1));
+      setX2(String(b.x2));
+      setY2(String(b.y2));
+      setZ1(String(b.z1));
+      setZ2(String(b.z2));
     }
   }, [pendingRoi]);
 
-  /** Sync text field changes back to the pendingRoi atom so the overlay updates live. */
-  const syncFieldsToPending = (
-    nx1: string, ny1: string, nx2: string, ny2: string, nz1: string, nz2: string,
-  ) => {
-    // When editing a saved ROI, update it in-place for live overlay feedback.
-    if (editingRoiId) {
+  /**
+   * Sync text field changes back to the atom layer so the overlay updates live.
+   *
+   * Uses functional updaters to avoid stale-closure issues: the latest atom
+   * state is always received via the `prev` argument rather than captured
+   * from the enclosing render scope.
+   */
+  const syncFieldsToPending = React.useCallback(
+    (nx1: string, ny1: string, nx2: string, ny2: string, nz1: string, nz2: string) => {
       const px1 = Number(nx1);
       const py1 = Number(ny1);
       const px2 = Number(nx2);
       const py2 = Number(ny2);
       if ([px1, py1, px2, py2].some(Number.isNaN)) return;
-      setSavedRois(savedRois.map((r) => {
-        if (r.id !== editingRoiId) return r;
+
+      const newCorner1: [number, number] = [Math.min(px1, px2), Math.min(py1, py2)];
+      const newCorner2: [number, number] = [Math.max(px1, px2), Math.max(py1, py2)];
+
+      // When editing a saved ROI, update it in-place for live overlay feedback.
+      if (editingRoiId) {
+        setSavedRois((prev) =>
+          prev.map((r) => {
+            if (r.id !== editingRoiId) return r;
+            return {
+              ...r,
+              corner1: newCorner1,
+              corner2: newCorner2,
+              z1: nz1 !== "" ? Number(nz1) : r.z1,
+              z2: nz2 !== "" ? Number(nz2) : r.z2,
+            };
+          }),
+        );
+        return;
+      }
+
+      // Update the pending ROI using a functional updater so we never
+      // read a stale `pendingRoi` from the closure.
+      setPendingRoi((prev) => {
+        if (!prev) return prev;
+        internalUpdate.current = true;
         return {
-          ...r,
-          corner1: [Math.min(px1, px2), Math.min(py1, py2)],
-          corner2: [Math.max(px1, px2), Math.max(py1, py2)],
-          z1: nz1 !== "" ? Number(nz1) : r.z1,
-          z2: nz2 !== "" ? Number(nz2) : r.z2,
+          corner1: newCorner1,
+          corner2: newCorner2,
+          z1: nz1 !== "" ? Number(nz1) : prev.z1,
+          z2: nz2 !== "" ? Number(nz2) : prev.z2,
         };
-      }));
-      return;
-    }
-    if (!pendingRoi) return;
-    const px1 = Number(nx1);
-    const py1 = Number(ny1);
-    const px2 = Number(nx2);
-    const py2 = Number(ny2);
-    if ([px1, py1, px2, py2].some(Number.isNaN)) return;
-    internalUpdate.current = true;
-    setPendingRoi({
-      corner1: [Math.min(px1, px2), Math.min(py1, py2)],
-      corner2: [Math.max(px1, px2), Math.max(py1, py2)],
-      z1: nz1 !== "" ? Number(nz1) : pendingRoi.z1,
-      z2: nz2 !== "" ? Number(nz2) : pendingRoi.z2,
-    });
-  };
+      });
+    },
+    [editingRoiId, setSavedRois, setPendingRoi],
+  );
 
   // Field change helpers — update local state AND sync to pending overlay.
   const onX1Change = (v: string) => { setX1(v); syncFieldsToPending(v, y1, x2, y2, z1, z2); };
@@ -168,18 +190,19 @@ function RoiSelector() {
     const nx2 = Number(x2);
     const ny2 = Number(y2);
     if ([nx1, ny1, nx2, ny2].some(Number.isNaN)) return;
-    const color = ROI_COLORS[savedRois.length % ROI_COLORS.length];
     const nz1 = z1 !== "" ? Number(z1) : pendingRoi.z1;
     const nz2 = z2 !== "" ? Number(z2) : pendingRoi.z2;
-    setSavedRois([
-      ...savedRois,
+    const raw = { corner1: [nx1, ny1] as [number, number], corner2: [nx2, ny2] as [number, number], z1: nz1, z2: nz2 };
+    const b = normalizeRoiBounds(raw);
+    setSavedRois((prev) => [
+      ...prev,
       {
         id: Math.random().toString(36).slice(2),
-        corner1: [Math.min(nx1, nx2), Math.min(ny1, ny2)],
-        corner2: [Math.max(nx1, nx2), Math.max(ny1, ny2)],
-        z1: Math.min(nz1, nz2),
-        z2: Math.max(nz1, nz2),
-        color,
+        corner1: [b.x1, b.y1],
+        corner2: [b.x2, b.y2],
+        z1: b.z1,
+        z2: b.z2,
+        color: nextAvailableColor(prev),
         visible: true,
       },
     ]);
@@ -193,13 +216,13 @@ function RoiSelector() {
 
   /** Delete a saved ROI by id. */
   const handleDeleteRoi = (id: string) => {
-    setSavedRois(savedRois.filter((r) => r.id !== id));
+    setSavedRois((prev) => prev.filter((r) => r.id !== id));
     if (editingRoiId === id) setEditingRoiId(null);
   };
 
   /** Toggle visibility of a saved ROI. */
   const handleToggleVisibility = (id: string) => {
-    setSavedRois(savedRois.map((r) => (r.id === id ? { ...r, visible: !r.visible } : r)));
+    setSavedRois((prev) => prev.map((r) => (r.id === id ? { ...r, visible: !r.visible } : r)));
   };
 
   /** Stash the original values when entering edit mode so we can restore on cancel. */
@@ -212,16 +235,13 @@ function RoiSelector() {
     if (isDrawing) setRoiDrawState(null);
     editOriginal.current = { ...roi };
     setEditingRoiId(roi.id);
-    const minX = Math.min(roi.corner1[0], roi.corner2[0]);
-    const minY = Math.min(roi.corner1[1], roi.corner2[1]);
-    const maxX = Math.max(roi.corner1[0], roi.corner2[0]);
-    const maxY = Math.max(roi.corner1[1], roi.corner2[1]);
-    setX1(String(minX));
-    setY1(String(minY));
-    setX2(String(maxX));
-    setY2(String(maxY));
-    setZ1(String(Math.min(roi.z1, roi.z2)));
-    setZ2(String(Math.max(roi.z1, roi.z2)));
+    const b = normalizeRoiBounds(roi);
+    setX1(String(b.x1));
+    setY1(String(b.y1));
+    setX2(String(b.x2));
+    setY2(String(b.y2));
+    setZ1(String(b.z1));
+    setZ2(String(b.z2));
   };
 
   /** Finish editing: commit current field values (already live-synced) and exit edit mode. */
@@ -234,7 +254,7 @@ function RoiSelector() {
   const handleCancelEdit = () => {
     if (editOriginal.current && editingRoiId) {
       const orig = editOriginal.current;
-      setSavedRois(savedRois.map((r) => (r.id === editingRoiId ? orig : r)));
+      setSavedRois((prev) => prev.map((r) => (r.id === editingRoiId ? orig : r)));
     }
     editOriginal.current = null;
     setEditingRoiId(null);
@@ -246,12 +266,9 @@ function RoiSelector() {
   /** Navigate the viewer to a specific saved ROI (XY + Z) and ensure visibility. */
   const handleGoToSavedRoi = (roi: SavedRoi) => {
     if (!viewport) return;
-    const minX = Math.min(roi.corner1[0], roi.corner2[0]);
-    const maxX = Math.max(roi.corner1[0], roi.corner2[0]);
-    const minY = Math.min(roi.corner1[1], roi.corner2[1]);
-    const maxY = Math.max(roi.corner1[1], roi.corner2[1]);
-    const roiWidth = maxX - minX;
-    const roiHeight = maxY - minY;
+    const b = normalizeRoiBounds(roi);
+    const roiWidth = b.x2 - b.x1;
+    const roiHeight = b.y2 - b.y1;
     if (roiWidth === 0 || roiHeight === 0) return;
     const padding = 40;
     const availableWidth = viewport.width - 2 * padding;
@@ -259,48 +276,39 @@ function RoiSelector() {
     const zoom = Math.log2(Math.min(availableWidth / roiWidth, availableHeight / roiHeight));
     setViewState({
       zoom,
-      target: [(minX + maxX) / 2, (minY + maxY) / 2],
+      target: [(b.x1 + b.x2) / 2, (b.y1 + b.y2) / 2],
       width: viewport.width,
       height: viewport.height,
     });
     // Navigate to the ROI's Z plane (use the start of its range)
     if (hasZAxis) {
-      setZSlice(Math.min(roi.z1, roi.z2));
+      setZSlice(b.z1);
     }
     // Ensure the ROI is visible
     if (!roi.visible) {
-      setSavedRois(savedRois.map((r) => (r.id === roi.id ? { ...r, visible: true } : r)));
+      setSavedRois((prev) => prev.map((r) => (r.id === roi.id ? { ...r, visible: true } : r)));
     }
+  };
+
+  /** Build a clipboard payload from a ROI. */
+  const roiToPayload = (roi: SavedRoi): Record<string, number> => {
+    const b = normalizeRoiBounds(roi);
+    const payload: Record<string, number> = { x1: b.x1, y1: b.y1, x2: b.x2, y2: b.y2 };
+    if (hasZAxis) {
+      payload.z1 = b.z1;
+      payload.z2 = b.z2;
+    }
+    return payload;
   };
 
   /** Copy a single ROI's coordinates to clipboard. */
   const handleCopySingleRoi = (roi: SavedRoi) => {
-    const minX = Math.min(roi.corner1[0], roi.corner2[0]);
-    const minY = Math.min(roi.corner1[1], roi.corner2[1]);
-    const maxX = Math.max(roi.corner1[0], roi.corner2[0]);
-    const maxY = Math.max(roi.corner1[1], roi.corner2[1]);
-    const payload: Record<string, number> = { x1: minX, y1: minY, x2: maxX, y2: maxY };
-    if (hasZAxis) {
-      payload.z1 = Math.min(roi.z1, roi.z2);
-      payload.z2 = Math.max(roi.z1, roi.z2);
-    }
-    navigator.clipboard.writeText(JSON.stringify(payload)).then(() => setSnackOpen(true));
+    navigator.clipboard.writeText(JSON.stringify(roiToPayload(roi))).then(() => setSnackOpen(true));
   };
 
   /** Copy all saved ROIs to clipboard as a JSON array. */
   const handleCopyAllRois = () => {
-    const arr = savedRois.map((roi) => {
-      const minX = Math.min(roi.corner1[0], roi.corner2[0]);
-      const minY = Math.min(roi.corner1[1], roi.corner2[1]);
-      const maxX = Math.max(roi.corner1[0], roi.corner2[0]);
-      const maxY = Math.max(roi.corner1[1], roi.corner2[1]);
-      const payload: Record<string, number> = { x1: minX, y1: minY, x2: maxX, y2: maxY };
-      if (hasZAxis) {
-        payload.z1 = Math.min(roi.z1, roi.z2);
-        payload.z2 = Math.max(roi.z1, roi.z2);
-      }
-      return payload;
-    });
+    const arr = savedRois.map(roiToPayload);
     navigator.clipboard.writeText(JSON.stringify(arr, null, 2)).then(() => setSnackOpen(true));
   };
 
@@ -552,12 +560,7 @@ function RoiSelector() {
               <Collapse in={roiMenuOpen}>
                 <Box sx={{ mt: 0.5 }}>
                   {savedRois.map((roi) => {
-                    const minX = Math.min(roi.corner1[0], roi.corner2[0]);
-                    const minY = Math.min(roi.corner1[1], roi.corner2[1]);
-                    const maxX = Math.max(roi.corner1[0], roi.corner2[0]);
-                    const maxY = Math.max(roi.corner1[1], roi.corner2[1]);
-                    const roiZ1 = Math.min(roi.z1, roi.z2);
-                    const roiZ2 = Math.max(roi.z1, roi.z2);
+                    const b = normalizeRoiBounds(roi);
                     return (
                       <Box
                         key={roi.id}
@@ -605,14 +608,14 @@ function RoiSelector() {
                               whiteSpace: "nowrap",
                             }}
                           >
-                            ({minX}, {minY}) → ({maxX}, {maxY})
+                            ({b.x1}, {b.y1}) → ({b.x2}, {b.y2})
                           </Typography>
                           {hasZAxis && (
                             <Typography
                               variant="caption"
                               sx={{ color: "grey.500", fontFamily: "monospace", fontSize: 9 }}
                             >
-                              z: {roiZ1 === roiZ2 ? roiZ1 : `${roiZ1}–${roiZ2}`}
+                              z: {b.z1 === b.z2 ? b.z1 : `${b.z1}–${b.z2}`}
                             </Typography>
                           )}
                         </Box>

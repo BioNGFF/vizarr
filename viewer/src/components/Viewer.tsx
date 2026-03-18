@@ -5,7 +5,7 @@ import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { useAxisNavigation } from "../hooks/useAxisNavigation";
-import { layerAtoms, currentZInfoAtom, roiDrawStateAtom, viewportAtom, savedRoisAtom, pendingRoiAtom, ROI_COLORS } from "../state";
+import { layerAtoms, deckExtensionsAtom, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
@@ -19,27 +19,9 @@ export default function Viewer() {
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
   const axisNavigationSnackbar = useAxisNavigation(deckRef, viewport);
-  // ---- ROI draw-on-image support ----
-  // Read the shared draw-mode atom so we know whether to intercept clicks.
-  const [roiDrawState, setRoiDrawState] = useAtom(roiDrawStateAtom);
-  const isDrawing = roiDrawState !== null;
 
-  // Current Z-axis info (may be null if there's no Z axis).
-  const zInfo = useAtomValue(currentZInfoAtom);
-
-  // Track the current mouse position in image coordinates for the preview rectangle.
-  const [roiMousePos, setRoiMousePos] = React.useState<[number, number] | null>(null);
-
-  // The first corner (if placed) — extracted for convenience.
-  const roiCorner1 =
-    roiDrawState && typeof roiDrawState === "object" && "corner1" in roiDrawState
-      ? roiDrawState.corner1
-      : null;
-
-  // ---- Multi-ROI state ----
-  const savedRois = useAtomValue(savedRoisAtom);
-  const [pendingRoi, setPendingRoi] = useAtom(pendingRoiAtom);
-  const nextRoiColor = ROI_COLORS[savedRois.length % ROI_COLORS.length];
+  // ---- Plugin extension system ----
+  const extensions = useAtomValue(deckExtensionsAtom);
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
@@ -156,146 +138,65 @@ export default function Viewer() {
     };
   }, [layers]);
 
-  /**
-   * Handle clicks on the deck.gl canvas. -> Needed for ROI drawing in RoiSelector
-   *
-   * When draw mode is active (`roiDrawState !== null`), clicks are
-   * intercepted to place ROI corners instead of doing the default
-   * pick / tooltip behaviour.
-   *
-   * `info.coordinate` is the [x, y] position in **image space** (world
-   * coordinates) — exactly what we need for the ROI bounding box.
-   */
+  // ---- Extension layers (polygon overlays from plugins) ----
+  const extensionLayers = React.useMemo(() => {
+    return Object.values(extensions).flatMap((ext) =>
+      (ext.overlays ?? []).map(
+        (overlay) =>
+          new PolygonLayer({
+            id: overlay.id,
+            data: [{ polygon: overlay.polygon }],
+            getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
+            getFillColor: overlay.fillColor,
+            getLineColor: overlay.lineColor,
+            getLineWidth: overlay.lineWidth ?? 2,
+            lineWidthUnits: "pixels" as const,
+            stroked: true,
+            filled: true,
+            pickable: false,
+          }),
+      ),
+    );
+  }, [extensions]);
+
+  // ---- Generic click handler (delegates to registered extensions) ----
   const handleClick = React.useCallback(
     (info: PickingInfo) => {
-      if (!isDrawing || !info.coordinate) return;
-
-      const [x, y] = info.coordinate;
-
-      if (roiDrawState === "waiting-first") {
-        // First click → record corner 1 + current Z, wait for corner 2
-        const z1 = zInfo?.zValue ?? 0;
-        setRoiDrawState({ corner1: [Math.round(x), Math.round(y)], z1 });
-      } else if (roiDrawState && typeof roiDrawState === "object" && "corner1" in roiDrawState) {
-        // Second click → set as pending ROI for save/discard in RoiSelector.
-        const corner2: [number, number] = [Math.round(x), Math.round(y)];
-        const z2 = zInfo?.zValue ?? 0;
-        setPendingRoi({
-          corner1: roiDrawState.corner1,
-          corner2,
-          z1: roiDrawState.z1,
-          z2,
-        });
-        setRoiDrawState(null);
+      if (!info.coordinate) return;
+      const coord: [number, number] = [info.coordinate[0], info.coordinate[1]];
+      for (const ext of Object.values(extensions)) {
+        if (ext.onClick?.(coord)) return;
       }
     },
-    [isDrawing, roiDrawState, setRoiDrawState, setPendingRoi, zInfo],
+    [extensions],
   );
 
-  // Track mouse movement in image coordinates while waiting for the second corner.
+  // ---- Generic hover handler (delegates to registered extensions) ----
   const handleHover = React.useCallback(
     (info: PickingInfo) => {
-      if (roiCorner1 && info.coordinate) {
-        setRoiMousePos([info.coordinate[0], info.coordinate[1]]);
-      } else {
-        setRoiMousePos(null);
+      const coord = info.coordinate
+        ? ([info.coordinate[0], info.coordinate[1]] as [number, number])
+        : null;
+      for (const ext of Object.values(extensions)) {
+        ext.onHover?.(coord);
       }
     },
-    [roiCorner1],
+    [extensions],
   );
 
-  // Build a preview rectangle layer when corner1 is placed and cursor is moving.
-  const roiPreviewLayer = React.useMemo(() => {
-    if (!roiCorner1 || !roiMousePos) return null;
-    const [x1, y1] = roiCorner1;
-    const [x2, y2] = roiMousePos;
-    return new PolygonLayer({
-      id: "roi-preview",
-      data: [
-        {
-          polygon: [
-            [x1, y1],
-            [x2, y1],
-            [x2, y2],
-            [x1, y2],
-          ],
-        },
-      ],
-      getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
-      getFillColor: [...nextRoiColor, 40] as [number, number, number, number],
-      getLineColor: [...nextRoiColor, 200] as [number, number, number, number],
-      getLineWidth: 2,
-      lineWidthUnits: "pixels",
-      stroked: true,
-      filled: true,
-      pickable: false,
-    });
-  }, [roiCorner1, roiMousePos, nextRoiColor]);
-
-  // Build polygon overlay layers for saved ROIs and the pending (unsaved) ROI.
-  // Only show saved ROIs that are visible AND whose z-range includes the current z slice.
-  const currentZ = zInfo?.zValue ?? null;
-  const roiOverlayLayers = React.useMemo(() => {
-    const overlays = [];
-
-    // Saved ROIs — filtered by visibility and current Z plane
-    for (const roi of savedRois) {
-      if (!roi.visible) continue;
-      // If there's a Z axis, only show ROI when current Z is within its z range
-      if (currentZ !== null) {
-        const zMin = Math.min(roi.z1, roi.z2);
-        const zMax = Math.max(roi.z1, roi.z2);
-        if (currentZ < zMin || currentZ > zMax) continue;
-      }
-      const [ax, ay] = roi.corner1;
-      const [bx, by] = roi.corner2;
-      overlays.push(
-        new PolygonLayer({
-          id: `roi-saved-${roi.id}`,
-          data: [{ polygon: [[ax, ay], [bx, ay], [bx, by], [ax, by]] }],
-          getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
-          getFillColor: [...roi.color, 40] as [number, number, number, number],
-          getLineColor: [...roi.color, 200] as [number, number, number, number],
-          getLineWidth: 2,
-          lineWidthUnits: "pixels" as const,
-          stroked: true,
-          filled: true,
-          pickable: false,
-        }),
-      );
+  // ---- Generic cursor (first extension with a cursor wins, else "grab") ----
+  const getCursor = React.useCallback(() => {
+    for (const ext of Object.values(extensions)) {
+      if (ext.cursor) return ext.cursor;
     }
-
-    // Pending ROI (drawn but not yet saved/discarded)
-    if (pendingRoi) {
-      const [ax, ay] = pendingRoi.corner1;
-      const [bx, by] = pendingRoi.corner2;
-      overlays.push(
-        new PolygonLayer({
-          id: "roi-pending",
-          data: [{ polygon: [[ax, ay], [bx, ay], [bx, by], [ax, by]] }],
-          getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
-          getFillColor: [...nextRoiColor, 60] as [number, number, number, number],
-          getLineColor: [...nextRoiColor, 220] as [number, number, number, number],
-          getLineWidth: 2,
-          lineWidthUnits: "pixels" as const,
-          stroked: true,
-          filled: true,
-          pickable: false,
-        }),
-      );
-    }
-
-    return overlays;
-  }, [savedRois, pendingRoi, nextRoiColor, currentZ]);
-
-  // Change the cursor to crosshair while draw mode is active
-  const getCursor = React.useCallback(() => (isDrawing ? "crosshair" : "grab"), [isDrawing]);
+    return "grab";
+  }, [extensions]);
 
   return (
     <>
       <DeckGL
         ref={deckRef}
-        layers={[...deckLayers, ...roiOverlayLayers, ...(roiPreviewLayer ? [roiPreviewLayer] : [])]}
+        layers={[...deckLayers, ...extensionLayers]}
         viewState={viewState && { ortho: viewState }}
         controller={{ keyboard: true }}
         onViewStateChange={(e: { viewState: OrthographicViewState }) =>

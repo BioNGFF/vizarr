@@ -115,50 +115,34 @@ export const viewStateAtom = atom<ViewState | null>(null);
 export const sourceErrorAtom = atom<string | null>(null);
 export const sourceWarningAtom = atom<string[]>([]);
 
-/**
- * Shared state for the "draw ROI on image" feature.
- *
- * State machine:
- *   null              → draw mode is OFF
- *   "waiting-first"   → draw mode ON, waiting for the first click
- *   { corner1, z1 }   → first corner placed, waiting for second click
- */
-export type RoiDrawState = null | "waiting-first" | { corner1: [number, number]; z1: number };
-export const roiDrawStateAtom = atom<RoiDrawState>(null);
+// ---- Plugin extension system ----
 
-/** A saved ROI with its assigned overlay color. */
-export interface SavedRoi {
+/** A polygon overlay specification (plain data, converted to deck.gl layers by the Viewer). */
+export interface OverlayPolygon {
   id: string;
-  corner1: [number, number];
-  corner2: [number, number];
-  z1: number;
-  z2: number;
-  color: [number, number, number];
-  visible: boolean;
+  polygon: [number, number][];
+  fillColor: [number, number, number, number];
+  lineColor: [number, number, number, number];
+  lineWidth?: number;
 }
 
-/** A ROI that has been drawn but not yet saved or discarded. */
-export interface PendingRoi {
-  corner1: [number, number];
-  corner2: [number, number];
-  z1: number;
-  z2: number;
+/**
+ * Extension interface for plugins to inject behavior into the deck.gl viewer.
+ * Plugins register an extension via the `deckExtensionsAtom`.
+ */
+export interface DeckExtension {
+  /** Polygon overlay specifications to render on the canvas. */
+  overlays?: OverlayPolygon[];
+  /** Click handler. Receives image-space coordinates. Return true to consume the event. */
+  onClick?: (coordinate: [number, number]) => boolean;
+  /** Hover handler. Receives image-space coordinates or null when leaving the canvas. */
+  onHover?: (coordinate: [number, number] | null) => void;
+  /** Cursor to show when this extension is active. */
+  cursor?: string;
 }
 
-export const savedRoisAtom = atom<SavedRoi[]>([]);
-export const pendingRoiAtom = atom<PendingRoi | null>(null);
-
-/** Color palette (RGB) cycled through for multi-ROI overlays. */
-export const ROI_COLORS: [number, number, number][] = [
-  [255, 100, 100], // red
-  [100, 180, 255], // blue
-  [100, 220, 100], // green
-  [255, 200, 50],  // yellow
-  [200, 100, 255], // purple
-  [255, 150, 50],  // orange
-  [50, 220, 200],  // teal
-  [255, 100, 200], // pink
-];
+/** Registry of deck.gl extensions keyed by unique ID. */
+export const deckExtensionsAtom = atom<Record<string, DeckExtension>>({});
 
 /**
  * Derived atom that exposes the current Z-axis selection and metadata

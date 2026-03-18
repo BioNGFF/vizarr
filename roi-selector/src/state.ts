@@ -1,0 +1,94 @@
+import { atom } from "jotai";
+
+/**
+ * Shared state for the "draw ROI on image" feature.
+ *
+ * State machine:
+ *   null              → draw mode is OFF
+ *   "waiting-first"   → draw mode ON, waiting for the first click
+ *   { corner1, z1 }   → first corner placed, waiting for second click
+ */
+export type RoiDrawState = null | "waiting-first" | { corner1: [number, number]; z1: number };
+export const roiDrawStateAtom = atom<RoiDrawState>(null);
+
+/** A saved ROI with its assigned overlay color. */
+export interface SavedRoi {
+  id: string;
+  corner1: [number, number];
+  corner2: [number, number];
+  z1: number;
+  z2: number;
+  color: [number, number, number];
+  visible: boolean;
+}
+
+/** A ROI that has been drawn but not yet saved or discarded. */
+export interface PendingRoi {
+  corner1: [number, number];
+  corner2: [number, number];
+  z1: number;
+  z2: number;
+}
+
+export const savedRoisAtom = atom<SavedRoi[]>([]);
+export const pendingRoiAtom = atom<PendingRoi | null>(null);
+
+/** Normalized bounding box with guaranteed min/max ordering. */
+export interface NormalizedBounds {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  z1: number;
+  z2: number;
+}
+
+/*
+ * Normalize a ROI's coordinates so that (x1,y1) is the top-left and
+ * (x2,y2) is the bottom-right, with z1 ≤ z2.
+ *
+ * Works for both SavedRoi and PendingRoi.
+ */
+export function normalizeRoiBounds(roi: { corner1: [number, number]; corner2: [number, number]; z1: number; z2: number }): NormalizedBounds {
+  return {
+    x1: Math.min(roi.corner1[0], roi.corner2[0]),
+    y1: Math.min(roi.corner1[1], roi.corner2[1]),
+    x2: Math.max(roi.corner1[0], roi.corner2[0]),
+    y2: Math.max(roi.corner1[1], roi.corner2[1]),
+    z1: Math.min(roi.z1, roi.z2),
+    z2: Math.max(roi.z1, roi.z2),
+  };
+}
+
+/** Color palette (RGB) cycled through for multi-ROI overlays. */
+export const ROI_COLORS: [number, number, number][] = [
+  [255, 100, 100], // red
+  [100, 180, 255], // blue
+  [100, 220, 100], // green
+  [255, 200, 50],  // yellow
+  [200, 100, 255], // purple
+  [255, 150, 50],  // orange
+  [50, 220, 200],  // teal
+  [255, 100, 200], // pink
+  [180, 220, 80],  // lime
+  [255, 130, 130], // salmon
+  [130, 130, 255], // periwinkle
+  [255, 180, 180], // light coral
+  [80, 200, 140],  // mint
+  [220, 160, 255], // lavender
+  [255, 220, 100], // gold
+  [100, 200, 200], // cyan
+];
+
+/**
+ * Pick the first color from `ROI_COLORS` that isn't already used by any
+ * existing ROI. Falls back to cycling if all colors are taken.
+ */
+export function nextAvailableColor(existingRois: SavedRoi[]): [number, number, number] {
+  const usedSet = new Set(existingRois.map((r) => r.color.join(",")));
+  for (const color of ROI_COLORS) {
+    if (!usedSet.has(color.join(","))) return color;
+  }
+  // All colors in use — cycle based on count
+  return ROI_COLORS[existingRois.length % ROI_COLORS.length];
+}
