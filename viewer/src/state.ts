@@ -115,6 +115,34 @@ export const viewStateAtom = atom<ViewState | null>(null);
 export const sourceErrorAtom = atom<string | null>(null);
 export const sourceWarningAtom = atom<string[]>([]);
 
+/**
+ * Shared state for the "draw ROI on image" feature.
+ *
+ * State machine:
+ *   null              → draw mode is OFF
+ *   "waiting-first"   → draw mode ON, waiting for the first click
+ *   { corner1, z1 }   → first corner placed, waiting for second click
+ */
+export type RoiDrawState = null | "waiting-first" | { corner1: [number, number]; z1: number };
+export const roiDrawStateAtom = atom<RoiDrawState>(null);
+
+/**
+ * Derived atom that exposes the current Z-axis selection and metadata
+ * from the first loaded source. Returns null when there is no source
+ * or the data has no Z axis.
+ */
+export const currentZInfoAtom = atom((get) => {
+  const sources = get(sourceInfoAtom);
+  if (sources.length === 0) return null;
+  const source = sources[0];
+  const zAxisIndex = source.axis_labels.indexOf("z");
+  if (zAxisIndex === -1) return null;
+  const layerState = get(layerFamilyAtom(source));
+  const zValue = layerState.layerProps.selections[0]?.[zAxisIndex] ?? 0;
+  const zMax = source.loader[0].shape[zAxisIndex] - 1;
+  return { zValue, zMax };
+});
+
 export interface Redirect {
   url: string;
   message: string;

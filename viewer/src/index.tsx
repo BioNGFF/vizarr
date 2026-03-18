@@ -8,3 +8,8 @@ export { createViewer } from "./api";
 export type { VizarrViewer } from "./api";
 
 export type { ViewState, ImageLayerConfig } from "./state";
+
+// ROI-related atoms & hooks — used by the @biongff/roi-selector plugin
+export { roiDrawStateAtom, currentZInfoAtom, viewportAtom } from "./state";
+export type { RoiDrawState } from "./state";
+export { useViewState, ViewStateContext } from "./hooks";

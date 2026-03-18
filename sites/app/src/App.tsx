@@ -1,3 +1,4 @@
+import { RoiSelector } from "@biongff/roi-selector";
 import { type ViewState, Vizarr } from "@biongff/vizarr";
 import debounce from "just-debounce-it";
 import * as React from "react";
@@ -20,12 +21,20 @@ function parseViewStateFromUrl(): ViewState | undefined {
 export default function App() {
   const urlString = window.location.href;
 
-  const { sources, viewState } = React.useMemo(() => {
+  const { sources, viewState, enableRoi } = React.useMemo(() => {
     const url = new URL(urlString);
     const { searchParams } = url;
+
+    // Ensure `roi` param is always visible in the URL (default: "0")
+    if (!searchParams.has("roi")) {
+      searchParams.set("roi", "0");
+      window.history.replaceState(window.history.state, "", decodeURIComponent(url.href));
+    }
+
     return {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
+      enableRoi: searchParams.get("roi") === "1",
     };
   }, [urlString]);
 
@@ -48,7 +57,9 @@ export default function App() {
 
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "black" }}>
-      <Vizarr sources={sources} viewState={viewState} onViewStateChange={handleViewStateChange} />
+      <Vizarr sources={sources} viewState={viewState} onViewStateChange={handleViewStateChange}>
+        {enableRoi && <RoiSelector />}
+      </Vizarr>
     </div>
   );
 }

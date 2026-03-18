@@ -24,9 +24,10 @@ export interface VizarrViewerProps {
   sources?: string[];
   viewState?: ViewState;
   onViewStateChange?: (viewState: ViewState) => void;
+  children?: React.ReactNode;
 }
 
-function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange }: VizarrViewerProps) {
+function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange, children }: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
@@ -99,6 +100,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
           <Menu />
           <Viewer />
+          {children}
         </ViewStateContext.Provider>
       )}
       {sourceError !== null && (
@@ -155,11 +157,11 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   );
 }
 
-export default function VizarrViewer(props: VizarrViewerProps) {
+export default function VizarrViewer({ children, ...props }: VizarrViewerProps) {
   return (
     <ThemeProvider theme={theme}>
       <Provider>
-        <VizarrViewerComponent {...props} />
+        <VizarrViewerComponent {...props}>{children}</VizarrViewerComponent>
       </Provider>
     </ThemeProvider>
   );

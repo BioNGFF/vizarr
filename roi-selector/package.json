@@ -1,0 +1,43 @@
+{
+  "name": "@biongff/roi-selector",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/biongff-roi-selector.cjs.js",
+  "module": "dist/biongff-roi-selector.es.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/biongff-roi-selector.es.js",
+      "require": "./dist/biongff-roi-selector.cjs.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run check && vite build",
+    "preview": "vite preview",
+    "check": "tsc"
+  },
+  "dependencies": {
+    "@biongff/vizarr": "workspace:*"
+  },
+  "peerDependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.2.0",
+    "@mui/material": "^7.2.0",
+    "jotai": "^1.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.10",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.7",
+    "vite-plugin-dts": "^4.5.4"
+  }
+}
