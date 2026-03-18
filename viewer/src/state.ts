@@ -126,6 +126,40 @@ export const sourceWarningAtom = atom<string[]>([]);
 export type RoiDrawState = null | "waiting-first" | { corner1: [number, number]; z1: number };
 export const roiDrawStateAtom = atom<RoiDrawState>(null);
 
+/** A saved ROI with its assigned overlay color. */
+export interface SavedRoi {
+  id: string;
+  corner1: [number, number];
+  corner2: [number, number];
+  z1: number;
+  z2: number;
+  color: [number, number, number];
+  visible: boolean;
+}
+
+/** A ROI that has been drawn but not yet saved or discarded. */
+export interface PendingRoi {
+  corner1: [number, number];
+  corner2: [number, number];
+  z1: number;
+  z2: number;
+}
+
+export const savedRoisAtom = atom<SavedRoi[]>([]);
+export const pendingRoiAtom = atom<PendingRoi | null>(null);
+
+/** Color palette (RGB) cycled through for multi-ROI overlays. */
+export const ROI_COLORS: [number, number, number][] = [
+  [255, 100, 100], // red
+  [100, 180, 255], // blue
+  [100, 220, 100], // green
+  [255, 200, 50],  // yellow
+  [200, 100, 255], // purple
+  [255, 150, 50],  // orange
+  [50, 220, 200],  // teal
+  [255, 100, 200], // pink
+];
+
 /**
  * Derived atom that exposes the current Z-axis selection and metadata
  * from the first loaded source. Returns null when there is no source
@@ -141,6 +175,27 @@ export const currentZInfoAtom = atom((get) => {
   const zValue = layerState.layerProps.selections[0]?.[zAxisIndex] ?? 0;
   const zMax = source.loader[0].shape[zAxisIndex] - 1;
   return { zValue, zMax };
+});
+
+/**
+ * Write-only atom that sets the Z-axis slice for all loaded sources.
+ * Pass a z index number and it will update every source's selection.
+ */
+export const setZSliceAtom = atom(null, (get, set, zValue: number) => {
+  const sources = get(sourceInfoAtom);
+  for (const source of sources) {
+    const zAxisIndex = source.axis_labels.indexOf("z");
+    if (zAxisIndex === -1) continue;
+    const layerStateAtom = layerFamilyAtom(source);
+    set(layerStateAtom, (prev) => {
+      const selections = prev.layerProps.selections.map((ch) => {
+        const newCh = [...ch];
+        newCh[zAxisIndex] = zValue;
+        return newCh;
+      });
+      return { ...prev, layerProps: { ...prev.layerProps, selections } };
+    });
+  }
 });
 
 export interface Redirect {
