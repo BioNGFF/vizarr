@@ -139,7 +139,7 @@ export interface OverlayPolygon {
 export interface DeckExtension {
   /** Polygon overlay specifications to render on the canvas. */
   overlays?: OverlayPolygon[];
-  /** Click handler. Receives image-space coordinates. Return true to consume the event. */
+  /** Click handler. Receives image-space coordinates. Return true to stop propagation to other registered extensions (does not prevent layer-level click handlers from running). */
   onClick?: (coordinate: [number, number]) => boolean;
   /** Hover handler. Receives image-space coordinates or null when leaving the canvas. */
   onHover?: (coordinate: [number, number] | null) => void;

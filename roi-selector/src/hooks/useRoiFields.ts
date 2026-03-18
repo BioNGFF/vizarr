@@ -116,6 +116,11 @@ export function useRoiFields(): UseRoiFieldsReturn {
       const newCorner1: [number, number] = [Math.min(px1, px2), Math.min(py1, py2)];
       const newCorner2: [number, number] = [Math.max(px1, px2), Math.max(py1, py2)];
 
+      const parsedZ1 = nz1 !== "" ? Number(nz1) : undefined;
+      const parsedZ2 = nz2 !== "" ? Number(nz2) : undefined;
+      if ((parsedZ1 !== undefined && Number.isNaN(parsedZ1)) || (parsedZ2 !== undefined && Number.isNaN(parsedZ2)))
+        return;
+
       if (editingRoiId) {
         setSavedRois((prev) =>
           prev.map((r) => {
@@ -124,8 +129,8 @@ export function useRoiFields(): UseRoiFieldsReturn {
               ...r,
               corner1: newCorner1,
               corner2: newCorner2,
-              z1: nz1 !== "" ? Number(nz1) : r.z1,
-              z2: nz2 !== "" ? Number(nz2) : r.z2,
+              z1: parsedZ1 ?? r.z1,
+              z2: parsedZ2 ?? r.z2,
             };
           }),
         );
@@ -138,8 +143,8 @@ export function useRoiFields(): UseRoiFieldsReturn {
         return {
           corner1: newCorner1,
           corner2: newCorner2,
-          z1: nz1 !== "" ? Number(nz1) : prev.z1,
-          z2: nz2 !== "" ? Number(nz2) : prev.z2,
+          z1: parsedZ1 ?? prev.z1,
+          z2: parsedZ2 ?? prev.z2,
         };
       });
     },
@@ -190,6 +195,7 @@ export function useRoiFields(): UseRoiFieldsReturn {
     if ([nx1, ny1, nx2, ny2].some(Number.isNaN)) return;
     const nz1 = z1 !== "" ? Number(z1) : pendingRoi.z1;
     const nz2 = z2 !== "" ? Number(z2) : pendingRoi.z2;
+    if (Number.isNaN(nz1) || Number.isNaN(nz2)) return;
     const raw = {
       corner1: [nx1, ny1] as [number, number],
       corner2: [nx2, ny2] as [number, number],

@@ -76,9 +76,9 @@ function RoiSelector() {
     const roiHeight = b.y2 - b.y1;
     if (roiWidth === 0 || roiHeight === 0) return;
     const padding = 40;
-    const zoom = Math.log2(
-      Math.min((viewport.width - 2 * padding) / roiWidth, (viewport.height - 2 * padding) / roiHeight),
-    );
+    const availW = Math.max(viewport.width - 2 * padding, 1);
+    const availH = Math.max(viewport.height - 2 * padding, 1);
+    const zoom = Math.log2(Math.min(availW / roiWidth, availH / roiHeight));
     setViewState({
       zoom,
       target: [(b.x1 + b.x2) / 2, (b.y1 + b.y2) / 2],

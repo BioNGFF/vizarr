@@ -48,27 +48,26 @@ export default function App() {
     }
   }, [roiReady]);
 
+  // Sync the `roi` URL param once we know whether the plugin is available.
+  React.useEffect(() => {
+    if (!roiReady) return;
+    const url = new URL(window.location.href);
+    if (roiAvailable) {
+      if (!url.searchParams.has("roi")) {
+        url.searchParams.set("roi", "0");
+        window.history.replaceState(window.history.state, "", url.href);
+      }
+    } else {
+      if (url.searchParams.has("roi")) {
+        url.searchParams.delete("roi");
+        window.history.replaceState(window.history.state, "", url.href);
+      }
+    }
+  }, [roiReady]);
+
   const { sources, viewState, enableRoi } = React.useMemo(() => {
     const url = new URL(urlString);
     const { searchParams } = url;
-
-    // Don't touch the URL until we know whether the plugin is available.
-    if (roiReady) {
-      if (roiAvailable) {
-        // Plugin installed — ensure `roi` param is visible (default: "0")
-        if (!searchParams.has("roi")) {
-          searchParams.set("roi", "0");
-          window.history.replaceState(window.history.state, "", decodeURIComponent(url.href));
-        }
-      } else {
-        // Plugin not installed — remove stale roi param
-        if (searchParams.has("roi")) {
-          searchParams.delete("roi");
-          window.history.replaceState(window.history.state, "", decodeURIComponent(url.href));
-        }
-      }
-    }
-
     return {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
@@ -88,7 +87,7 @@ export default function App() {
             zoom: update.zoom,
           }),
         );
-        window.history.replaceState(window.history.state, "", decodeURIComponent(url.href));
+        window.history.replaceState(window.history.state, "", url.href);
       }, 200),
     [],
   );
