@@ -3,21 +3,27 @@ import debounce from "just-debounce-it";
 import * as React from "react";
 
 /**
- * Lazy load the optional ROI selector plugin.
- * If `@biongff/roi-selector` is not installed (or substituted by the
- * optionalDeps Vite plugin), this resolves to `null` and nothing renders.
+ * `__ROI_AVAILABLE__` is a compile-time constant injected by Vite based on
+ * whether `roi-selector` is active in pnpm-workspace.yaml.
+ * When disabled, the import is dead-code-eliminated in production builds;
+ * in dev mode the `optionalDeps` Vite plugin stubs the module.
  */
-const roiPromise: Promise<{ default: React.ComponentType } | null> = import("@biongff/roi-selector")
-  .then((mod) => (typeof mod.RoiSelector === "function" ? { default: mod.RoiSelector } : null))
-  .catch(() => null);
+const LazyRoiSelector = __ROI_AVAILABLE__
+  ? React.lazy(() => import("@biongff/roi-selector").then((m) => ({ default: m.RoiSelector })))
+  : null;
 
-/** True once we know the plugin is available (resolved at module level). */
-let roiAvailable = false;
-roiPromise.then((m) => {
-  roiAvailable = m !== null;
-});
-
-const LazyRoiSelector = React.lazy(() => roiPromise.then((m) => m ?? { default: (() => null) as unknown as React.FC }));
+class RoiErrorBoundary extends React.Component<React.PropsWithChildren> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: unknown) {
+    console.error("[ROI Selector]", error);
+  }
+  render() {
+    return this.state.hasError ? null : this.props.children;
+  }
+}
 
 function parseViewStateFromUrl(): ViewState | undefined {
   const url = new URL(window.location.href);
@@ -37,33 +43,15 @@ function parseViewStateFromUrl(): ViewState | undefined {
 export default function App() {
   const urlString = window.location.href;
 
-  // Re-render once we know whether the ROI plugin is available (async check).
-  const [roiReady, setRoiReady] = React.useState(roiAvailable);
+  // Add ?roi=0 param when ROI plugin is compiled in but param is missing.
   React.useEffect(() => {
-    if (!roiReady) {
-      roiPromise.then((m) => {
-        roiAvailable = m !== null;
-        setRoiReady(true);
-      });
-    }
-  }, [roiReady]);
-
-  // Sync the `roi` URL param once we know whether the plugin is available.
-  React.useEffect(() => {
-    if (!roiReady) return;
+    if (!__ROI_AVAILABLE__) return;
     const url = new URL(window.location.href);
-    if (roiAvailable) {
-      if (!url.searchParams.has("roi")) {
-        url.searchParams.set("roi", "0");
-        window.history.replaceState(window.history.state, "", url.href);
-      }
-    } else {
-      if (url.searchParams.has("roi")) {
-        url.searchParams.delete("roi");
-        window.history.replaceState(window.history.state, "", url.href);
-      }
+    if (!url.searchParams.has("roi")) {
+      url.searchParams.set("roi", "0");
+      window.history.replaceState(window.history.state, "", url.href);
     }
-  }, [roiReady]);
+  }, []);
 
   const { sources, viewState, enableRoi } = React.useMemo(() => {
     const url = new URL(urlString);
@@ -71,9 +59,9 @@ export default function App() {
     return {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
-      enableRoi: roiAvailable && searchParams.get("roi") === "1",
+      enableRoi: __ROI_AVAILABLE__ && searchParams.get("roi") === "1",
     };
-  }, [urlString, roiReady]);
+  }, [urlString]);
 
   // Debounced viewState change handler
   const handleViewStateChange = React.useMemo(
@@ -95,10 +83,12 @@ export default function App() {
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "black" }}>
       <Vizarr sources={sources} viewState={viewState} onViewStateChange={handleViewStateChange}>
-        {enableRoi && (
-          <React.Suspense fallback={null}>
-            <LazyRoiSelector />
-          </React.Suspense>
+        {enableRoi && LazyRoiSelector && (
+          <RoiErrorBoundary>
+            <React.Suspense fallback={null}>
+              <LazyRoiSelector />
+            </React.Suspense>
+          </RoiErrorBoundary>
         )}
       </Vizarr>
     </div>

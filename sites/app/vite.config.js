@@ -26,13 +26,18 @@ export default defineConfig(({ mode }) => ({
 }));
 
 export default defineConfig(({ mode }) => {
-  // Read workspace config to determine which packages are active
   const wsPath = path.resolve(__dirname, "../../pnpm-workspace.yaml");
   const wsContent = fs.readFileSync(wsPath, "utf-8");
-  const roiActive = /^\s*-\s*['"]?roi-selector['"]?\s*$/m.test(wsContent);
+  const roiActive = isWorkspaceFolderActive(wsContent, "roi-selector");
+
+  const disabledPackages = new Set();
+  if (!roiActive) disabledPackages.add("@biongff/roi-selector");
 
   return {
-    plugins: [optionalDeps({ "@biongff/roi-selector": "roi-selector" }), react()],
+    plugins: [optionalDeps(disabledPackages), react()],
+    define: {
+      __ROI_AVAILABLE__: JSON.stringify(roiActive),
+    },
     resolve: {
       alias: {
         ...(mode === "development"
