@@ -5,7 +5,7 @@ import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { useAxisNavigation } from "../hooks/useAxisNavigation";
-import { layerAtoms, deckExtensionsAtom, viewportAtom } from "../state";
+import { deckExtensionsAtom, layerAtoms, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
@@ -176,9 +176,7 @@ export default function Viewer() {
   // ---- Generic hover handler (delegates to registered extensions) ----
   const handleHover = React.useCallback(
     (info: PickingInfo) => {
-      const coord = info.coordinate
-        ? ([info.coordinate[0], info.coordinate[1]] as [number, number])
-        : null;
+      const coord = info.coordinate ? ([info.coordinate[0], info.coordinate[1]] as [number, number]) : null;
       for (const ext of Object.values(extensions)) {
         ext.onHover?.(coord);
       }
@@ -215,9 +213,7 @@ export default function Viewer() {
           const d = deckRef.current?.deck;
           setViewport(d ? { width: d.width, height: d.height } : null);
         }}
-        onResize={({ width, height }: { width: number; height: number }) =>
-          setViewport({ width, height })
-        }
+        onResize={({ width, height }: { width: number; height: number }) => setViewport({ width, height })}
       />
       {axisNavigationSnackbar}
     </>

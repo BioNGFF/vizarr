@@ -9,7 +9,7 @@ import RoiCoordinateFields from "./components/RoiCoordinateFields";
 import RoiDrawControls from "./components/RoiDrawControls";
 import SavedRoiList from "./components/SavedRoiList";
 import { useRoiFields } from "./hooks/useRoiFields";
-import { normalizeRoiBounds, type SavedRoi } from "./state";
+import { type SavedRoi, normalizeRoiBounds } from "./state";
 import { useRoiDeckExtension } from "./useRoiDeckExtension";
 
 /**
@@ -28,14 +28,34 @@ function RoiSelector() {
   useRoiDeckExtension();
 
   const {
-    x1, y1, x2, y2, z1, z2,
-    onX1Change, onY1Change, onX2Change, onY2Change, onZ1Change, onZ2Change,
-    hasZAxis, zInfo, imageBounds,
-    isDrawing, roiDrawState,
-    pendingRoi, savedRois, editingRoiId,
-    handleToggleDraw, handleSaveRoi, handleDiscardRoi,
-    handleDeleteRoi, handleToggleVisibility,
-    handleEditRoi, handleUpdateRoi, handleCancelEdit,
+    x1,
+    y1,
+    x2,
+    y2,
+    z1,
+    z2,
+    onX1Change,
+    onY1Change,
+    onX2Change,
+    onY2Change,
+    onZ1Change,
+    onZ2Change,
+    hasZAxis,
+    zInfo,
+    imageBounds,
+    isDrawing,
+    roiDrawState,
+    pendingRoi,
+    savedRois,
+    editingRoiId,
+    handleToggleDraw,
+    handleSaveRoi,
+    handleDiscardRoi,
+    handleDeleteRoi,
+    handleToggleVisibility,
+    handleEditRoi,
+    handleUpdateRoi,
+    handleCancelEdit,
   } = useRoiFields();
 
   // ---- Panel toggle state ----
@@ -57,10 +77,7 @@ function RoiSelector() {
     if (roiWidth === 0 || roiHeight === 0) return;
     const padding = 40;
     const zoom = Math.log2(
-      Math.min(
-        (viewport.width - 2 * padding) / roiWidth,
-        (viewport.height - 2 * padding) / roiHeight,
-      ),
+      Math.min((viewport.width - 2 * padding) / roiWidth, (viewport.height - 2 * padding) / roiHeight),
     );
     setViewState({
       zoom,
@@ -84,7 +101,10 @@ function RoiSelector() {
   const roiToPayload = (roi: SavedRoi): Record<string, number> => {
     const b = normalizeRoiBounds(roi);
     const payload: Record<string, number> = { x1: b.x1, y1: b.y1, x2: b.x2, y2: b.y2 };
-    if (hasZAxis) { payload.z1 = b.z1; payload.z2 = b.z2; }
+    if (hasZAxis) {
+      payload.z1 = b.z1;
+      payload.z2 = b.z2;
+    }
     return payload;
   };
 
@@ -93,9 +113,7 @@ function RoiSelector() {
   };
 
   const handleCopyAllRois = () => {
-    navigator.clipboard
-      .writeText(JSON.stringify(savedRois.map(roiToPayload), null, 2))
-      .then(() => setSnackOpen(true));
+    navigator.clipboard.writeText(JSON.stringify(savedRois.map(roiToPayload), null, 2)).then(() => setSnackOpen(true));
   };
 
   // ---- Render ----
@@ -113,11 +131,7 @@ function RoiSelector() {
       }}
     >
       <Tooltip title="Select Region of Interest">
-        <IconButton
-          size="small"
-          onClick={() => setOpen((prev) => !prev)}
-          sx={{ color: "#fff" }}
-        >
+        <IconButton size="small" onClick={() => setOpen((prev) => !prev)} sx={{ color: "#fff" }}>
           <CropFree fontSize="small" />
           <Typography variant="caption" sx={{ ml: 0.5, color: "#fff" }}>
             ROI Selection
@@ -129,7 +143,12 @@ function RoiSelector() {
         <Box sx={{ mt: 1 }}>
           {(pendingRoi || editingRoiId) && (
             <RoiCoordinateFields
-              x1={x1} y1={y1} x2={x2} y2={y2} z1={z1} z2={z2}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              z1={z1}
+              z2={z2}
               onX1Change={onX1Change}
               onY1Change={onY1Change}
               onX2Change={onX2Change}

@@ -24,9 +24,21 @@ interface RoiCoordinateFieldsProps {
 const fieldSx = { color: "#fff", fontSize: 12 };
 
 export default function RoiCoordinateFields({
-  x1, y1, x2, y2, z1, z2,
-  onX1Change, onY1Change, onX2Change, onY2Change, onZ1Change, onZ2Change,
-  hasZAxis, zInfo, imageBounds,
+  x1,
+  y1,
+  x2,
+  y2,
+  z1,
+  z2,
+  onX1Change,
+  onY1Change,
+  onX2Change,
+  onY2Change,
+  onZ1Change,
+  onZ2Change,
+  hasZAxis,
+  zInfo,
+  imageBounds,
 }: RoiCoordinateFieldsProps) {
   return (
     <>

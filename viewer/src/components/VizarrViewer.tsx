@@ -27,7 +27,12 @@ export interface VizarrViewerProps {
   children?: React.ReactNode;
 }
 
-function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange, children }: VizarrViewerProps) {
+function VizarrViewerComponent({
+  sources = [],
+  viewState: initialViewState,
+  onViewStateChange,
+  children,
+}: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);

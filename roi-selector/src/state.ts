@@ -49,7 +49,12 @@ export interface NormalizedBounds {
  *
  * Works for both `SavedRoi` and `PendingRoi` obj.
  */
-export function normalizeRoiBounds(roi: { corner1: [number, number]; corner2: [number, number]; z1: number; z2: number }): NormalizedBounds {
+export function normalizeRoiBounds(roi: {
+  corner1: [number, number];
+  corner2: [number, number];
+  z1: number;
+  z2: number;
+}): NormalizedBounds {
   return {
     x1: Math.min(roi.corner1[0], roi.corner2[0]),
     y1: Math.min(roi.corner1[1], roi.corner2[1]),
@@ -88,16 +93,16 @@ export const ROI_COLORS: [number, number, number][] = [
   [255, 100, 100], // red
   [100, 180, 255], // blue
   [100, 220, 100], // green
-  [255, 200, 50],  // yellow
+  [255, 200, 50], // yellow
   [200, 100, 255], // purple
-  [255, 150, 50],  // orange
-  [50, 220, 200],  // teal
+  [255, 150, 50], // orange
+  [50, 220, 200], // teal
   [255, 100, 200], // pink
-  [180, 220, 80],  // lime
+  [180, 220, 80], // lime
   [255, 130, 130], // salmon
   [130, 130, 255], // periwinkle
   [255, 180, 180], // light coral
-  [80, 200, 140],  // mint
+  [80, 200, 140], // mint
   [220, 160, 255], // lavender
   [255, 220, 100], // gold
   [100, 200, 200], // cyan

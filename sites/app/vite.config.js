@@ -32,10 +32,7 @@ export default defineConfig(({ mode }) => {
   const roiActive = /^\s*-\s*['"]?roi-selector['"]?\s*$/m.test(wsContent);
 
   return {
-    plugins: [
-      optionalDeps({ "@biongff/roi-selector": "roi-selector" }),
-      react(),
-    ],
+    plugins: [optionalDeps({ "@biongff/roi-selector": "roi-selector" }), react()],
     resolve: {
       alias: {
         ...(mode === "development"

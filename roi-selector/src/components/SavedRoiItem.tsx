@@ -2,7 +2,7 @@ import { ContentCopy, Delete, Edit, MyLocation, VisibilityOff } from "@mui/icons
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import React from "react";
 
-import { normalizeRoiBounds, type SavedRoi } from "../state";
+import { type SavedRoi, normalizeRoiBounds } from "../state";
 
 interface SavedRoiItemProps {
   roi: SavedRoi;
@@ -77,10 +77,7 @@ export default function SavedRoiItem({
           ({b.x1}, {b.y1}) → ({b.x2}, {b.y2})
         </Typography>
         {hasZAxis && (
-          <Typography
-            variant="caption"
-            sx={{ color: "grey.500", fontFamily: "monospace", fontSize: 9 }}
-          >
+          <Typography variant="caption" sx={{ color: "grey.500", fontFamily: "monospace", fontSize: 9 }}>
             z: {b.z1 === b.z2 ? b.z1 : `${b.z1}–${b.z2}`}
           </Typography>
         )}
@@ -98,11 +95,7 @@ export default function SavedRoiItem({
         </IconButton>
       </Tooltip>
       <Tooltip title="Edit ROI">
-        <IconButton
-          size="small"
-          onClick={onEdit}
-          sx={{ color: isEditing ? "primary.main" : "grey.400", p: 0.25 }}
-        >
+        <IconButton size="small" onClick={onEdit} sx={{ color: isEditing ? "primary.main" : "grey.400", p: 0.25 }}>
           <Edit sx={{ fontSize: 14 }} />
         </IconButton>
       </Tooltip>

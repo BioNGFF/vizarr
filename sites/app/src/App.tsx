@@ -8,20 +8,16 @@ import * as React from "react";
  * optionalDeps Vite plugin), this resolves to `null` and nothing renders.
  */
 const roiPromise: Promise<{ default: React.ComponentType } | null> = import("@biongff/roi-selector")
-  .then((mod) =>
-    typeof mod.RoiSelector === "function"
-      ? { default: mod.RoiSelector }
-      : null,
-  )
+  .then((mod) => (typeof mod.RoiSelector === "function" ? { default: mod.RoiSelector } : null))
   .catch(() => null);
 
 /** True once we know the plugin is available (resolved at module level). */
 let roiAvailable = false;
-roiPromise.then((m) => { roiAvailable = m !== null; });
+roiPromise.then((m) => {
+  roiAvailable = m !== null;
+});
 
-const LazyRoiSelector = React.lazy(() =>
-  roiPromise.then((m) => m ?? { default: (() => null) as unknown as React.FC }),
-);
+const LazyRoiSelector = React.lazy(() => roiPromise.then((m) => m ?? { default: (() => null) as unknown as React.FC }));
 
 function parseViewStateFromUrl(): ViewState | undefined {
   const url = new URL(window.location.href);

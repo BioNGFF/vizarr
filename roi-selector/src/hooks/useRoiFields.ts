@@ -4,16 +4,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { currentImageBoundsAtom, currentZInfoAtom } from "@biongff/vizarr";
 
 import {
+  type ImageBounds,
+  type PendingRoi,
+  type RoiDrawState,
+  type SavedRoi,
   clampToBounds,
   nextAvailableColor,
   normalizeRoiBounds,
   pendingRoiAtom,
   roiDrawStateAtom,
   savedRoisAtom,
-  type ImageBounds,
-  type PendingRoi,
-  type RoiDrawState,
-  type SavedRoi,
 } from "../state";
 
 export interface UseRoiFieldsReturn {
@@ -146,12 +146,30 @@ export function useRoiFields(): UseRoiFieldsReturn {
     [editingRoiId, setSavedRois, setPendingRoi],
   );
 
-  const onX1Change = (v: string) => { setX1(v); syncFieldsToPending(v, y1, x2, y2, z1, z2); };
-  const onY1Change = (v: string) => { setY1(v); syncFieldsToPending(x1, v, x2, y2, z1, z2); };
-  const onX2Change = (v: string) => { setX2(v); syncFieldsToPending(x1, y1, v, y2, z1, z2); };
-  const onY2Change = (v: string) => { setY2(v); syncFieldsToPending(x1, y1, x2, v, z1, z2); };
-  const onZ1Change = (v: string) => { setZ1(v); syncFieldsToPending(x1, y1, x2, y2, v, z2); };
-  const onZ2Change = (v: string) => { setZ2(v); syncFieldsToPending(x1, y1, x2, y2, z1, v); };
+  const onX1Change = (v: string) => {
+    setX1(v);
+    syncFieldsToPending(v, y1, x2, y2, z1, z2);
+  };
+  const onY1Change = (v: string) => {
+    setY1(v);
+    syncFieldsToPending(x1, v, x2, y2, z1, z2);
+  };
+  const onX2Change = (v: string) => {
+    setX2(v);
+    syncFieldsToPending(x1, y1, v, y2, z1, z2);
+  };
+  const onY2Change = (v: string) => {
+    setY2(v);
+    syncFieldsToPending(x1, y1, x2, v, z1, z2);
+  };
+  const onZ1Change = (v: string) => {
+    setZ1(v);
+    syncFieldsToPending(x1, y1, x2, y2, v, z2);
+  };
+  const onZ2Change = (v: string) => {
+    setZ2(v);
+    syncFieldsToPending(x1, y1, x2, y2, z1, v);
+  };
 
   // ---- Draw-mode toggle ----
   const handleToggleDraw = () => {
@@ -235,8 +253,18 @@ export function useRoiFields(): UseRoiFieldsReturn {
   };
 
   return {
-    x1, y1, x2, y2, z1, z2,
-    onX1Change, onY1Change, onX2Change, onY2Change, onZ1Change, onZ2Change,
+    x1,
+    y1,
+    x2,
+    y2,
+    z1,
+    z2,
+    onX1Change,
+    onY1Change,
+    onX2Change,
+    onY2Change,
+    onZ1Change,
+    onZ2Change,
     hasZAxis,
     zInfo,
     imageBounds,

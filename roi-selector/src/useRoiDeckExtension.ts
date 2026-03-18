@@ -1,20 +1,9 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  currentZInfoAtom,
-  currentImageBoundsAtom,
-  deckExtensionsAtom,
-  type OverlayPolygon,
-} from "@biongff/vizarr";
+import { type OverlayPolygon, currentImageBoundsAtom, currentZInfoAtom, deckExtensionsAtom } from "@biongff/vizarr";
 
-import {
-  roiDrawStateAtom,
-  savedRoisAtom,
-  pendingRoiAtom,
-  nextAvailableColor,
-  normalizeRoiBounds,
-} from "./state";
+import { nextAvailableColor, normalizeRoiBounds, pendingRoiAtom, roiDrawStateAtom, savedRoisAtom } from "./state";
 
 /**
  * Hook that registers ROI overlay layers, click and hover handlers
@@ -35,9 +24,7 @@ export function useRoiDeckExtension() {
   const nextRoiColor = nextAvailableColor(savedRois);
 
   const roiCorner1 =
-    roiDrawState && typeof roiDrawState === "object" && "corner1" in roiDrawState
-      ? roiDrawState.corner1
-      : null;
+    roiDrawState && typeof roiDrawState === "object" && "corner1" in roiDrawState ? roiDrawState.corner1 : null;
 
   // Track mouse position for the preview rectangle (only while placing second corner).
   const [roiMousePos, setRoiMousePos] = useState<[number, number] | null>(null);
@@ -59,7 +46,12 @@ export function useRoiDeckExtension() {
       const [bx, by] = roi.corner2;
       result.push({
         id: `roi-saved-${roi.id}`,
-        polygon: [[ax, ay], [bx, ay], [bx, by], [ax, by]],
+        polygon: [
+          [ax, ay],
+          [bx, ay],
+          [bx, by],
+          [ax, by],
+        ],
         fillColor: [...roi.color, 40],
         lineColor: [...roi.color, 200],
       });
@@ -71,7 +63,12 @@ export function useRoiDeckExtension() {
       const [bx, by] = pendingRoi.corner2;
       result.push({
         id: "roi-pending",
-        polygon: [[ax, ay], [bx, ay], [bx, by], [ax, by]],
+        polygon: [
+          [ax, ay],
+          [bx, ay],
+          [bx, by],
+          [ax, by],
+        ],
         fillColor: [...nextRoiColor, 60],
         lineColor: [...nextRoiColor, 220],
       });
@@ -83,7 +80,12 @@ export function useRoiDeckExtension() {
       const [x2, y2] = roiMousePos;
       result.push({
         id: "roi-preview",
-        polygon: [[x1, y1], [x2, y1], [x2, y2], [x1, y2]],
+        polygon: [
+          [x1, y1],
+          [x2, y1],
+          [x2, y2],
+          [x1, y2],
+        ],
         fillColor: [...nextRoiColor, 40],
         lineColor: [...nextRoiColor, 200],
       });
@@ -102,9 +104,7 @@ export function useRoiDeckExtension() {
       const x = imageBounds ? clampXY(rawX, imageBounds.xMax) : Math.round(rawX);
       const y = imageBounds ? clampXY(rawY, imageBounds.yMax) : Math.round(rawY);
       const clampZ = (z: number) =>
-        imageBounds?.zMax !== null && imageBounds?.zMax !== undefined
-          ? Math.max(0, Math.min(z, imageBounds.zMax))
-          : z;
+        imageBounds?.zMax !== null && imageBounds?.zMax !== undefined ? Math.max(0, Math.min(z, imageBounds.zMax)) : z;
 
       if (roiDrawState === "waiting-first") {
         const z1 = clampZ(zInfo?.zValue ?? 0);
