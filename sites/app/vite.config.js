@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import * as path from "node:path";
 
 import react from "@vitejs/plugin-react";
@@ -16,6 +17,37 @@ export default defineConfig(({ mode }) => ({
           }
         : {}),
     },
+    load(id) {
+      if (id.startsWith("\0optional:")) {
+        return "export default {}";
+      }
+    },
   },
-  server: { open: `?source=${source}` },
 }));
+
+export default defineConfig(({ mode }) => {
+  // Read workspace config to determine which packages are active
+  const wsPath = path.resolve(__dirname, "../../pnpm-workspace.yaml");
+  const wsContent = fs.readFileSync(wsPath, "utf-8");
+  const roiActive = /^\s*-\s*['"]?roi-selector['"]?\s*$/m.test(wsContent);
+
+  return {
+    plugins: [
+      optionalDeps({ "@biongff/roi-selector": "roi-selector" }),
+      react(),
+    ],
+    resolve: {
+      alias: {
+        ...(mode === "development"
+          ? {
+              "@biongff/vizarr": path.resolve(__dirname, "../../viewer/src/index.tsx"),
+              ...(roiActive
+                ? { "@biongff/roi-selector": path.resolve(__dirname, "../../roi-selector/src/index.tsx") }
+                : {}),
+            }
+          : {}),
+      },
+    },
+    server: { open: `?source=${source}` },
+  };
+});
