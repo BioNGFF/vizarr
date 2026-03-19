@@ -1,3 +1,4 @@
 packages:
   - 'viewer'
   - 'sites/*'
+  - 'anndata-zarr'

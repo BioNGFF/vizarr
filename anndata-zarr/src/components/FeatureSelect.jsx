@@ -29,7 +29,7 @@ export const FeatureSelect = ({
   adata,
   feature,
   onSelect,
-  callback = () => {},
+  callback = () => { },
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 

@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack';
 import { FeatureSelect } from './FeatureSelect';
 import { ObsSelect } from './ObsSelect';
 
-export const AnndataController = ({ adata, callback = () => {} }) => {
+export const AnndataController = ({ adata, callback = () => { } }) => {
   const [feature, setFeature] = useState(null);
   const [obsCol, setObsCol] = useState(null);
 
@@ -40,4 +40,4 @@ export const AnndataController = ({ adata, callback = () => {} }) => {
       </Box>
     </Stack>
   );
-};
+}

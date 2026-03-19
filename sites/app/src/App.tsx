@@ -1,6 +1,19 @@
 import { type ViewState, Vizarr } from "@biongff/vizarr";
+import { AnndataProvider, AnndataController } from "@biongff/anndata-zarr"
 import debounce from "just-debounce-it";
 import * as React from "react";
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+  typography: {
+    fontSize: 12,
+  },
+});
 
 function parseViewStateFromUrl(): ViewState | undefined {
   const url = new URL(window.location.href);
@@ -17,18 +30,24 @@ function parseViewStateFromUrl(): ViewState | undefined {
   return undefined;
 }
 
+
 export default function App() {
   const urlString = window.location.href;
 
-  const { sources, viewState } = React.useMemo(() => {
+
+  const { sources, viewState, anndatas } = React.useMemo(() => {
     const url = new URL(urlString);
     const { searchParams } = url;
     return {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
+      anndatas: searchParams
+        .getAll('anndata')
+        .map((v) => (v ? { url: v } : null)),
     };
   }, [urlString]);
 
+  const [colors, setColors] = React.useState(() => Array(sources.length).fill(null));
   // Debounced viewState change handler
   const handleViewStateChange = React.useMemo(
     () =>
@@ -45,10 +64,30 @@ export default function App() {
       }, 200),
     [],
   );
-
+  const selectCallback = (colorData: any, i: any) => {
+    setColors((prev) => {
+      return prev.map((c, ci) => (ci === i ? colorData : c));
+    });
+  };
+  const anndataControllers = React.useMemo(() => {
+    return sources.map((_s, i) => {
+      if (!anndatas?.[i]?.url) return null;
+      return (
+        <AnndataController
+          key={i}
+          adata={anndatas[i]}
+          callback={(colorData: any) => selectCallback(colorData, i)}
+        />
+      );
+    });
+  }, [anndatas, sources]);
   return (
-    <div style={{ position: "fixed", inset: 0, backgroundColor: "black" }}>
-      <Vizarr sources={sources} viewState={viewState} onViewStateChange={handleViewStateChange} />
-    </div>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <AnndataProvider>
+        <div className="container-right">{anndataControllers}</div>
+        <Vizarr sources={sources} viewState={viewState} onViewStateChange={handleViewStateChange} colours={colors} />
+      </AnndataProvider>
+    </ThemeProvider>
   );
 }

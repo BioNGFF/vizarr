@@ -20,10 +20,12 @@ export interface VizarrViewerProps {
   sources?: string[];
   viewState?: ViewState;
   onViewStateChange?: (viewState: ViewState) => void;
+  colours: [];
 }
 
-function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange }: VizarrViewerProps) {
+function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange, colours }: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
+  const sourceInfo = useAtomValue(sourceInfoAtom)
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
   const redirectObj = useAtomValue(redirectObjAtom);
@@ -58,7 +60,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   );
 
   React.useEffect(() => {
-    async function loadSources() {
+    async function loadSources(colours) {
       const results = await Promise.allSettled(
         configs.map(async (config, index) => {
           const sourceData = await createSourceData(config);
@@ -72,6 +74,10 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
       let sourceDatas = [];
       for (const res of results) {
         if (res.status === "fulfilled") {
+
+          if (colours[0] !== null) {
+            res.value.labels[0].colors = colours[0]
+          }
           sourceDatas.push(res.value);
         } else {
           console.error(res.reason);
@@ -81,9 +87,10 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
       setSourceInfo(sourceDatas);
     }
 
-    loadSources();
-  }, [configs, setSourceInfo]);
 
+
+    loadSources(colours);
+  }, [configs, setSourceInfo, colours]);
   return (
     <>
       {sourceError === null && redirectObj === null && (
