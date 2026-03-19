@@ -5,7 +5,9 @@
   "main": "dist/biongff-vizarr.cjs.js",
   "module": "dist/biongff-vizarr.es.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -28,7 +30,6 @@
     "@vivjs/types": "~0.17.0",
     "@zarrita/storage": "0.1.4",
     "deck.gl": "~9.0.0",
-    "http-server": "^14.1.1",
     "jotai": "^1.0.0",
     "math.gl": "^4.1.0",
     "notistack": "^3.0.2",

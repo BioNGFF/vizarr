@@ -5,11 +5,10 @@ import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { useAxisNavigation } from "../hooks/useAxisNavigation";
-import { layerAtoms, sourceErrorAtom, viewportAtom } from "../state";
+import { layerAtoms, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
-import { useSetAtom } from "jotai";
 import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
 
