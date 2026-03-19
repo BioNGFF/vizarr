@@ -1,85 +1,95 @@
-## Feedback and Contribution
+## Contributing to Vizarr
 
-Thanks for your interest in `vizarr`! I welcome any input, feedback, bug reports, and contributions. 
+Thanks for your interest in `vizarr`. We welcome any input, feedback, bug reports, and contributions. 
 Please do not hesitate to reach out if you have any questions!
 
-### Setting up a development environment
+## Setting Up Your Development Environment
 
-In order to make changes to `vizarr`, you will need to fork the repository. Clone your fork
-of the repository to your local machine and change directories:
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally:
 
 ```bash
 git clone https://github.com/your-username/vizarr.git
 cd vizarr
-``` 
+```
 
-Set the `upstream` remote to the base `vizarr` repository: 
+3. **Set the upstream remote** to keep your fork in sync:
 
 ```bash
 git remote add upstream git@github.com:BioNGFF/vizarr.git
 ```
 
-Install the dependencies to develop and build `vizarr` via `pnpm`. First [install pnpm](https://pnpm.io/installation) if you do not have it already.
-
+4. **Install dependencies** using pnpm (if you don’t have pnpm, [install it](https://pnpm.io/installation)):
 
 ```bash
-pnpm install 
+pnpm install
 ```
 
-> Note: You need to have [Node.js](https://nodejs.org/en/) (v20.0 or later) to build
-> and develop `vizarr`. I recommend using [`nvm`](https://github.com/nvm-sh/nvm) or
-> [`fnm`](https://github.com/Schniz/fnm) to manage different version of Node.js
-> on your machine.
+> **Note:** Node.js v20 or later is required. Use a version manager like [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) to manage multiple Node versions.
 
-### Running the development server
+## Running the Development Server
+
+Start a local development server:
 
 ```bash
 pnpm dev
 ```
 
-The `dev` command will start a development server on `http://localhost:5173`
-which you can navigate to in your web browser. You can "live" edit the contents
-of any of the files within `src/` or `public/` when running this server;
-changes are reflected instantly in the browser. Stop the development server
-when you are done making changes.
+* Access the app at [http://localhost:5173](http://localhost:5173)
+* You can edit files in **`src/`** (TypeScript code) or **`public/`** (static assets) while the server is running. Changes update live in the browser.
 
-- `src/` - contains all TypeScript source code
-- `public/` - contains all static assets required for the site
+Other useful scripts are available in `package.json`. Run them with:
 
-Have a look at the other `script` commands in `package.json` for the project. These are standard to any JS
-build and can be executed by running `pnpm <command>`.
+```bash
+pnpm <command>
+```
 
-### Making changes
+## Making Changes
 
-Create a new feature branch:
+1. Create a new feature branch:
 
 ```bash
 git checkout main -b your-feature-branch-name
 ```
 
-Add and commit your changed files.
+2. Make your changes, then stage and commit:
 
-### Sharing your changes
+```bash
+git add .
+git commit -m "Describe your changes"
+```
 
-Update your remote branch:
+## Sharing Your Changes
+
+Push your branch to your fork:
 
 ```bash
 git push -u origin your-feature-branch-name
 ```
 
-You can then make a pull-request to `vizarr`'s `main` branch. When making a
-pull-request, your code will be checked for linting with `biome`. Please run
-`pnpm fix` to automatically format your code when making a pull-request.
+Create a pull request (PR) against the `main` branch of `BioNGFF/vizarr`.
 
-
-### (Note to self) Building and publishing `vizarr`
-
-Build a production version of the site:
+> **Tip:** Before submitting your PR, make sure your code is formatted and linted:
 
 ```bash
-pnpm version [<new version> | major | minor | patch]
-pnpm publish
+pnpm fix   # formats code using Biome
+pnpm lint  # checks for linting issues
 ```
 
-### Useful VSCode plugins:
-- [Biome](https://marketplace.visualstudio.com/items?itemName=biomejs.biome) for code formatting/linting
+Your PR will automatically be checked by the CI workflow.
+
+## Building a Production Version
+
+If you need to build or release a new version locally:
+
+```bash
+pnpm build                        # builds all packages
+pnpm version [major|minor|patch]  # updates versions across packages
+pnpm publish                      # publishes package(s) if you have permissions
+```
+
+> For development pre-releases (e.g., dev branches), use `pnpm publish --tag dev`.
+
+## Recommended VSCode Extensions
+
+* **[Biome](https://marketplace.visualstudio.com/items?itemName=biomejs.biome)** – Code formatting and linting

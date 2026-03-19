@@ -1,13 +1,11 @@
 {
   "name": "@biongff/vizarr",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "module",
   "main": "dist/biongff-vizarr.cjs.js",
   "module": "dist/biongff-vizarr.es.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -36,6 +34,7 @@
     "p-map": "^7.0.3",
     "quick-lru": "^7.0.0",
     "react-is": "18.3.1",
+    "yaml": "^2.8.2",
     "zarrita": "0.5.0"
   },
   "peerDependencies": {
