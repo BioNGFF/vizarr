@@ -32,6 +32,7 @@
     "p-map": "^7.0.3",
     "quick-lru": "^7.0.0",
     "react-is": "18.3.1",
+    "yaml": "^2.8.2",
     "zarrita": "0.5.0"
   },
   "peerDependencies": {
