@@ -1,8 +1,40 @@
-node_modules
-.DS_Store
-.venv
-.ipynb_checkpoints
-dist/
-__pycache__
+# Node dependencies
+node_modules/
 
+# Build output
+dist/
+build/
+*.log
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Python notebooks storage
 /python/notebooks/*.zarr/
+
+# pnpm store / lockfiles
+.pnpm-store/
+pnpm-lock.yaml
+
+# Misc
+.env
+.env.local
+.env.*.local
+
+# Coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.swp
