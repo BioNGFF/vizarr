@@ -34,10 +34,7 @@ export function lru<S extends zarr.Readable>(store: S, maxSize = 100) {
     const cached = cache.get(cacheKey);
     if (cached) return cached;
     const sanitizedKey = sanitizeKey(key);
-    const result = Promise.resolve(store.get(sanitizedKey, opts)).catch((err) => {
-      cache.delete(cacheKey);
-      throw err;
-    });
+    const result = Promise.resolve(store.get(sanitizedKey, opts));
     cache.set(cacheKey, result);
     return result;
   }

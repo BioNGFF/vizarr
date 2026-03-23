@@ -26,7 +26,7 @@ export const RGB = [COLORS.red, COLORS.green, COLORS.blue];
 export const CYMRGB = Object.values(COLORS).slice(0, MAX_CHANNELS);
 export const OME_VALIDATOR_URL = "https://ome.github.io/ome-ngff-validator/";
 
-async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Location<zarr.Readable>> {
+export async function normalizeStore(source: string | zarr.Readable): Promise<zarr.Location<zarr.Readable>> {
   if (typeof source === "string") {
     let store: zarr.Readable;
     let path: `/${string}` = "/";
@@ -144,6 +144,11 @@ export function getAxisLabels(
     axis_labels = nonXYaxisLabels.concat(["y", "x"]);
   }
   return axis_labels as [...string[], "y", "x"];
+}
+
+export function getDefaultChannelLabels(nChannels: number): string[] {
+  // e.g. ['channel_0', 'channel_1']
+  return range(nChannels).map((i) => `channel_${i}`);
 }
 
 export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
@@ -388,20 +393,32 @@ export function typedEmitter<T>() {
     },
   };
 }
-
 /**
  * Extracts the OME metadata from the zarr attributes
  *
  * TODO: We should use zod to handle this
  */
+
 export function resolveAttrs(attrs: zarr.Attributes): zarr.Attributes {
+  if ("omero" in attrs && "ome" in attrs) {
+    return {
+      version: typeof attrs.ome === "object" && attrs.ome !== null && "version" in attrs.ome ? attrs.ome.version : "",
+      multiscales:
+        typeof attrs.ome === "object" && attrs.ome !== null && "multiscales" in attrs.ome ? attrs.ome.multiscales : {},
+      omero: {
+        channels:
+          typeof attrs.omero === "object" && attrs.omero !== null && "channels" in attrs.omero
+            ? attrs.omero.channels
+            : {},
+      },
+    };
+  }
   if ("ome" in attrs) {
     // @ts-expect-error - handles v0.5
     return attrs.ome;
   }
   return attrs;
 }
-
 /**
  * Error thrown when an assertion fails.
  */
@@ -660,4 +677,8 @@ export function transformBox(bbox: number[], modelMatrix: Matrix4): number[] {
     Math.max(...transformedCoords.map((i) => i[1])),
   ];
   return transformedBox;
+}
+
+export function arraysIdentical(arr1: Array<string | number>, arr2: Array<string | number>): boolean {
+  return arr1.length === arr2.length && arr1.every((element, index) => element === arr2[index]);
 }

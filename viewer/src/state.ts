@@ -111,7 +111,9 @@ export type LayerState<T extends LayerType = LayerType> = {
 type WithId<T> = T & { id: string };
 
 export const viewStateAtom = atom<ViewState | null>(null);
+
 export const sourceErrorAtom = atom<string | null>(null);
+export const sourceWarningAtom = atom<string[]>([]);
 
 export interface Redirect {
   url: string;
