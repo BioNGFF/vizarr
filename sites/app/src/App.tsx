@@ -1,4 +1,4 @@
-import { type ViewState, Vizarr } from "@biongff/vizarr";
+import { type ViewState, type labelColor, Vizarr } from "@biongff/vizarr";
 import { AnndataProvider, AnndataController } from "@biongff/anndata-zarr"
 import debounce from "just-debounce-it";
 import * as React from "react";
@@ -30,10 +30,8 @@ function parseViewStateFromUrl(): ViewState | undefined {
   return undefined;
 }
 
-
 export default function App() {
   const urlString = window.location.href;
-
 
   const { sources, viewState, anndatas } = React.useMemo(() => {
     const url = new URL(urlString);
@@ -47,7 +45,9 @@ export default function App() {
     };
   }, [urlString]);
 
-  const [colors, setColors] = React.useState(() => Array(sources.length).fill(null));
+
+
+  const [colors, setColors] = React.useState((): labelColor[][] => Array(sources.length).fill([]));
   // Debounced viewState change handler
   const handleViewStateChange = React.useMemo(
     () =>
@@ -86,7 +86,7 @@ export default function App() {
       <CssBaseline />
       <AnndataProvider>
         <div className="container-right">{anndataControllers}</div>
-        <Vizarr sources={sources} viewState={viewState} onViewStateChange={handleViewStateChange} colours={colors} />
+        <Vizarr sources={sources} viewState={viewState} onViewStateChange={handleViewStateChange} labelColours={colors} />
       </AnndataProvider>
     </ThemeProvider>
   );

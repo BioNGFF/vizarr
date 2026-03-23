@@ -108,10 +108,10 @@ importers:
   sites/app:
     dependencies:
       '@biongff/anndata-zarr':
-        specifier: workspace:*
+        specifier: workspace:anndata-zarr
         version: link:../../anndata-zarr
       '@biongff/vizarr':
-        specifier: workspace:*
+        specifier: workspace:viewer
         version: link:../../viewer
       '@emotion/react':
         specifier: ^11.14.0

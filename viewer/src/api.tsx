@@ -27,6 +27,13 @@ type Events = {
 
 export type { ViewState, ImageLayerConfig };
 
+export type labelColor = {
+  labelValue: number,
+  rgba: [r: number, g: number, b: number, a: number],
+  value?: string | number | null
+}
+
+
 export interface VizarrViewer {
   addImage(config: ImageLayerConfig): void;
   setViewState(viewState: ViewState): void;

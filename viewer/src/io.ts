@@ -3,7 +3,7 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadWell } from "./ome";
 import * as utils from "./utils";
 
-import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
+import { DEFAULT_LABEL_OPACITY, type OmeColor } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 
@@ -276,4 +276,36 @@ function getSourceSelectionTransform(
       excludeFromTransformedSelection.has(name) ? 0 : sourceSelection[source.labels.indexOf(name)],
     );
   };
+}
+
+export async function loadSources(sources: string[], labelColors?: OmeColor[][]) {
+  const results = await Promise.allSettled(
+    sources.map(async (source, index) => {
+      const sourceData = await createSourceData({ source: source });
+      const id = Math.random().toString(36).slice(2);
+      if (!sourceData.name) {
+        sourceData.name = `image_${index}`;
+      }
+      debugger;
+      if (labelColors && labelColors[index].length) {
+        if (!sourceData.labels) {
+          utils.assert("Feature colours provided but source image has no label!")
+        } else {
+          debugger;
+          sourceData.labels[0].colors = labelColors[index]
+        }
+      }
+      return { id, ...sourceData };
+    }),
+  );
+  let sourceDatas = [];
+  for (const res of results) {
+    if (res.status === "fulfilled") {
+
+      sourceDatas.push(res.value);
+    } else {
+      console.error(res.reason);
+    }
+  }
+  return sourceDatas.filter((s) => s !== null);
 }

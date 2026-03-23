@@ -3,7 +3,7 @@ import { Box, Link, Typography } from "@mui/material";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React from "react";
 import { ViewStateContext } from "../hooks";
-import { createSourceData } from "../io";
+import { loadSources } from "../io"
 import {
   type ImageLayerConfig,
   type ViewState,
@@ -15,26 +15,24 @@ import {
 import theme from "../theme";
 import Menu from "./Menu";
 import Viewer from "./Viewer";
+import type { OmeColor } from "../layers/label-layer";
 
 export interface VizarrViewerProps {
   sources?: string[];
   viewState?: ViewState;
   onViewStateChange?: (viewState: ViewState) => void;
-  colours: [];
+  labelColours?: OmeColor[][];
 }
 
-function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange, colours }: VizarrViewerProps) {
+function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange, labelColours }: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
-  const sourceInfo = useAtomValue(sourceInfoAtom)
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
   const redirectObj = useAtomValue(redirectObjAtom);
 
-  React.useEffect(() => {
-    if (initialViewState) {
-      setViewStateAtom(initialViewState);
-    }
-  }, [initialViewState, setViewStateAtom]);
+  if (initialViewState) {
+    setViewStateAtom(initialViewState);
+  }
 
   const viewStateAtomWithEffect: PrimitiveAtom<ViewState | null> = atom(
     (get) => get(viewStateAtom),
@@ -50,47 +48,10 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
     },
   );
 
-  const [configs] = React.useState(
-    sources.map((source, index) => {
-      const config: ImageLayerConfig = {
-        source: source,
-      };
-      return config;
-    }),
-  );
-
   React.useEffect(() => {
-    async function loadSources(colours) {
-      const results = await Promise.allSettled(
-        configs.map(async (config, index) => {
-          const sourceData = await createSourceData(config);
-          const id = Math.random().toString(36).slice(2);
-          if (!sourceData.name) {
-            sourceData.name = `image_${index}`;
-          }
-          return { id, ...sourceData };
-        }),
-      );
-      let sourceDatas = [];
-      for (const res of results) {
-        if (res.status === "fulfilled") {
+    loadSources(sources, labelColours).then((sourceData) => setSourceInfo(sourceData))
+  }, [sources, labelColours, setSourceInfo]);
 
-          if (colours[0] !== null) {
-            res.value.labels[0].colors = colours[0]
-          }
-          sourceDatas.push(res.value);
-        } else {
-          console.error(res.reason);
-        }
-      }
-      sourceDatas = sourceDatas.filter((s) => s !== null);
-      setSourceInfo(sourceDatas);
-    }
-
-
-
-    loadSources(colours);
-  }, [configs, setSourceInfo, colours]);
   return (
     <>
       {sourceError === null && redirectObj === null && (
