@@ -225,7 +225,7 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
   let labels = undefined;
   if (source.labels && source.labels.length > 0) {
     labels = source.labels.map((label, i) => ({
-      on: false,
+      on: label.on ? label.on : false,
       transformSourceSelection: getSourceSelectionTransform(label.loader[0], source.loader[0]),
       layerProps: {
         id: `${source.id}_${i}`,
@@ -286,13 +286,15 @@ export async function loadSources(sources: string[], labelColors?: OmeColor[][])
       if (!sourceData.name) {
         sourceData.name = `image_${index}`;
       }
-      debugger;
       if (labelColors && labelColors[index].length) {
-        if (!sourceData.labels) {
-          utils.assert("Feature colours provided but source image has no label!")
+        if (!sourceData.labels || (!sourceData.labels.length)) {
+          console.log('Did not find source labels')
+          throw new Error('Feature colours provided but source image has no label!')
         } else {
-          debugger;
+          //Really not the best way to do this but the layer state is heavily wrapped up in 
+          //being derived directly from the sourceData and would require a fairly large refactor to find
           sourceData.labels[0].colors = labelColors[index]
+          sourceData.labels[0].on = true
         }
       }
       return { id, ...sourceData };

@@ -62,6 +62,7 @@ export type ImageLabels = Array<{
   loader: ZarrPixelSource[];
   modelMatrix: Matrix4;
   colors?: ReadonlyArray<OmeColor>;
+  on?: boolean
 }>;
 
 export type SourceData = {
@@ -184,10 +185,10 @@ const imageLabelsIstanceFamily = atomFamily((a: Atom<LayerState>) =>
     return labels.map((label) =>
       label.on
         ? new LabelLayer({
-            ...label.layerProps,
-            selection: label.transformSourceSelection(layerProps.selections[0]),
-            pickable: true,
-          })
+          ...label.layerProps,
+          selection: label.transformSourceSelection(layerProps.selections[0]),
+          pickable: true,
+        })
         : null,
     );
   }),

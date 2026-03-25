@@ -49,7 +49,10 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   );
 
   React.useEffect(() => {
-    loadSources(sources, labelColours).then((sourceData) => setSourceInfo(sourceData))
+    loadSources(sources, labelColours).then((sourceData) => {
+      setSourceInfo(sourceData)
+    }
+    )
   }, [sources, labelColours, setSourceInfo]);
 
   return (
