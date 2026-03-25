@@ -1,4 +1,7 @@
 import { type ViewState, type labelColor, Vizarr } from "@biongff/vizarr";
+
+//@ts-ignore 
+//No types provided by anndata-zarr plugin
 import { AnndataProvider, AnndataController } from "@biongff/anndata-zarr"
 import debounce from "just-debounce-it";
 import * as React from "react";

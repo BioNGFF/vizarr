@@ -10,4 +10,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
+    target-branch: "dev"
+    pull-request-branch-name:
+      separator: "/"

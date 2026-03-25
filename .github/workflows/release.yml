@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 permissions:
   contents: write
   id-token: write
@@ -15,39 +19,39 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
 
-      - name: Setup Node.js
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.5.0
+          run_install: true
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: pnpm
 
-      - name: Install pnpm
-        run: npm install -g pnpm@9
+      - name: Typecheck
+        run: pnpm check
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Lint
+        run: pnpm lint
 
-      - name: Build app
-        run: pnpm run build
+      - name: Test
+        run: pnpm test
 
-      - name: Generate the package
+      - name: Build
+        run: pnpm build
+
+      - name: Create release tarball
         run: tar -czpf dist.tar.gz sites/app/dist LICENSE
-        
+
       - name: Run Semantic Release
-        id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         run: pnpm exec semantic-release
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./dist.tar.gz
-          asset_name: dist

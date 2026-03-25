@@ -1,7 +1,9 @@
+import { Info } from "@mui/icons-material";
 import { ThemeProvider } from "@mui/material";
 import { Box, Link, Typography } from "@mui/material";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
-import React from "react";
+import React, { useId } from "react";
+import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext } from "../hooks";
 import { loadSources } from "../io"
 import {
@@ -10,10 +12,12 @@ import {
   redirectObjAtom,
   sourceErrorAtom,
   sourceInfoAtom,
+  sourceWarningAtom,
   viewStateAtom,
 } from "../state";
 import theme from "../theme";
 import Menu from "./Menu";
+import { InfoSnackbar } from "./Snackbar";
 import Viewer from "./Viewer";
 import type { OmeColor } from "../layers/label-layer";
 
@@ -29,6 +33,8 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
   const redirectObj = useAtomValue(redirectObjAtom);
+  const setSourceError = useSetAtom(sourceErrorAtom);
+  const sourceWarning = useAtomValue(sourceWarningAtom);
 
   if (initialViewState) {
     setViewStateAtom(initialViewState);
@@ -49,15 +55,29 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   );
 
   React.useEffect(() => {
-    loadSources(sources, labelColours).then((sourceData) => {
+    loadSources(sources, labelColours).then((results) => {
+      if (!sourceDataValid(results)) {
+        setSourceError(writeUserErrorMessage(getSourceDataError(results)));
+      }
+      let sourceDatas = [];
+      for (const res of results) {
+        if (res.status === "fulfilled") {
+
+          sourceDatas.push(res.value);
+        } else {
+          console.error(res.reason);
+        }
+      }
+      const sourceData = sourceDatas.filter((s) => s !== null);
       setSourceInfo(sourceData)
     }
     )
   }, [sources, labelColours, setSourceInfo]);
 
+
   return (
     <>
-      {sourceError === null && redirectObj === null && (
+      {redirectObj === null && (
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
           <Menu />
           <Viewer />
@@ -79,9 +99,18 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
             fontSize: "120%",
           }}
         >
-          <p>{`Error: server replied with "${sourceError}" when loading the resource`}</p>
+          <p>
+            {" "}
+            Sorry, we were unable to load this image due to the following error: <br /> <br /> {sourceError} <br />{" "}
+            <br /> If you believe this is an error with our application, please open an issue:{" "}
+            <a href="https://github.com/BioNGFF/vizarr/issues "> here </a>
+          </p>
         </Box>
       )}
+      {sourceWarning.length &&
+        sourceWarning.map((warning, index) => {
+          return <InfoSnackbar message={warning} key={useId()} />;
+        })}
       {redirectObj !== null && (
         <Box
           sx={{

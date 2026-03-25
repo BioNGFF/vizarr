@@ -1,7 +1,7 @@
-name: publish-dev
+name: Publish Dev
+
 # Publishes a pre-release (dev) version of the package to npmjs.org
 # whenever changes are pushed to the "dev" branch.
-
 on:
   push:
     branches: [dev]
@@ -10,20 +10,35 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  publish-dev:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.5.0
+          run_install: true
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: pnpm
 
-      - name: Install pnpm
-        run: npm install -g pnpm@9
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
 
       - name: Update prerelease version
         id: pre-release-version
@@ -31,13 +46,13 @@ jobs:
         with:
           pre-release-tag: "dev"
 
-      - name: Sync package versions
+      - name: Sync package versions across workspace
         run: pnpm -r exec npm version ${{ steps.pre-release-version.outputs.pre-release-version }} --no-git-tag-version
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build package
+      - name: Build Viewer Package
         run: pnpm build:viewer
 
       - name: Configure npm authentication
@@ -46,7 +61,7 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish to npm
+      - name: Publish to npm (dev tag)
+        run: pnpm publish viewer --tag dev --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish viewer --tag dev --access public --no-git-checks

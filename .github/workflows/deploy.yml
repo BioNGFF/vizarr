@@ -1,10 +1,9 @@
-name: Build and Deploy
+name: Deploy
 
 on:
   push:
     branches:
       - main
-      - dev
 
 permissions:
   contents: write
@@ -17,39 +16,38 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 9.5.0
           run_install: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "pnpm"
+          cache: pnpm
+
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
 
       - name: Build main branch
-        run: |
-          git fetch origin main
-          git checkout main
-          echo "Building main branch output..."
-          pnpm i && pnpm build
+        run: pnpm build
 
-      - name: Build dev branch
-        run: |
-          git fetch origin dev
-          git checkout dev
-          echo "Building dev branch output..."
-          pnpm i && pnpm build --outDir dist/dev
-          
       - name: Add .nojekyll
         run: touch sites/app/dist/.nojekyll
 
-      - name: Upload build output
+      - name: Upload build output for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: sites/app/dist
