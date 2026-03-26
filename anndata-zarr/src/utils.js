@@ -1,30 +1,27 @@
-import _ from 'lodash';
-import { FetchStore, open, get } from 'zarrita';
+import _ from "lodash";
+import { FetchStore, get, open } from "zarrita";
 
-import { COLORSCALES } from './constants/colorscales';
+import { COLORSCALES } from "./constants/colorscales";
 
 export const fetchDataFromZarr = async (url, path, s) => {
   try {
     const store = new FetchStore(url);
-    const node = await open(store, { kind: 'group' });
+    const node = await open(store, { kind: "group" });
 
     const dataNode = await open(node.resolve(path));
     let result;
-    if (
-      dataNode.attrs?.['encoding-type'] === 'array' ||
-      dataNode.attrs?.['encoding-type'] === 'string-array'
-    ) {
+    if (dataNode.attrs?.["encoding-type"] === "array" || dataNode.attrs?.["encoding-type"] === "string-array") {
       result = await get(dataNode, s);
-    } else if (dataNode.attrs?.['encoding-type'] === 'categorical') {
-      const categoriesArr = await open(dataNode.resolve('categories'), {
-        kind: 'array',
+    } else if (dataNode.attrs?.["encoding-type"] === "categorical") {
+      const categoriesArr = await open(dataNode.resolve("categories"), {
+        kind: "array",
       });
-      const codesArr = await open(dataNode.resolve('codes'), { kind: 'array' });
+      const codesArr = await open(dataNode.resolve("codes"), { kind: "array" });
       const { data: categories } = await get(categoriesArr);
       const { data } = await get(codesArr, s);
       result = { data, categories };
     } else {
-      throw new Error('Unsupported encoding-type');
+      throw new Error("Unsupported encoding-type");
     }
 
     return result;
@@ -33,12 +30,12 @@ export const fetchDataFromZarr = async (url, path, s) => {
   }
 };
 
-export const getVarNames = async (url, namesCol = '_index') => {
+export const getVarNames = async (url, namesCol = "_index") => {
   try {
     const store = new FetchStore(url);
-    const node = await open(store, { kind: 'group' });
+    const node = await open(store, { kind: "group" });
 
-    const arr = await open(node.resolve(`var/${namesCol}`, { kind: 'array' }));
+    const arr = await open(node.resolve(`var/${namesCol}`, { kind: "array" }));
     const varNames = (await get(arr)).data;
     return varNames;
   } catch (error) {
@@ -50,22 +47,20 @@ export const getVarNames = async (url, namesCol = '_index') => {
 export const getObs = async (url) => {
   try {
     const store = new FetchStore(url);
-    const node = await open(store, { kind: 'group' });
+    const node = await open(store, { kind: "group" });
 
-    const cols = (await open(node.resolve('obs', { kind: 'group' }))).attrs?.[
-      'column-order'
-    ];
+    const cols = (await open(node.resolve("obs", { kind: "group" }))).attrs?.["column-order"];
     const obs = { categorical: [], numerical: [] };
     for (const col of cols) {
       const dataNode = await open(node.resolve(`obs/${col}`));
-      const { 'encoding-type': encodingType } = dataNode.attrs || {};
-      if (encodingType === 'categorical') {
-        const categoriesArr = await open(dataNode.resolve('categories'), {
-          kind: 'array',
+      const { "encoding-type": encodingType } = dataNode.attrs || {};
+      if (encodingType === "categorical") {
+        const categoriesArr = await open(dataNode.resolve("categories"), {
+          kind: "array",
         });
         const { data: categories } = await get(categoriesArr);
         obs.categorical.push({ name: col, categories });
-      } else if (encodingType === 'array') {
+      } else if (encodingType === "array") {
         obs.numerical.push({ name: col });
       }
     }
@@ -76,12 +71,12 @@ export const getObs = async (url) => {
   }
 };
 
-export const getVarIndex = async (url, varId, namesCol = '_index') => {
+export const getVarIndex = async (url, varId, namesCol = "_index") => {
   try {
     const store = new FetchStore(url);
-    const node = await open(store, { kind: 'group' });
+    const node = await open(store, { kind: "group" });
 
-    const arr = await open(node.resolve(`var/${namesCol}`, { kind: 'array' }));
+    const arr = await open(node.resolve(`var/${namesCol}`, { kind: "array" }));
     const varNames = (await get(arr)).data;
     const varIndex = varNames.findIndex((name) => name === varId);
     return varIndex;
@@ -94,11 +89,11 @@ export const getZarrPath = async (url, matrixProps) => {
   const { feature, obs } = matrixProps;
   if (feature) {
     if (feature.index !== undefined && feature.index !== null) {
-      return { url, path: 'X', s: [null, feature.index] };
+      return { url, path: "X", s: [null, feature.index] };
     } else if (feature.name) {
       return {
         url,
-        path: 'X',
+        path: "X",
         s: [null, await getVarIndex(url, feature.name, feature.namesCol)],
       };
     }
@@ -112,13 +107,13 @@ export const getZarrPath = async (url, matrixProps) => {
     };
   }
 
-  throw new Error('No feature or obs in matrixProps');
+  throw new Error("No feature or obs in matrixProps");
 };
 
 const parseHexColor = (color) => {
-  const r = parseInt(color?.substring(1, 3), 16);
-  const g = parseInt(color?.substring(3, 5), 16);
-  const b = parseInt(color?.substring(5, 7), 16);
+  const r = Number.parseInt(color?.substring(1, 3), 16);
+  const g = Number.parseInt(color?.substring(3, 5), 16);
+  const b = Number.parseInt(color?.substring(5, 7), 16);
 
   return [r, g, b];
 };

@@ -5,9 +5,7 @@
   "type": "module",
   "main": "dist/biongff-anndata-zarr.cjs.js",
   "module": "dist/biongff-anndata-zarr.es.js",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "exports": {
     ".": {
       "import": "./dist/biongff-anndata-zarr.es.js",

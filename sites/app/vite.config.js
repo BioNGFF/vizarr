@@ -9,9 +9,9 @@ export default defineConfig(({ mode }) => ({
     alias: {
       ...(mode === "development"
         ? {
-          "@biongff/vizarr": path.resolve(__dirname, "../../viewer/src/index.tsx"),
-          "@biongff/anndata-zarr": path.resolve(__dirname, "../../anndata-zarr/src/index.js")
-        }
+            "@biongff/vizarr": path.resolve(__dirname, "../../viewer/src/index.tsx"),
+            "@biongff/anndata-zarr": path.resolve(__dirname, "../../anndata-zarr/src/index.js"),
+          }
         : {}),
     },
   },

@@ -5,7 +5,8 @@ import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jo
 import React, { useId } from "react";
 import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext } from "../hooks";
-import { loadSources } from "../io"
+import { loadSources } from "../io";
+import type { OmeColor } from "../layers/label-layer";
 import {
   type ImageLayerConfig,
   type ViewState,
@@ -19,7 +20,6 @@ import theme from "../theme";
 import Menu from "./Menu";
 import { InfoSnackbar } from "./Snackbar";
 import Viewer from "./Viewer";
-import type { OmeColor } from "../layers/label-layer";
 
 export interface VizarrViewerProps {
   sources?: string[];
@@ -28,7 +28,12 @@ export interface VizarrViewerProps {
   labelColours?: OmeColor[][];
 }
 
-function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange, labelColours }: VizarrViewerProps) {
+function VizarrViewerComponent({
+  sources = [],
+  viewState: initialViewState,
+  onViewStateChange,
+  labelColours,
+}: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
@@ -62,18 +67,15 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
       let sourceDatas = [];
       for (const res of results) {
         if (res.status === "fulfilled") {
-
           sourceDatas.push(res.value);
         } else {
           console.error(res.reason);
         }
       }
       const sourceData = sourceDatas.filter((s) => s !== null);
-      setSourceInfo(sourceData)
-    }
-    )
+      setSourceInfo(sourceData);
+    });
   }, [sources, labelColours, setSourceInfo]);
-
 
   return (
     <>

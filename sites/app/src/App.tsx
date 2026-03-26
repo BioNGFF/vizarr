@@ -1,17 +1,16 @@
-import { type ViewState, type labelColor, Vizarr } from "@biongff/vizarr";
+import { type ViewState, Vizarr, type labelColor } from "@biongff/vizarr";
 
-//@ts-ignore 
+//@ts-ignore
 //No types provided by anndata-zarr plugin
-import { AnndataProvider, AnndataController } from "@biongff/anndata-zarr"
+import { AnndataController, AnndataProvider } from "@biongff/anndata-zarr";
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import debounce from "just-debounce-it";
 import * as React from "react";
-import { ThemeProvider, createTheme } from '@mui/material/styles'
-import CssBaseline from '@mui/material/CssBaseline'
-
 
 const darkTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: "dark",
   },
   typography: {
     fontSize: 12,
@@ -42,13 +41,9 @@ export default function App() {
     return {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
-      anndatas: searchParams
-        .getAll('anndata')
-        .map((v) => (v ? { url: v } : null)),
+      anndatas: searchParams.getAll("anndata").map((v) => (v ? { url: v } : null)),
     };
   }, [urlString]);
-
-
 
   const [colors, setColors] = React.useState((): labelColor[][] => Array(sources.length).fill([]));
   // Debounced viewState change handler
@@ -76,11 +71,7 @@ export default function App() {
     return sources.map((_s, i) => {
       if (!anndatas?.[i]?.url) return null;
       return (
-        <AnndataController
-          key={i}
-          adata={anndatas[i]}
-          callback={(colorData: any) => selectCallback(colorData, i)}
-        />
+        <AnndataController key={i} adata={anndatas[i]} callback={(colorData: any) => selectCallback(colorData, i)} />
       );
     });
   }, [anndatas, sources]);
@@ -89,7 +80,12 @@ export default function App() {
       <CssBaseline />
       <AnndataProvider>
         <div className="container-right">{anndataControllers}</div>
-        <Vizarr sources={sources} viewState={viewState} onViewStateChange={handleViewStateChange} labelColours={colors} />
+        <Vizarr
+          sources={sources}
+          viewState={viewState}
+          onViewStateChange={handleViewStateChange}
+          labelColours={colors}
+        />
       </AnndataProvider>
     </ThemeProvider>
   );

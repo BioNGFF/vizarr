@@ -1,16 +1,10 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
-import { useQueries, useQuery } from '@tanstack/react-query';
-import _ from 'lodash';
+import { useQueries, useQuery } from "@tanstack/react-query";
+import _ from "lodash";
 
-import { COLORSCALES } from './constants/colorscales';
-import {
-  fetchDataFromZarr,
-  getZarrPath,
-  getColors,
-  getVarNames,
-  getObs,
-} from './utils';
+import { COLORSCALES } from "./constants/colorscales";
+import { fetchDataFromZarr, getColors, getObs, getVarNames, getZarrPath } from "./utils";
 
 const getAnndataColors = async (url, matrixProps, colorProps) => {
   let zarrData;
@@ -25,9 +19,7 @@ const getAnndataColors = async (url, matrixProps, colorProps) => {
 
   const { categories } = zarrData;
 
-  const max = categories
-    ? categories.length - 1
-    : colorProps?.max || _.max(zarrData.data);
+  const max = categories ? categories.length - 1 : colorProps?.max || _.max(zarrData.data);
   const min = categories ? 0 : colorProps?.min || _.min(zarrData.data);
   const colorscale = categories ? COLORSCALES.Accent : colorProps?.colorscale;
 
@@ -52,9 +44,8 @@ export const useAnndataColors = (adata = { url: null }, opts = {}) => {
     isLoading = false,
     serverError = null,
   } = useQuery({
-    queryKey: ['anndataColor', adata.url, adata.matrixProps, adata.colorProps],
-    queryFn: () =>
-      getAnndataColors(adata.url, adata.matrixProps, adata.colorProps),
+    queryKey: ["anndataColor", adata.url, adata.matrixProps, adata.colorProps],
+    queryFn: () => getAnndataColors(adata.url, adata.matrixProps, adata.colorProps),
     ...opts,
   });
 
@@ -76,7 +67,7 @@ export const useAnndatasColors = (adatas = [], opts = {}) => {
     serverError = null,
   } = useQueries({
     queries: adatas.map(({ url, matrixProps, colorProps }) => ({
-      queryKey: ['anndataColor', url, matrixProps, colorProps],
+      queryKey: ["anndataColor", url, matrixProps, colorProps],
       queryFn: () => getAnndataColors(url, matrixProps, colorProps),
     })),
     ...opts,
@@ -92,7 +83,7 @@ export const useAnndataFeatures = (adata = { url: null, namesCol: null }) => {
     isLoading = false,
     serverError = null,
   } = useQuery({
-    queryKey: ['anndataFeatures', adata.url, adata.namesCol],
+    queryKey: ["anndataFeatures", adata.url, adata.namesCol],
     queryFn: () => getVarNames(adata.url, adata.namesCol),
   });
 
@@ -105,7 +96,7 @@ export const useAnndataObs = (adata = { url: null }) => {
     isLoading = false,
     serverError = null,
   } = useQuery({
-    queryKey: ['anndataObs', adata.url],
+    queryKey: ["anndataObs", adata.url],
     queryFn: () => getObs(adata.url),
   });
 
