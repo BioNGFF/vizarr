@@ -5,13 +5,13 @@ import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: './',
+  base: "./",
   resolve: {
     alias: {
       ...(mode === "development"
         ? {
-          "@biongff/vizarr": path.resolve(__dirname, "../../viewer/src/index.tsx"),
-        }
+            "@biongff/vizarr": path.resolve(__dirname, "../../viewer/src/index.tsx"),
+          }
         : {}),
     },
   },
