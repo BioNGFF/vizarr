@@ -65,6 +65,47 @@ export function normalizeRoiBounds(roi: {
   };
 }
 
+/** Convert NormalizedBounds to string-keyed form for text fields. */
+export function boundsToCoords(b: NormalizedBounds): Record<string, string> {
+  return {
+    x1: String(b.x1),
+    y1: String(b.y1),
+    x2: String(b.x2),
+    y2: String(b.y2),
+    z1: String(b.z1),
+    z2: String(b.z2),
+  };
+}
+
+/**
+ * Parse string coordinate fields into the corner1/corner2 + z1/z2 shape
+ * used by SavedRoi / PendingRoi.  Returns `null` when any xy value is NaN.
+ */
+export function coordsToRoi(
+  c: Record<"x1" | "y1" | "x2" | "y2" | "z1" | "z2", string>,
+  fallbackZ?: { z1: number; z2: number },
+): {
+  corner1: [number, number];
+  corner2: [number, number];
+  z1: number;
+  z2: number;
+} | null {
+  const nx1 = Number(c.x1);
+  const ny1 = Number(c.y1);
+  const nx2 = Number(c.x2);
+  const ny2 = Number(c.y2);
+  if ([nx1, ny1, nx2, ny2].some(Number.isNaN)) return null;
+  const nz1 = c.z1 !== "" ? Number(c.z1) : (fallbackZ?.z1 ?? 0);
+  const nz2 = c.z2 !== "" ? Number(c.z2) : (fallbackZ?.z2 ?? 0);
+  if (Number.isNaN(nz1) || Number.isNaN(nz2)) return null;
+  return {
+    corner1: [nx1, ny1],
+    corner2: [nx2, ny2],
+    z1: nz1,
+    z2: nz2,
+  };
+}
+
 /** Spatial dimensions of the loaded image, used for bounds clamping. */
 export interface ImageBounds {
   xMax: number;

@@ -28,18 +28,8 @@ function RoiSelector() {
   useRoiDeckExtension();
 
   const {
-    x1,
-    y1,
-    x2,
-    y2,
-    z1,
-    z2,
-    onX1Change,
-    onY1Change,
-    onX2Change,
-    onY2Change,
-    onZ1Change,
-    onZ2Change,
+    coords,
+    onCoordChange,
     hasZAxis,
     zInfo,
     imageBounds,
@@ -143,18 +133,8 @@ function RoiSelector() {
         <Box sx={{ mt: 1 }}>
           {(pendingRoi || editingRoiId) && (
             <RoiCoordinateFields
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              z1={z1}
-              z2={z2}
-              onX1Change={onX1Change}
-              onY1Change={onY1Change}
-              onX2Change={onX2Change}
-              onY2Change={onY2Change}
-              onZ1Change={onZ1Change}
-              onZ2Change={onZ2Change}
+              coords={coords}
+              onCoordChange={onCoordChange}
               hasZAxis={hasZAxis}
               zInfo={zInfo}
               imageBounds={imageBounds}

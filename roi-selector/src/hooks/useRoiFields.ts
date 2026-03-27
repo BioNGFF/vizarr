@@ -8,7 +8,9 @@ import {
   type PendingRoi,
   type RoiDrawState,
   type SavedRoi,
+  boundsToCoords,
   clampToBounds,
+  coordsToRoi,
   nextAvailableColor,
   normalizeRoiBounds,
   pendingRoiAtom,
@@ -16,21 +18,12 @@ import {
   savedRoisAtom,
 } from "../state";
 
+export type CoordKey = "x1" | "y1" | "x2" | "y2" | "z1" | "z2";
+export type CoordValues = Record<CoordKey, string>;
+
 export interface UseRoiFieldsReturn {
-  // Coordinate field string values (kept as strings so the user can type freely)
-  x1: string;
-  y1: string;
-  x2: string;
-  y2: string;
-  z1: string;
-  z2: string;
-  // Per-field change handlers
-  onX1Change: (v: string) => void;
-  onY1Change: (v: string) => void;
-  onX2Change: (v: string) => void;
-  onY2Change: (v: string) => void;
-  onZ1Change: (v: string) => void;
-  onZ2Change: (v: string) => void;
+  coords: CoordValues;
+  onCoordChange: (key: CoordKey, value: string) => void;
   // Derived / shared state
   hasZAxis: boolean;
   zInfo: { zValue: number; zMax: number } | null;
@@ -60,12 +53,14 @@ export interface UseRoiFieldsReturn {
  * display flag that is already computed here and forwarded.
  */
 export function useRoiFields(): UseRoiFieldsReturn {
-  const [x1, setX1] = useState("");
-  const [y1, setY1] = useState("");
-  const [x2, setX2] = useState("");
-  const [y2, setY2] = useState("");
-  const [z1, setZ1] = useState("");
-  const [z2, setZ2] = useState("");
+  const [coords, setCoords] = useState<CoordValues>({
+    x1: "",
+    y1: "",
+    x2: "",
+    y2: "",
+    z1: "",
+    z2: "",
+  });
 
   const [editingRoiId, setEditingRoiId] = useState<string | null>(null);
 
@@ -95,43 +90,19 @@ export function useRoiFields(): UseRoiFieldsReturn {
     if (pendingRoi) {
       const bn = normalizeRoiBounds(pendingRoi);
       const b = imageBounds ? clampToBounds(bn, imageBounds) : bn;
-      setX1(String(b.x1));
-      setY1(String(b.y1));
-      setX2(String(b.x2));
-      setY2(String(b.y2));
-      setZ1(String(b.z1));
-      setZ2(String(b.z2));
+      setCoords(boundsToCoords(b) as CoordValues);
     }
   }, [pendingRoi, imageBounds]);
 
   // ---- Live sync: field changes → atom (for overlay preview) ----
   const syncFieldsToPending = React.useCallback(
-    (nx1: string, ny1: string, nx2: string, ny2: string, nz1: string, nz2: string) => {
-      const px1 = Number(nx1);
-      const py1 = Number(ny1);
-      const px2 = Number(nx2);
-      const py2 = Number(ny2);
-      if ([px1, py1, px2, py2].some(Number.isNaN)) return;
-
-      const newCorner1: [number, number] = [Math.min(px1, px2), Math.min(py1, py2)];
-      const newCorner2: [number, number] = [Math.max(px1, px2), Math.max(py1, py2)];
-
-      const parsedZ1 = nz1 !== "" ? Number(nz1) : undefined;
-      const parsedZ2 = nz2 !== "" ? Number(nz2) : undefined;
-      if ((parsedZ1 !== undefined && Number.isNaN(parsedZ1)) || (parsedZ2 !== undefined && Number.isNaN(parsedZ2)))
-        return;
-
+    (next: CoordValues) => {
       if (editingRoiId) {
         setSavedRois((prev) =>
           prev.map((r) => {
             if (r.id !== editingRoiId) return r;
-            return {
-              ...r,
-              corner1: newCorner1,
-              corner2: newCorner2,
-              z1: parsedZ1 ?? r.z1,
-              z2: parsedZ2 ?? r.z2,
-            };
+            const parsed = coordsToRoi(next, r);
+            return parsed ? { ...r, ...parsed } : r;
           }),
         );
         return;
@@ -139,42 +110,25 @@ export function useRoiFields(): UseRoiFieldsReturn {
 
       setPendingRoi((prev) => {
         if (!prev) return prev;
+        const parsed = coordsToRoi(next, prev);
+        if (!parsed) return prev;
         internalUpdate.current = true;
-        return {
-          corner1: newCorner1,
-          corner2: newCorner2,
-          z1: parsedZ1 ?? prev.z1,
-          z2: parsedZ2 ?? prev.z2,
-        };
+        return parsed;
       });
     },
     [editingRoiId, setSavedRois, setPendingRoi],
   );
 
-  const onX1Change = (v: string) => {
-    setX1(v);
-    syncFieldsToPending(v, y1, x2, y2, z1, z2);
-  };
-  const onY1Change = (v: string) => {
-    setY1(v);
-    syncFieldsToPending(x1, v, x2, y2, z1, z2);
-  };
-  const onX2Change = (v: string) => {
-    setX2(v);
-    syncFieldsToPending(x1, y1, v, y2, z1, z2);
-  };
-  const onY2Change = (v: string) => {
-    setY2(v);
-    syncFieldsToPending(x1, y1, x2, v, z1, z2);
-  };
-  const onZ1Change = (v: string) => {
-    setZ1(v);
-    syncFieldsToPending(x1, y1, x2, y2, v, z2);
-  };
-  const onZ2Change = (v: string) => {
-    setZ2(v);
-    syncFieldsToPending(x1, y1, x2, y2, z1, v);
-  };
+  const onCoordChange = React.useCallback(
+    (key: CoordKey, value: string) => {
+      setCoords((prev) => {
+        const next = { ...prev, [key]: value };
+        syncFieldsToPending(next);
+        return next;
+      });
+    },
+    [syncFieldsToPending],
+  );
 
   // ---- Draw-mode toggle ----
   const handleToggleDraw = () => {
@@ -188,20 +142,8 @@ export function useRoiFields(): UseRoiFieldsReturn {
   // ---- Save pending ROI ----
   const handleSaveRoi = () => {
     if (!pendingRoi) return;
-    const nx1 = Number(x1);
-    const ny1 = Number(y1);
-    const nx2 = Number(x2);
-    const ny2 = Number(y2);
-    if ([nx1, ny1, nx2, ny2].some(Number.isNaN)) return;
-    const nz1 = z1 !== "" ? Number(z1) : pendingRoi.z1;
-    const nz2 = z2 !== "" ? Number(z2) : pendingRoi.z2;
-    if (Number.isNaN(nz1) || Number.isNaN(nz2)) return;
-    const raw = {
-      corner1: [nx1, ny1] as [number, number],
-      corner2: [nx2, ny2] as [number, number],
-      z1: nz1,
-      z2: nz2,
-    };
+    const raw = coordsToRoi(coords, pendingRoi);
+    if (!raw) return;
     const b = imageBounds ? clampToBounds(normalizeRoiBounds(raw), imageBounds) : normalizeRoiBounds(raw);
     setSavedRois((prev) => [
       ...prev,
@@ -236,12 +178,7 @@ export function useRoiFields(): UseRoiFieldsReturn {
     setEditingRoiId(roi.id);
     const bn = normalizeRoiBounds(roi);
     const b = imageBounds ? clampToBounds(bn, imageBounds) : bn;
-    setX1(String(b.x1));
-    setY1(String(b.y1));
-    setX2(String(b.x2));
-    setY2(String(b.y2));
-    setZ1(String(b.z1));
-    setZ2(String(b.z2));
+    setCoords(boundsToCoords(b) as CoordValues);
   };
 
   const handleUpdateRoi = () => {
@@ -259,18 +196,8 @@ export function useRoiFields(): UseRoiFieldsReturn {
   };
 
   return {
-    x1,
-    y1,
-    x2,
-    y2,
-    z1,
-    z2,
-    onX1Change,
-    onY1Change,
-    onX2Change,
-    onY2Change,
-    onZ1Change,
-    onZ2Change,
+    coords,
+    onCoordChange,
     hasZAxis,
     zInfo,
     imageBounds,
