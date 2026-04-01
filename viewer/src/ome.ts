@@ -278,7 +278,6 @@ export async function loadOmeMultiscales(
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
     meta = await defaultMeta(lowresSource, axis_labels);
   }
-
   const originalSizeZ = data[0].shape[axis_labels.indexOf("z")];
   const zDownsampled = isDownsampledZ(data, axis_labels.indexOf("z"), originalSizeZ);
   const physicalSizes = utils.getPhysicalSizes(utils.resolveAttrs(attrs));
@@ -291,7 +290,6 @@ export async function loadOmeMultiscales(
         originalSizeZ: zDownsampled ? originalSizeZ : undefined,
       }),
   );
-
   const labels = await resolveOmeLabelsFromMultiscales(grp);
   return {
     loader: loader,
@@ -366,6 +364,24 @@ async function defaultMeta(loader: ZarrPixelSource, axis_labels: string[]): Prom
   };
 }
 
+function setVisibilities(channels: Ome.Channel[]): boolean[] {
+  const visibilities: boolean[] = [];
+  if (
+    !channels.some((channel) => {
+      "active" in channel;
+    })
+  ) {
+    for (const channel of channels) {
+      visibilities.push(true);
+    }
+  } else {
+    for (const channel of channels) {
+      visibilities.push(channel.active);
+    }
+  }
+  return visibilities;
+}
+
 function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]): Meta {
   const t = rdefs?.defaultT ?? 0;
   const z = rdefs?.defaultZ ?? 0;
@@ -373,13 +389,12 @@ function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]):
 
   const colors: string[] = [];
   const contrast_limits: [min: number, max: number][] = [];
-  const visibilities: boolean[] = [];
+  const visibilities: boolean[] = setVisibilities(channels);
   const names: string[] = [];
 
   channels.forEach((c, index) => {
     colors.push(c.color);
     contrast_limits.push([c.window.start, c.window.end]);
-    visibilities.push(c.active);
     names.push(c.label || `${index}`);
   });
 

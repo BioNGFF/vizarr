@@ -1,0 +1,6 @@
+source: https://ome-zarr-scivis.s3.us-east-1.amazonaws.com/v0.5/96x2-ozx/kingsnake.ozx
+name: kingsnake
+type: dask_image_gaussian
+version: "0.5"
+features:
+  multiscale: true

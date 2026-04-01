@@ -48,19 +48,17 @@ async function loadMultiChannel(
       );
     }
   }
-
   visibilities = visibilities || utils.getDefaultVisibilities(n);
   colors = colors || utils.getDefaultColors(n, visibilities);
 
   const contrastLimits =
     contrast_limits ?? (await (() => utils.calcConstrastLimits(data[data.length - 1], channelAxis, visibilities))());
-
   return {
     loader: data,
     name,
     channel_axis: channelAxis,
     colors,
-    names: names ?? utils.range(n).map((i) => `channel_${i}`),
+    names: names ?? utils.getDefaultChannelLabels(n),
     contrast_limits: contrastLimits,
     visibilities,
     model_matrix: utils.parseMatrix(model_matrix),
@@ -77,10 +75,8 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
   const node = await utils.open(config.source);
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
-
   if (node instanceof zarr.Group) {
     let attrs = utils.resolveAttrs(node.attrs);
-
     if (utils.isOmePlate(attrs)) {
       return loadPlate(config, node, attrs.plate);
     }
@@ -155,6 +151,7 @@ function getAxisLabelsAndChannelAxis(
   }
 
   // create dummy axis labels if not provided and try to guess channel_axis if missing
+
   const labels = maybeAxisLabels ?? utils.getAxisLabels(arr);
   const channel_axis = maybeChannelAxis ?? labels.indexOf("c");
   return { labels, channel_axis };

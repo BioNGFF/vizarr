@@ -1,5 +1,4 @@
-name: publish
-# Publishes the package to npmjs.org whenever a release is published.
+name: Publish
 
 on:
   release:
@@ -14,20 +13,23 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.5.0
+          run_install: true
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: pnpm
 
-      - name: Install pnpm
-        run: npm install -g pnpm@9
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build package
+      - name: Build Viewer Package
         run: pnpm build:viewer
 
       - name: Configure npm authentication
@@ -37,6 +39,6 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm
+        run: pnpm publish viewer --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish viewer --access public --no-git-checks
