@@ -8,7 +8,6 @@ import { ViewStateContext } from "../hooks";
 import { createSourceData } from "../io";
 import {
   type ImageLayerConfig,
-  type ViewState,
   redirectObjAtom,
   sourceErrorAtom,
   sourceInfoAtom,
@@ -20,9 +19,21 @@ import Menu from "./Menu";
 import { InfoSnackbar } from "./Snackbar";
 import Viewer from "./Viewer";
 
+export interface ViewState {
+  /**Level of zoom */
+  zoom: number;
+  /** Coordinates to center the view state on */
+  target: [number, number];
+  width?: number;
+  height?: number;
+}
+
 export interface VizarrViewerProps {
+  /**  Source image urls*/
   sources?: string[];
+  /** View state of the viewer*/
   viewState?: ViewState;
+  /** Callback to execute side effects when view state changes */
   onViewStateChange?: (viewState: ViewState) => void;
 }
 
@@ -155,6 +166,9 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
   );
 }
 
+/**
+ *Component to render source images
+ */
 export default function VizarrViewer(props: VizarrViewerProps) {
   return (
     <ThemeProvider theme={theme}>

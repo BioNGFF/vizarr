@@ -1,0 +1,8 @@
+{
+  "projectDocuments": [
+    "introduction.md"
+  ],
+  "entryPoints": [
+    "src/components/VizarrViewer.tsx",
+  ]
+}

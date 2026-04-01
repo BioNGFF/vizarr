@@ -19,8 +19,11 @@ import {
   type MultiscaleImageLayerProps,
 } from "./layers/viv-layers";
 
+
 export interface ViewState {
+  /**Level of zoom */
   zoom: number;
+  /** Coordinates to center the view state on */
   target: [number, number];
   width?: number;
   height?: number;
@@ -186,10 +189,10 @@ const imageLabelsIstanceFamily = atomFamily((a: Atom<LayerState>) =>
     return labels.map((label) =>
       label.on
         ? new LabelLayer({
-            ...label.layerProps,
-            selection: label.transformSourceSelection(layerProps.selections[0]),
-            pickable: true,
-          })
+          ...label.layerProps,
+          selection: label.transformSourceSelection(layerProps.selections[0]),
+          pickable: true,
+        })
         : null,
     );
   }),
