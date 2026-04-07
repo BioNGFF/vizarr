@@ -633,6 +633,9 @@ export function getLayerSize({ props }: VizarrLayer) {
   return { height, width, maxZoom };
 }
 
+/**
+ *Get physical size for specific resolution in multiscale image
+ */
 export function getPhysicalSizes(attrs: zarr.Attributes) {
   if (isMultiscales(attrs)) {
     const axes = getNgffAxes(attrs.multiscales);
