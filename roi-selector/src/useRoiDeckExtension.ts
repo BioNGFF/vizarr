@@ -1,13 +1,8 @@
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { PolygonLayer } from "deck.gl";
+import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  type OverlayPolygon,
-  currentImageBoundsAtom,
-  currentTInfoAtom,
-  currentZInfoAtom,
-  deckExtensionsAtom,
-} from "@biongff/vizarr";
+import { useViewerPlugin } from "@biongff/vizarr";
 
 import {
   boundsToPolygonXY,
@@ -19,21 +14,23 @@ import {
   toXY,
 } from "./state";
 
+const PLUGIN_ID = "roi-selector";
+
 /**
- * Hook that registers ROI overlay layers, click and hover handlers
- * with the viewer's deck.gl extension system.
+ * Hook that builds ROI overlay layers and registers click/hover handlers
+ * with the viewer via ViewerPluginContext.
  *
- * This keeps all ROI ↔ deck.gl interaction out of the core Viewer component.
- * Call this once from the top-level RoiSelector component.
+ * The plugin owns the layer creation — the viewer just renders whatever layers
+ * are handed to it, with no knowledge of ROI internals.
  */
 export function useRoiDeckExtension() {
+  const plugin = useViewerPlugin();
+  const { imageBounds, zInfo, tInfo } = plugin;
+
   const [roiDrawState, setRoiDrawState] = useAtom(roiDrawStateAtom);
   const isDrawing = roiDrawState !== null;
   const savedRois = useAtomValue(savedRoisAtom);
   const [pendingRoi, setPendingRoi] = useAtom(pendingRoiAtom);
-  const zInfo = useAtomValue(currentZInfoAtom);
-  const tInfo = useAtomValue(currentTInfoAtom);
-  const imageBounds = useAtomValue(currentImageBoundsAtom);
   const currentZ = zInfo?.zValue ?? null;
   const currentT = tInfo?.tValue ?? null;
 
@@ -45,11 +42,15 @@ export function useRoiDeckExtension() {
   // Track mouse position for the preview rectangle (only while placing second corner).
   const [roiMousePos, setRoiMousePos] = useState<[number, number] | null>(null);
 
-  const setExtensions = useSetAtom(deckExtensionsAtom);
-
-  // ---- Build overlay polygon specifications ----
-  const overlays = useMemo(() => {
-    const result: OverlayPolygon[] = [];
+  // ---- Build real deck.gl PolygonLayer instances ----
+  const roiLayers = useMemo(() => {
+    type PolySpec = {
+      id: string;
+      polygon: [number, number][];
+      fillColor: [number, number, number, number];
+      lineColor: [number, number, number, number];
+    };
+    const specs: PolySpec[] = [];
 
     // Saved ROIs — filtered by visibility and current Z/T planes
     for (const roi of savedRois) {
@@ -69,7 +70,7 @@ export function useRoiDeckExtension() {
         (currentT < bounds.min.t || currentT > bounds.max.t)
       )
         continue;
-      result.push({
+      specs.push({
         id: `roi-saved-${roi.id}`,
         polygon: boundsToPolygonXY(bounds),
         fillColor: [...roi.color, 40],
@@ -79,7 +80,7 @@ export function useRoiDeckExtension() {
 
     // Pending ROI (drawn but not yet saved/discarded)
     if (pendingRoi) {
-      result.push({
+      specs.push({
         id: "roi-pending",
         polygon: boundsToPolygonXY(normalizeRoiBounds(pendingRoi)),
         fillColor: [...nextRoiColor, 60],
@@ -91,7 +92,7 @@ export function useRoiDeckExtension() {
     if (roiCorner1 && roiMousePos) {
       const [x1, y1] = toXY(roiCorner1);
       const [x2, y2] = roiMousePos;
-      result.push({
+      specs.push({
         id: "roi-preview",
         polygon: [
           [x1, y1],
@@ -104,7 +105,21 @@ export function useRoiDeckExtension() {
       });
     }
 
-    return result;
+    return specs.map(
+      (spec) =>
+        new PolygonLayer({
+          id: spec.id,
+          data: [{ polygon: spec.polygon }],
+          getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
+          getFillColor: spec.fillColor,
+          getLineColor: spec.lineColor,
+          getLineWidth: 2,
+          lineWidthUnits: "pixels" as const,
+          stroked: true,
+          filled: true,
+          pickable: false,
+        }),
+    );
   }, [savedRois, pendingRoi, nextRoiColor, currentZ, currentT, roiCorner1, roiMousePos]);
 
   // ---- Click handler (place ROI corners, clamped to image bounds) ----
@@ -158,26 +173,30 @@ export function useRoiDeckExtension() {
     [roiCorner1],
   );
 
-  // ---- Register / update extension ----
+  // ---- Register layers with the viewer ----
   useEffect(() => {
-    setExtensions((prev) => ({
-      ...prev,
-      "roi-selector": {
-        overlays,
-        onClick,
-        onHover,
-        cursor: isDrawing ? "crosshair" : undefined,
-      },
-    }));
-  }, [overlays, onClick, onHover, isDrawing, setExtensions]);
+    plugin.addLayers(PLUGIN_ID, {
+      layers: roiLayers,
+      cursor: isDrawing ? "crosshair" : undefined,
+    });
+  }, [roiLayers, isDrawing, plugin]);
+
+  // ---- Register click handler ----
+  useEffect(() => {
+    plugin.addClickHandler(PLUGIN_ID, onClick);
+  }, [onClick, plugin]);
+
+  // ---- Register hover handler ----
+  useEffect(() => {
+    plugin.addHoverHandler(PLUGIN_ID, onHover);
+  }, [onHover, plugin]);
 
   // ---- Cleanup on unmount ----
   useEffect(() => {
     return () => {
-      setExtensions((prev) => {
-        const { "roi-selector": _, ...rest } = prev;
-        return rest;
-      });
+      plugin.removeLayers(PLUGIN_ID);
+      plugin.removeClickHandler(PLUGIN_ID);
+      plugin.removeHoverHandler(PLUGIN_ID);
     };
-  }, [setExtensions]);
+  }, [plugin]);
 }

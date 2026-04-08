@@ -1,18 +1,25 @@
 import { ScaleBarLayer } from "@hms-dbmi/viv";
 import DeckGL from "deck.gl";
-import { OrthographicView, PolygonLayer } from "deck.gl";
+import { type Layer, OrthographicView } from "deck.gl";
 import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { useAxisNavigation } from "../hooks/useAxisNavigation";
-import { deckExtensionsAtom, layerAtoms, viewportAtom } from "../state";
+import { layerAtoms, viewportAtom } from "../state";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
 import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
 
-export default function Viewer() {
+interface ViewerProps {
+  additionalLayers?: Layer[];
+  pluginCursor?: string;
+  onPluginClick?: (coordinate: [number, number]) => boolean;
+  onPluginHover?: (coordinate: [number, number] | null) => void;
+}
+
+export default function Viewer({ additionalLayers = [], pluginCursor, onPluginClick, onPluginHover }: ViewerProps) {
   const deckRef = React.useRef<DeckGLRef>(null);
   const [viewport, setViewport] = useAtom(viewportAtom);
   const [viewState, setViewState] = useViewState();
@@ -20,9 +27,6 @@ export default function Viewer() {
   const firstLayer = layers[0] as VizarrLayer;
 
   const axisNavigationSnackbar = useAxisNavigation(deckRef);
-
-  // ---- Plugin extension system ----
-  const extensions = useAtomValue(deckExtensionsAtom);
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
@@ -140,63 +144,35 @@ export default function Viewer() {
     };
   }, [layers]);
 
-  // ---- Extension layers (polygon overlays from plugins) ----
-  const extensionLayers = React.useMemo(() => {
-    return Object.values(extensions).flatMap((ext) =>
-      (ext.overlays ?? []).map(
-        (overlay) =>
-          new PolygonLayer({
-            id: overlay.id,
-            data: [{ polygon: overlay.polygon }],
-            getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
-            getFillColor: overlay.fillColor,
-            getLineColor: overlay.lineColor,
-            getLineWidth: overlay.lineWidth ?? 2,
-            lineWidthUnits: "pixels" as const,
-            stroked: true,
-            filled: true,
-            pickable: false,
-          }),
-      ),
-    );
-  }, [extensions]);
-
-  // ---- Generic click handler (delegates to registered extensions) ----
+  // ---- Click handler (delegates to plugins, then falls through) ----
   const handleClick = React.useCallback(
     (info: PickingInfo) => {
       if (!info.coordinate) return;
       const coord: [number, number] = [info.coordinate[0], info.coordinate[1]];
-      for (const ext of Object.values(extensions)) {
-        if (ext.onClick?.(coord)) return;
-      }
+      onPluginClick?.(coord);
     },
-    [extensions],
+    [onPluginClick],
   );
 
-  // ---- Generic hover handler (delegates to registered extensions) ----
+  // ---- Hover handler (delegates to plugins) ----
   const handleHover = React.useCallback(
     (info: PickingInfo) => {
       const coord = info.coordinate ? ([info.coordinate[0], info.coordinate[1]] as [number, number]) : null;
-      for (const ext of Object.values(extensions)) {
-        ext.onHover?.(coord);
-      }
+      onPluginHover?.(coord);
     },
-    [extensions],
+    [onPluginHover],
   );
 
-  // ---- Generic cursor (first extension with a cursor wins, else "grab") ----
+  // ---- Cursor ----
   const getCursor = React.useCallback(() => {
-    for (const ext of Object.values(extensions)) {
-      if (ext.cursor) return ext.cursor;
-    }
-    return "grab";
-  }, [extensions]);
+    return pluginCursor ?? "grab";
+  }, [pluginCursor]);
 
   return (
     <>
       <DeckGL
         ref={deckRef}
-        layers={[...deckLayers, ...extensionLayers]}
+        layers={[...deckLayers, ...additionalLayers]}
         viewState={viewState && { ortho: viewState }}
         controller={{ keyboard: true }}
         onViewStateChange={(e: { viewState: OrthographicViewState }) =>

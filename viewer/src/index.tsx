@@ -9,12 +9,9 @@ export type { VizarrViewer } from "./api";
 
 export type { ViewState, ImageLayerConfig } from "./state";
 
-// Plugin extension system
-export { deckExtensionsAtom, viewportAtom } from "./state";
+// Plugin context API
+export { ViewerPluginContext, useViewerPlugin } from "./ViewerPluginContext";
+export type { ViewerPluginApi, PluginLayerEntry } from "./ViewerPluginContext";
 export type { ViewportSize } from "./state";
-export type { DeckExtension, OverlayPolygon } from "./state";
-
-// Z-axis, T-axis and image-bounds utilities
-export { currentZInfoAtom, setZSliceAtom, currentTInfoAtom, setTSliceAtom, currentImageBoundsAtom } from "./state";
 
 export { useViewState, ViewStateContext } from "./hooks";

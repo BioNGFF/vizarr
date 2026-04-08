@@ -1,7 +1,7 @@
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 
-import { currentImageBoundsAtom, currentTInfoAtom, currentZInfoAtom } from "@biongff/vizarr";
+import { useViewerPlugin } from "@biongff/vizarr";
 
 import {
   type ImageBounds,
@@ -72,9 +72,7 @@ export function useRoiFields(): UseRoiFieldsReturn {
   const [editingRoiId, setEditingRoiId] = useState<string | null>(null);
   const [roiName, setRoiName] = useState<string>("");
 
-  const zInfo = useAtomValue(currentZInfoAtom);
-  const tInfo = useAtomValue(currentTInfoAtom);
-  const imageBounds = useAtomValue(currentImageBoundsAtom);
+  const { zInfo, tInfo, imageBounds } = useViewerPlugin();
   const hasZAxis = zInfo !== null;
   const hasTAxis = tInfo !== null;
 

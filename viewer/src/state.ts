@@ -121,35 +121,6 @@ export const viewStateAtom = atom<ViewState | null>(null);
 export const sourceErrorAtom = atom<string | null>(null);
 export const sourceWarningAtom = atom<string[]>([]);
 
-// ---- Plugin extension system ----
-
-/** A polygon overlay specification (plain data, converted to deck.gl layers by the Viewer). */
-export interface OverlayPolygon {
-  id: string;
-  polygon: [number, number][];
-  fillColor: [number, number, number, number];
-  lineColor: [number, number, number, number];
-  lineWidth?: number;
-}
-
-/**
- * Extension interface for plugins to inject behavior into the deck.gl viewer.
- * Plugins register an extension via the `deckExtensionsAtom`.
- */
-export interface DeckExtension {
-  /** Polygon overlay specifications to render on the canvas. */
-  overlays?: OverlayPolygon[];
-  /** Click handler. Receives image-space coordinates. Return true to stop propagation to other registered extensions (does not prevent layer-level click handlers from running). */
-  onClick?: (coordinate: [number, number]) => boolean;
-  /** Hover handler. Receives image-space coordinates or null when leaving the canvas. */
-  onHover?: (coordinate: [number, number] | null) => void;
-  /** Cursor to show when this extension is active. */
-  cursor?: string;
-}
-
-/** Registry of deck.gl extensions keyed by unique ID. */
-export const deckExtensionsAtom = atom<Record<string, DeckExtension>>({});
-
 /**
  * Derived atom that exposes the current Z-axis selection and metadata
  * from the first loaded source. Returns null when there is no source

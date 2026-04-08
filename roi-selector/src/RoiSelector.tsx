@@ -1,9 +1,8 @@
 import { CropFree } from "@mui/icons-material";
 import { Box, Collapse, IconButton, Snackbar, Tooltip, Typography } from "@mui/material";
-import { useAtomValue, useSetAtom } from "jotai";
 import React, { useState } from "react";
 
-import { setTSliceAtom, setZSliceAtom, useViewState, viewportAtom } from "@biongff/vizarr";
+import { useViewerPlugin } from "@biongff/vizarr";
 
 import RoiCoordinateFields from "./components/RoiCoordinateFields";
 import RoiDrawControls from "./components/RoiDrawControls";
@@ -58,10 +57,7 @@ function RoiSelector() {
   const [snackOpen, setSnackOpen] = useState(false);
 
   // ---- Viewer navigation ----
-  const [, setViewState] = useViewState();
-  const viewport = useAtomValue(viewportAtom);
-  const setZSlice = useSetAtom(setZSliceAtom);
-  const setTSlice = useSetAtom(setTSliceAtom);
+  const { viewport, setViewState, setZSlice, setTSlice } = useViewerPlugin();
 
   /** Navigate the viewer to a saved ROI (XY + Z) and make it visible. */
   const handleGoToSavedRoi = (roi: SavedRoi) => {
