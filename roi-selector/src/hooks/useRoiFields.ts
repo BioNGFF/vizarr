@@ -128,12 +128,31 @@ export function useRoiFields(): UseRoiFieldsReturn {
   const onCoordChange = React.useCallback(
     (key: CoordKey, value: string) => {
       setCoords((prev) => {
-        const next = { ...prev, [key]: value };
+        // Clamp numeric value to image bounds when available
+        let clamped = value;
+        if (value !== "" && imageBounds) {
+          const num = Number(value);
+          if (!Number.isNaN(num)) {
+            const limits: Partial<Record<CoordKey, number>> = {
+              x1: imageBounds.xMax,
+              x2: imageBounds.xMax,
+              y1: imageBounds.yMax,
+              y2: imageBounds.yMax,
+              ...(imageBounds.zMax !== null ? { z1: imageBounds.zMax, z2: imageBounds.zMax } : {}),
+              ...(imageBounds.tMax !== null ? { t1: imageBounds.tMax, t2: imageBounds.tMax } : {}),
+            };
+            const max = limits[key];
+            if (max !== undefined) {
+              clamped = String(Math.max(0, Math.min(num, max)));
+            }
+          }
+        }
+        const next = { ...prev, [key]: clamped };
         syncFieldsToPending(next);
         return next;
       });
     },
-    [syncFieldsToPending],
+    [syncFieldsToPending, imageBounds],
   );
 
   // ---- Draw-mode toggle ----
