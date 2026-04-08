@@ -36,13 +36,13 @@ declare namespace Ome {
 
   type CoordinateTransformation =
     | {
-        type: "scale";
-        scale: Array<number>;
-      }
+      type: "scale";
+      scale: Array<number>;
+    }
     | {
-        type: "translation";
-        translation: Array<number>;
-      };
+      type: "translation";
+      translation: Array<number>;
+    };
 
   interface Dataset {
     path: string;
@@ -53,6 +53,7 @@ declare namespace Ome {
     datasets: Array<Dataset>;
     version?: string;
     axes?: string[] | Axis[];
+    coordinateTransformations?: CoordinateTransformation[]
   }
 
   interface Bioformats2rawlayout {

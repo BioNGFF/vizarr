@@ -1,4 +1,4 @@
-import { Matrix4 } from "math.gl";
+
 import * as zarr from "zarrita";
 
 import type * as viv from "@vivjs/types";
@@ -552,57 +552,6 @@ export function resolveLoaderFromLayerProps(
   return isGridLayerProps(layerProps) ? layerProps.loaders[0].loader : layerProps.loader;
 }
 
-/**
- * Convert an array of coordinateTransformations objects to a 16-element
- * plain JS array using Matrix4 linear algebra transformation functions.
- *
- * Adapted from Vitessce: https://github.com/vitessce/vitessce/blob/c267ebecab1824dae68d6f2640a6c5ce7250efbb/packages/utils/spatial-utils/src/spatial.js#L403-L524
- *
- * @param coordinateTransformations List of objects matching the OME-NGFF v0.4 coordinateTransformations spec.
- * @param axes - Axes in OME-NGFF v0.4 format
- *
- * @returns Array of 16 numbers representing the Matrix4.
- */
-export function coordinateTransformationsToMatrix(multiscales: Array<Ome.Multiscale>) {
-  let mat = new Matrix4().identity();
-  const axes = getNgffAxes(multiscales);
-  const coordinateTransformations = multiscales[0].datasets[0]?.coordinateTransformations;
-  const xyzIndices = ["x", "y", "z"].map((name) =>
-    axes.findIndex((axisObj) => axisObj.type === "space" && axisObj.name === name),
-  );
-
-  // Apply each transformation sequentially and in order according to the OME-NGFF v0.4 spec.
-  // Reference: https://ngff.openmicroscopy.org/0.4/#trafo-md
-  for (const transform of coordinateTransformations ?? []) {
-    if (transform.type === "translation") {
-      const { translation: axisOrderedTranslation } = transform;
-      if (axisOrderedTranslation.length !== axes.length) {
-        throw new Error("Length of translation array was expected to match length of axes.");
-      }
-      const defaultValue = 0;
-      // Get the translation values for [x, y, z].
-      const xyzTranslation = xyzIndices.map((axisIndex) =>
-        axisIndex >= 0 ? axisOrderedTranslation[axisIndex] : defaultValue,
-      );
-      const nextMat = new Matrix4().translate(xyzTranslation);
-      mat = mat.multiplyLeft(nextMat);
-    }
-    if (transform.type === "scale") {
-      const { scale: axisOrderedScale } = transform;
-      // Add in z dimension needed for Matrix4 scale API.
-      if (axisOrderedScale.length !== axes.length) {
-        throw new Error("Length of scale array was expected to match length of axes.");
-      }
-      const defaultValue = 1;
-      // Get the scale values for [x, y, z].
-      const xyzScale = xyzIndices.map((axisIndex) => (axisIndex >= 0 ? axisOrderedScale[axisIndex] : defaultValue));
-      const nextMat = new Matrix4().scale(xyzScale);
-      mat = mat.multiplyLeft(nextMat);
-    }
-  }
-
-  return mat;
-}
 
 /**
  * Builds N-tuples of elements from the given N arrays with matching indices,

@@ -5,6 +5,8 @@ import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./s
 import { ZarrPixelSource } from "./ZarrPixelSource";
 import * as utils from "./utils";
 
+import { getPhysicalSizes, coordinateTransformationsToMatrix } from "./coordinate-transformations";
+
 export async function loadWell(
   config: ImageLayerConfig,
   grp: zarr.Group<zarr.Readable>,
@@ -256,6 +258,14 @@ function isDownsampledZ(
   return !data.every((element) => element.shape[zIndex] === originalSizeZ);
 }
 
+function getOrderedTransformations(metadata: Ome.Multiscale[]): Ome.CoordinateTransformation[] {
+  const resolutionTransformations = metadata[0].datasets[0]?.coordinateTransformations ? metadata[0].datasets[0]?.coordinateTransformations : []
+  const imageTransformations = metadata[0].coordinateTransformations ? metadata[0].coordinateTransformations : []
+
+
+  return [...resolutionTransformations, ...imageTransformations]
+}
+
 /**
  * Load a multiscale OME-NGFF image
  */
@@ -280,7 +290,7 @@ export async function loadOmeMultiscales(
   }
   const originalSizeZ = data[0].shape[axis_labels.indexOf("z")];
   const zDownsampled = isDownsampledZ(data, axis_labels.indexOf("z"), originalSizeZ);
-  const physicalSizes = utils.getPhysicalSizes(utils.resolveAttrs(attrs));
+  const physicalSizes = getPhysicalSizes(utils.resolveAttrs(attrs));
   const loader = data.map(
     (arr, i) =>
       new ZarrPixelSource(arr, {
@@ -296,7 +306,7 @@ export async function loadOmeMultiscales(
     axis_labels,
     model_matrix: config.model_matrix
       ? utils.parseMatrix(config.model_matrix)
-      : utils.coordinateTransformationsToMatrix(attrs.multiscales),
+      : coordinateTransformationsToMatrix(getOrderedTransformations(attrs.multiscales), utils.getNgffAxes(attrs.multiscales)),
     defaults: {
       selection: meta.defaultSelection,
       colormap,
@@ -321,7 +331,7 @@ async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: strin
   const colors = (attrs["image-label"].colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));
   return {
     name,
-    modelMatrix: utils.coordinateTransformationsToMatrix(attrs.multiscales),
+    modelMatrix: coordinateTransformationsToMatrix(attrs.multiscales),
     loader: data.map((arr) => new ZarrPixelSource(arr, { labels, tileSize })),
     colors: colors.length > 0 ? colors : undefined,
   };
