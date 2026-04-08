@@ -3,7 +3,7 @@ import { Box, Collapse, IconButton, Snackbar, Tooltip, Typography } from "@mui/m
 import { useAtomValue, useSetAtom } from "jotai";
 import React, { useState } from "react";
 
-import { setZSliceAtom, useViewState, viewportAtom } from "@biongff/vizarr";
+import { setTSliceAtom, setZSliceAtom, useViewState, viewportAtom } from "@biongff/vizarr";
 
 import RoiCoordinateFields from "./components/RoiCoordinateFields";
 import RoiDrawControls from "./components/RoiDrawControls";
@@ -31,7 +31,9 @@ function RoiSelector() {
     coords,
     onCoordChange,
     hasZAxis,
+    hasTAxis,
     zInfo,
+    tInfo,
     imageBounds,
     isDrawing,
     roiDrawState,
@@ -57,13 +59,14 @@ function RoiSelector() {
   const [, setViewState] = useViewState();
   const viewport = useAtomValue(viewportAtom);
   const setZSlice = useSetAtom(setZSliceAtom);
+  const setTSlice = useSetAtom(setTSliceAtom);
 
   /** Navigate the viewer to a saved ROI (XY + Z) and make it visible. */
   const handleGoToSavedRoi = (roi: SavedRoi) => {
     if (!viewport) return;
-    const b = normalizeRoiBounds(roi);
-    const roiWidth = b.x2 - b.x1;
-    const roiHeight = b.y2 - b.y1;
+    const bounds = normalizeRoiBounds(roi);
+    const roiWidth = bounds.max.x - bounds.min.x;
+    const roiHeight = bounds.max.y - bounds.min.y;
     if (roiWidth === 0 || roiHeight === 0) return;
     const padding = 40;
     const availW = Math.max(viewport.width - 2 * padding, 1);
@@ -71,14 +74,20 @@ function RoiSelector() {
     const zoom = Math.log2(Math.min(availW / roiWidth, availH / roiHeight));
     setViewState({
       zoom,
-      target: [(b.x1 + b.x2) / 2, (b.y1 + b.y2) / 2],
+      target: [(bounds.min.x + bounds.max.x) / 2, (bounds.min.y + bounds.max.y) / 2],
       width: viewport.width,
       height: viewport.height,
     });
-    if (hasZAxis && zInfo) {
+    if (hasZAxis && zInfo && bounds.min.z !== undefined && bounds.max.z !== undefined) {
       // Only jump Z if the current slice is outside the ROI's Z range.
-      if (zInfo.zValue < b.z1 || zInfo.zValue > b.z2) {
-        setZSlice(b.z1);
+      if (zInfo.zValue < bounds.min.z || zInfo.zValue > bounds.max.z) {
+        setZSlice(bounds.min.z);
+      }
+    }
+    if (hasTAxis && tInfo && bounds.min.t !== undefined && bounds.max.t !== undefined) {
+      // Only jump T if the current frame is outside the ROI's T range.
+      if (tInfo.tValue < bounds.min.t || tInfo.tValue > bounds.max.t) {
+        setTSlice(bounds.min.t);
       }
     }
     if (!roi.visible) {
@@ -89,11 +98,15 @@ function RoiSelector() {
 
   // ---- Clipboard ----
   const roiToPayload = (roi: SavedRoi): Record<string, number> => {
-    const b = normalizeRoiBounds(roi);
-    const payload: Record<string, number> = { x1: b.x1, y1: b.y1, x2: b.x2, y2: b.y2 };
-    if (hasZAxis) {
-      payload.z1 = b.z1;
-      payload.z2 = b.z2;
+    const bounds = normalizeRoiBounds(roi);
+    const payload: Record<string, number> = { x1: bounds.min.x, y1: bounds.min.y, x2: bounds.max.x, y2: bounds.max.y };
+    if (hasZAxis && bounds.min.z !== undefined && bounds.max.z !== undefined) {
+      payload.z1 = bounds.min.z;
+      payload.z2 = bounds.max.z;
+    }
+    if (hasTAxis && bounds.min.t !== undefined && bounds.max.t !== undefined) {
+      payload.t1 = bounds.min.t;
+      payload.t2 = bounds.max.t;
     }
     return payload;
   };
@@ -136,7 +149,9 @@ function RoiSelector() {
               coords={coords}
               onCoordChange={onCoordChange}
               hasZAxis={hasZAxis}
+              hasTAxis={hasTAxis}
               zInfo={zInfo}
+              tInfo={tInfo}
               imageBounds={imageBounds}
             />
           )}
@@ -156,6 +171,7 @@ function RoiSelector() {
           <SavedRoiList
             savedRois={savedRois}
             hasZAxis={hasZAxis}
+            hasTAxis={hasTAxis}
             editingRoiId={editingRoiId}
             roiMenuOpen={roiMenuOpen}
             onToggleOpen={() => setRoiMenuOpen((prev) => !prev)}

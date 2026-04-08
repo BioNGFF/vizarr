@@ -8,7 +8,9 @@ interface RoiCoordinateFieldsProps {
   coords: CoordValues;
   onCoordChange: (key: CoordKey, value: string) => void;
   hasZAxis: boolean;
+  hasTAxis: boolean;
   zInfo: { zMax: number } | null;
+  tInfo: { tMax: number } | null;
   imageBounds: ImageBounds | null;
 }
 
@@ -18,7 +20,9 @@ export default function RoiCoordinateFields({
   coords,
   onCoordChange,
   hasZAxis,
+  hasTAxis,
   zInfo,
+  tInfo,
   imageBounds,
 }: RoiCoordinateFieldsProps) {
   return (
@@ -125,6 +129,45 @@ export default function RoiCoordinateFields({
                 slotProps={{
                   input: { sx: fieldSx },
                   htmlInput: { min: 0, max: zInfo.zMax },
+                }}
+              />
+            </Grid>
+          </Grid>
+        </>
+      )}
+
+      {/* ---- T range (only when data has a T axis) ---- */}
+      {hasTAxis && tInfo && (
+        <>
+          <Typography variant="caption" sx={{ color: "grey.400" }}>
+            T range (frame)
+          </Typography>
+          <Grid container spacing={1} sx={{ mb: 1 }}>
+            <Grid size={{ xs: 6 }}>
+              <TextField
+                label={`t₁ (0–${tInfo.tMax})`}
+                size="small"
+                type="number"
+                value={coords.t1}
+                onChange={(e) => onCoordChange("t1", e.target.value)}
+                fullWidth
+                slotProps={{
+                  input: { sx: fieldSx },
+                  htmlInput: { min: 0, max: tInfo.tMax },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <TextField
+                label={`t₂ (0–${tInfo.tMax})`}
+                size="small"
+                type="number"
+                value={coords.t2}
+                onChange={(e) => onCoordChange("t2", e.target.value)}
+                fullWidth
+                slotProps={{
+                  input: { sx: fieldSx },
+                  htmlInput: { min: 0, max: tInfo.tMax },
                 }}
               />
             </Grid>

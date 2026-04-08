@@ -8,6 +8,7 @@ import SavedRoiItem from "./SavedRoiItem";
 interface SavedRoiListProps {
   savedRois: SavedRoi[];
   hasZAxis: boolean;
+  hasTAxis: boolean;
   editingRoiId: string | null;
   roiMenuOpen: boolean;
   onToggleOpen: () => void;
@@ -22,6 +23,7 @@ interface SavedRoiListProps {
 export default function SavedRoiList({
   savedRois,
   hasZAxis,
+  hasTAxis,
   editingRoiId,
   roiMenuOpen,
   onToggleOpen,
@@ -69,6 +71,7 @@ export default function SavedRoiList({
               key={roi.id}
               roi={roi}
               hasZAxis={hasZAxis}
+              hasTAxis={hasTAxis}
               isEditing={editingRoiId === roi.id}
               onToggleVisibility={() => onToggleVisibility(roi.id)}
               onGoTo={() => onGoTo(roi)}

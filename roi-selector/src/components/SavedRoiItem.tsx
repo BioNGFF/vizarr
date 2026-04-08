@@ -7,6 +7,7 @@ import { type SavedRoi, normalizeRoiBounds } from "../state";
 interface SavedRoiItemProps {
   roi: SavedRoi;
   hasZAxis: boolean;
+  hasTAxis: boolean;
   isEditing: boolean;
   onToggleVisibility: () => void;
   onGoTo: () => void;
@@ -18,6 +19,7 @@ interface SavedRoiItemProps {
 export default function SavedRoiItem({
   roi,
   hasZAxis,
+  hasTAxis,
   isEditing,
   onToggleVisibility,
   onGoTo,
@@ -25,7 +27,7 @@ export default function SavedRoiItem({
   onEdit,
   onDelete,
 }: SavedRoiItemProps) {
-  const b = normalizeRoiBounds(roi);
+  const bounds = normalizeRoiBounds(roi);
 
   return (
     <Box
@@ -74,11 +76,16 @@ export default function SavedRoiItem({
             whiteSpace: "nowrap",
           }}
         >
-          ({b.x1}, {b.y1}) → ({b.x2}, {b.y2})
+          ({bounds.min.x}, {bounds.min.y}) → ({bounds.max.x}, {bounds.max.y})
         </Typography>
-        {hasZAxis && (
+        {hasZAxis && bounds.min.z !== undefined && bounds.max.z !== undefined && (
           <Typography variant="caption" sx={{ color: "grey.500", fontFamily: "monospace", fontSize: 9 }}>
-            z: {b.z1 === b.z2 ? b.z1 : `${b.z1}–${b.z2}`}
+            z: {bounds.min.z === bounds.max.z ? bounds.min.z : `${bounds.min.z}–${bounds.max.z}`}
+          </Typography>
+        )}
+        {hasTAxis && bounds.min.t !== undefined && bounds.max.t !== undefined && (
+          <Typography variant="caption" sx={{ color: "grey.500", fontFamily: "monospace", fontSize: 9, ml: hasZAxis ? 0.5 : 0 }}>
+            t: {bounds.min.t === bounds.max.t ? bounds.min.t : `${bounds.min.t}–${bounds.max.t}`}
           </Typography>
         )}
       </Box>

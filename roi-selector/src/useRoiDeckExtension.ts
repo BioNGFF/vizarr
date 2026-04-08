@@ -1,9 +1,17 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { type OverlayPolygon, currentImageBoundsAtom, currentZInfoAtom, deckExtensionsAtom } from "@biongff/vizarr";
+import { type OverlayPolygon, currentImageBoundsAtom, currentTInfoAtom, currentZInfoAtom, deckExtensionsAtom } from "@biongff/vizarr";
 
-import { nextAvailableColor, normalizeRoiBounds, pendingRoiAtom, roiDrawStateAtom, savedRoisAtom } from "./state";
+import {
+  boundsToPolygonXY,
+  nextAvailableColor,
+  normalizeRoiBounds,
+  pendingRoiAtom,
+  roiDrawStateAtom,
+  savedRoisAtom,
+  toXY,
+} from "./state";
 
 /**
  * Hook that registers ROI overlay layers, click and hover handlers
@@ -18,8 +26,10 @@ export function useRoiDeckExtension() {
   const savedRois = useAtomValue(savedRoisAtom);
   const [pendingRoi, setPendingRoi] = useAtom(pendingRoiAtom);
   const zInfo = useAtomValue(currentZInfoAtom);
+  const tInfo = useAtomValue(currentTInfoAtom);
   const imageBounds = useAtomValue(currentImageBoundsAtom);
   const currentZ = zInfo?.zValue ?? null;
+  const currentT = tInfo?.tValue ?? null;
 
   const nextRoiColor = nextAvailableColor(savedRois);
 
@@ -35,23 +45,15 @@ export function useRoiDeckExtension() {
   const overlays = useMemo(() => {
     const result: OverlayPolygon[] = [];
 
-    // Saved ROIs — filtered by visibility and current Z plane
+    // Saved ROIs — filtered by visibility and current Z/T planes
     for (const roi of savedRois) {
       if (!roi.visible) continue;
-      if (currentZ !== null) {
-        const b = normalizeRoiBounds(roi);
-        if (currentZ < b.z1 || currentZ > b.z2) continue;
-      }
-      const [ax, ay] = roi.corner1;
-      const [bx, by] = roi.corner2;
+      const bounds = normalizeRoiBounds(roi);
+      if (currentZ !== null && bounds.min.z !== undefined && bounds.max.z !== undefined && (currentZ < bounds.min.z || currentZ > bounds.max.z)) continue;
+      if (currentT !== null && bounds.min.t !== undefined && bounds.max.t !== undefined && (currentT < bounds.min.t || currentT > bounds.max.t)) continue;
       result.push({
         id: `roi-saved-${roi.id}`,
-        polygon: [
-          [ax, ay],
-          [bx, ay],
-          [bx, by],
-          [ax, by],
-        ],
+        polygon: boundsToPolygonXY(bounds),
         fillColor: [...roi.color, 40],
         lineColor: [...roi.color, 200],
       });
@@ -59,16 +61,9 @@ export function useRoiDeckExtension() {
 
     // Pending ROI (drawn but not yet saved/discarded)
     if (pendingRoi) {
-      const [ax, ay] = pendingRoi.corner1;
-      const [bx, by] = pendingRoi.corner2;
       result.push({
         id: "roi-pending",
-        polygon: [
-          [ax, ay],
-          [bx, ay],
-          [bx, by],
-          [ax, by],
-        ],
+        polygon: boundsToPolygonXY(normalizeRoiBounds(pendingRoi)),
         fillColor: [...nextRoiColor, 60],
         lineColor: [...nextRoiColor, 220],
       });
@@ -76,7 +71,7 @@ export function useRoiDeckExtension() {
 
     // Preview rectangle (corner1 placed, following mouse)
     if (roiCorner1 && roiMousePos) {
-      const [x1, y1] = roiCorner1;
+      const [x1, y1] = toXY(roiCorner1);
       const [x2, y2] = roiMousePos;
       result.push({
         id: "roi-preview",
@@ -92,7 +87,7 @@ export function useRoiDeckExtension() {
     }
 
     return result;
-  }, [savedRois, pendingRoi, nextRoiColor, currentZ, roiCorner1, roiMousePos]);
+  }, [savedRois, pendingRoi, nextRoiColor, currentZ, currentT, roiCorner1, roiMousePos]);
 
   // ---- Click handler (place ROI corners, clamped to image bounds) ----
   const onClick = useCallback(
@@ -105,21 +100,24 @@ export function useRoiDeckExtension() {
       const y = imageBounds ? clampXY(rawY, imageBounds.yMax) : Math.round(rawY);
       const clampZ = (z: number) =>
         imageBounds?.zMax !== null && imageBounds?.zMax !== undefined ? Math.max(0, Math.min(z, imageBounds.zMax)) : z;
+      const clampT = (t: number) =>
+        imageBounds?.tMax !== null && imageBounds?.tMax !== undefined ? Math.max(0, Math.min(t, imageBounds.tMax)) : t;
 
       if (roiDrawState === "waiting-first") {
-        const z1 = clampZ(zInfo?.zValue ?? 0);
-        setRoiDrawState({ corner1: [x, y], z1 });
+        const corner: import("./state").RoiCorner = { x, y };
+        if (zInfo) corner.z = clampZ(zInfo.zValue);
+        if (tInfo) corner.t = clampT(tInfo.tValue);
+        setRoiDrawState({ corner1: corner });
         return true;
       }
 
       if (roiDrawState && typeof roiDrawState === "object" && "corner1" in roiDrawState) {
-        const corner2: [number, number] = [x, y];
-        const z2 = clampZ(zInfo?.zValue ?? 0);
+        const corner: import("./state").RoiCorner = { x, y };
+        if (zInfo) corner.z = clampZ(zInfo.zValue);
+        if (tInfo) corner.t = clampT(tInfo.tValue);
         setPendingRoi({
           corner1: roiDrawState.corner1,
-          corner2,
-          z1: roiDrawState.z1,
-          z2,
+          corner2: corner,
         });
         setRoiDrawState(null);
         return true;
@@ -127,7 +125,7 @@ export function useRoiDeckExtension() {
 
       return false;
     },
-    [isDrawing, roiDrawState, setRoiDrawState, setPendingRoi, zInfo, imageBounds],
+    [isDrawing, roiDrawState, setRoiDrawState, setPendingRoi, zInfo, tInfo, imageBounds],
   );
 
   // ---- Hover handler (track mouse for preview rectangle) ----

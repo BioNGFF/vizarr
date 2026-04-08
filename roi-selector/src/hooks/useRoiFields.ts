@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 
-import { currentImageBoundsAtom, currentZInfoAtom } from "@biongff/vizarr";
+import { currentImageBoundsAtom, currentTInfoAtom, currentZInfoAtom } from "@biongff/vizarr";
 
 import {
   type ImageBounds,
@@ -18,7 +18,7 @@ import {
   savedRoisAtom,
 } from "../state";
 
-export type CoordKey = "x1" | "y1" | "x2" | "y2" | "z1" | "z2";
+export type CoordKey = "x1" | "y1" | "x2" | "y2" | "z1" | "z2" | "t1" | "t2";
 export type CoordValues = Record<CoordKey, string>;
 
 export interface UseRoiFieldsReturn {
@@ -26,7 +26,9 @@ export interface UseRoiFieldsReturn {
   onCoordChange: (key: CoordKey, value: string) => void;
   // Derived / shared state
   hasZAxis: boolean;
+  hasTAxis: boolean;
   zInfo: { zValue: number; zMax: number } | null;
+  tInfo: { tValue: number; tMax: number } | null;
   imageBounds: ImageBounds | null;
   isDrawing: boolean;
   roiDrawState: RoiDrawState;
@@ -60,13 +62,17 @@ export function useRoiFields(): UseRoiFieldsReturn {
     y2: "",
     z1: "",
     z2: "",
+    t1: "",
+    t2: "",
   });
 
   const [editingRoiId, setEditingRoiId] = useState<string | null>(null);
 
   const zInfo = useAtomValue(currentZInfoAtom);
+  const tInfo = useAtomValue(currentTInfoAtom);
   const imageBounds = useAtomValue(currentImageBoundsAtom);
   const hasZAxis = zInfo !== null;
+  const hasTAxis = tInfo !== null;
 
   const [roiDrawState, setRoiDrawState] = useAtom(roiDrawStateAtom);
   const isDrawing = roiDrawState !== null;
@@ -88,9 +94,9 @@ export function useRoiFields(): UseRoiFieldsReturn {
       return;
     }
     if (pendingRoi) {
-      const bn = normalizeRoiBounds(pendingRoi);
-      const b = imageBounds ? clampToBounds(bn, imageBounds) : bn;
-      setCoords(boundsToCoords(b) as CoordValues);
+      const normalized = normalizeRoiBounds(pendingRoi);
+      const clamped = imageBounds ? clampToBounds(normalized, imageBounds) : normalized;
+      setCoords(boundsToCoords(clamped) as CoordValues);
     }
   }, [pendingRoi, imageBounds]);
 
@@ -144,15 +150,13 @@ export function useRoiFields(): UseRoiFieldsReturn {
     if (!pendingRoi) return;
     const raw = coordsToRoi(coords, pendingRoi);
     if (!raw) return;
-    const b = imageBounds ? clampToBounds(normalizeRoiBounds(raw), imageBounds) : normalizeRoiBounds(raw);
+    const bounds = imageBounds ? clampToBounds(normalizeRoiBounds(raw), imageBounds) : normalizeRoiBounds(raw);
     setSavedRois((prev) => [
       ...prev,
       {
         id: Math.random().toString(36).slice(2),
-        corner1: [b.x1, b.y1],
-        corner2: [b.x2, b.y2],
-        z1: b.z1,
-        z2: b.z2,
+        corner1: bounds.min,
+        corner2: bounds.max,
         color: nextAvailableColor(prev),
         visible: true,
       },
@@ -176,9 +180,9 @@ export function useRoiFields(): UseRoiFieldsReturn {
     if (isDrawing) setRoiDrawState(null);
     editOriginal.current = { ...roi };
     setEditingRoiId(roi.id);
-    const bn = normalizeRoiBounds(roi);
-    const b = imageBounds ? clampToBounds(bn, imageBounds) : bn;
-    setCoords(boundsToCoords(b) as CoordValues);
+    const normalized = normalizeRoiBounds(roi);
+    const clamped = imageBounds ? clampToBounds(normalized, imageBounds) : normalized;
+    setCoords(boundsToCoords(clamped) as CoordValues);
   };
 
   const handleUpdateRoi = () => {
@@ -199,7 +203,9 @@ export function useRoiFields(): UseRoiFieldsReturn {
     coords,
     onCoordChange,
     hasZAxis,
+    hasTAxis,
     zInfo,
+    tInfo,
     imageBounds,
     isDrawing,
     roiDrawState,

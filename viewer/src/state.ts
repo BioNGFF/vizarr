@@ -161,10 +161,29 @@ export const currentZInfoAtom = atom((get) => {
   const source = sources[0];
   const zAxisIndex = source.axis_labels.indexOf("z");
   if (zAxisIndex === -1) return null;
+  const zMax = source.loader[0].shape[zAxisIndex] - 1;
+  if (zMax <= 0) return null;
   const layerState = get(layerFamilyAtom(source));
   const zValue = layerState.layerProps.selections[0]?.[zAxisIndex] ?? 0;
-  const zMax = source.loader[0].shape[zAxisIndex] - 1;
   return { zValue, zMax };
+});
+
+/**
+ * Derived atom that exposes the current T-axis (time) selection and metadata
+ * from the first loaded source. Returns null when there is no source
+ * or the data has no T axis.
+ */
+export const currentTInfoAtom = atom((get) => {
+  const sources = get(sourceInfoAtom);
+  if (sources.length === 0) return null;
+  const source = sources[0];
+  const tAxisIndex = source.axis_labels.indexOf("t");
+  if (tAxisIndex === -1) return null;
+  const tMax = source.loader[0].shape[tAxisIndex] - 1;
+  if (tMax <= 0) return null;
+  const layerState = get(layerFamilyAtom(source));
+  const tValue = layerState.layerProps.selections[0]?.[tAxisIndex] ?? 0;
+  return { tValue, tMax };
 });
 
 /**
@@ -182,10 +201,14 @@ export const currentImageBoundsAtom = atom((get) => {
   const yAxisIndex = source.axis_labels.indexOf("y");
   if (xAxisIndex === -1 || yAxisIndex === -1) return null;
   const zAxisIndex = source.axis_labels.indexOf("z");
+  const tAxisIndex = source.axis_labels.indexOf("t");
+  const zSize = zAxisIndex !== -1 ? loader.shape[zAxisIndex] : 0;
+  const tSize = tAxisIndex !== -1 ? loader.shape[tAxisIndex] : 0;
   return {
     xMax: loader.shape[xAxisIndex] - 1,
     yMax: loader.shape[yAxisIndex] - 1,
-    zMax: zAxisIndex !== -1 ? loader.shape[zAxisIndex] - 1 : null,
+    zMax: zSize > 1 ? zSize - 1 : null,
+    tMax: tSize > 1 ? tSize - 1 : null,
   };
 });
 
@@ -203,6 +226,27 @@ export const setZSliceAtom = atom(null, (get, set, zValue: number) => {
       const selections = prev.layerProps.selections.map((ch) => {
         const newCh = [...ch];
         newCh[zAxisIndex] = zValue;
+        return newCh;
+      });
+      return { ...prev, layerProps: { ...prev.layerProps, selections } };
+    });
+  }
+});
+
+/**
+ * Write-only atom that sets the T-axis (time) slice for all loaded sources.
+ * Pass a t index number and it will update every source's selection.
+ */
+export const setTSliceAtom = atom(null, (get, set, tValue: number) => {
+  const sources = get(sourceInfoAtom);
+  for (const source of sources) {
+    const tAxisIndex = source.axis_labels.indexOf("t");
+    if (tAxisIndex === -1) continue;
+    const layerStateAtom = layerFamilyAtom(source);
+    set(layerStateAtom, (prev) => {
+      const selections = prev.layerProps.selections.map((ch) => {
+        const newCh = [...ch];
+        newCh[tAxisIndex] = tValue;
         return newCh;
       });
       return { ...prev, layerProps: { ...prev.layerProps, selections } };

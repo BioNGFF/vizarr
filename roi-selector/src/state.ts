@@ -1,33 +1,45 @@
 import { atom } from "jotai";
 
+/** An ROI corner. x/y are always required; z and t are present only when the image has those axes. */
+export interface RoiCorner {
+  x: number;
+  y: number;
+  z?: number;
+  t?: number;
+}
+
+/**
+ * Slice a RoiPoint down to an [x, y] tuple.
+ * Single entry point for all 2D consumers (deck.gl polygons, viewport targeting, etc.).
+ */
+export function toXY(p: RoiCorner): [number, number] {
+  return [p.x, p.y];
+}
+
 /**
  * Shared state for the "draw ROI on image" feature.
  *
  * State machine:
  *   null              → draw mode is OFF
  *   "waiting-first"   → draw mode ON, waiting for the first click
- *   { corner1, z1 }   → first corner placed, waiting for second click
+ *   { corner1 }       → first corner placed, waiting for second click
  */
-export type RoiDrawState = null | "waiting-first" | { corner1: [number, number]; z1: number };
+export type RoiDrawState = null | "waiting-first" | { corner1: RoiCorner };
 export const roiDrawStateAtom = atom<RoiDrawState>(null);
 
 /** A saved ROI with its assigned overlay color. */
 export interface SavedRoi {
   id: string;
-  corner1: [number, number];
-  corner2: [number, number];
-  z1: number;
-  z2: number;
+  corner1: RoiCorner;
+  corner2: RoiCorner;
   color: [number, number, number];
   visible: boolean;
 }
 
 /** A ROI that has been drawn but not yet saved or discarded. */
 export interface PendingRoi {
-  corner1: [number, number];
-  corner2: [number, number];
-  z1: number;
-  z2: number;
+  corner1: RoiCorner;
+  corner2: RoiCorner;
 }
 
 export const savedRoisAtom = atom<SavedRoi[]>([]);
@@ -35,75 +47,103 @@ export const pendingRoiAtom = atom<PendingRoi | null>(null);
 
 /** Normalized bounding box with guaranteed min/max ordering. */
 export interface NormalizedBounds {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  z1: number;
-  z2: number;
-}
-
-/*
- * Normalize a ROI's coordinates so that (x1,y1) is the top-left and
- * (x2,y2) is the bottom-right, with z1 ≤ z2.
- *
- * Works for both `SavedRoi` and `PendingRoi` obj.
- */
-export function normalizeRoiBounds(roi: {
-  corner1: [number, number];
-  corner2: [number, number];
-  z1: number;
-  z2: number;
-}): NormalizedBounds {
-  return {
-    x1: Math.min(roi.corner1[0], roi.corner2[0]),
-    y1: Math.min(roi.corner1[1], roi.corner2[1]),
-    x2: Math.max(roi.corner1[0], roi.corner2[0]),
-    y2: Math.max(roi.corner1[1], roi.corner2[1]),
-    z1: Math.min(roi.z1, roi.z2),
-    z2: Math.max(roi.z1, roi.z2),
-  };
-}
-
-/** Convert NormalizedBounds to string-keyed form for text fields. */
-export function boundsToCoords(b: NormalizedBounds): Record<string, string> {
-  return {
-    x1: String(b.x1),
-    y1: String(b.y1),
-    x2: String(b.x2),
-    y2: String(b.y2),
-    z1: String(b.z1),
-    z2: String(b.z2),
-  };
+  min: RoiCorner;
+  max: RoiCorner;
 }
 
 /**
- * Parse string coordinate fields into the corner1/corner2 + z1/z2 shape
- * used by SavedRoi / PendingRoi.  Returns `null` when any xy value is NaN.
+ * Build a deck.gl-compatible polygon from the XY extent of normalized bounds.
+ * Single entry point for converting 3D bounds → 2D rectangle vertices.
+ */
+export function boundsToPolygonXY(bounds: NormalizedBounds): [number, number][] {
+  return [
+    [bounds.min.x, bounds.min.y],
+    [bounds.max.x, bounds.min.y],
+    [bounds.max.x, bounds.max.y],
+    [bounds.min.x, bounds.max.y],
+  ];
+}
+
+/*
+ * Normalize a ROI's corners so that min ≤ max on every axis.
+ * Optional axes (z, t) are only included when both corners carry them.
+ *
+ * Works for both `SavedRoi` and `PendingRoi`.
+ */
+export function normalizeRoiBounds(roi: {
+  corner1: RoiCorner;
+  corner2: RoiCorner;
+}): NormalizedBounds {
+  const min: RoiCorner = {
+    x: Math.min(roi.corner1.x, roi.corner2.x),
+    y: Math.min(roi.corner1.y, roi.corner2.y),
+  };
+  const max: RoiCorner = {
+    x: Math.max(roi.corner1.x, roi.corner2.x),
+    y: Math.max(roi.corner1.y, roi.corner2.y),
+  };
+  if (roi.corner1.z !== undefined && roi.corner2.z !== undefined) {
+    min.z = Math.min(roi.corner1.z, roi.corner2.z);
+    max.z = Math.max(roi.corner1.z, roi.corner2.z);
+  }
+  if (roi.corner1.t !== undefined && roi.corner2.t !== undefined) {
+    min.t = Math.min(roi.corner1.t, roi.corner2.t);
+    max.t = Math.max(roi.corner1.t, roi.corner2.t);
+  }
+  return { min, max };
+}
+
+/** Convert NormalizedBounds to string-keyed form for text fields. */
+export function boundsToCoords(bounds: NormalizedBounds): Record<string, string> {
+  const c: Record<string, string> = {
+    x1: String(bounds.min.x),
+    y1: String(bounds.min.y),
+    x2: String(bounds.max.x),
+    y2: String(bounds.max.y),
+  };
+  c.z1 = bounds.min.z !== undefined ? String(bounds.min.z) : "";
+  c.z2 = bounds.max.z !== undefined ? String(bounds.max.z) : "";
+  c.t1 = bounds.min.t !== undefined ? String(bounds.min.t) : "";
+  c.t2 = bounds.max.t !== undefined ? String(bounds.max.t) : "";
+  return c;
+}
+
+/**
+ * Parse string coordinate fields back into the corner1/corner2 RoiPoint shape.
+ * Returns `null` when any XY value is NaN.
+ * z and t fields are included in the result only when the string is non-empty
+ * (or a fallback provides them).
  */
 export function coordsToRoi(
-  c: Record<"x1" | "y1" | "x2" | "y2" | "z1" | "z2", string>,
-  fallbackZ?: { z1: number; z2: number },
-): {
-  corner1: [number, number];
-  corner2: [number, number];
-  z1: number;
-  z2: number;
-} | null {
+  c: Record<string, string>,
+  fallback?: { corner1: RoiCorner; corner2: RoiCorner },
+): { corner1: RoiCorner; corner2: RoiCorner } | null {
   const nx1 = Number(c.x1);
   const ny1 = Number(c.y1);
   const nx2 = Number(c.x2);
   const ny2 = Number(c.y2);
   if ([nx1, ny1, nx2, ny2].some(Number.isNaN)) return null;
-  const nz1 = c.z1 !== "" ? Number(c.z1) : (fallbackZ?.z1 ?? 0);
-  const nz2 = c.z2 !== "" ? Number(c.z2) : (fallbackZ?.z2 ?? 0);
-  if (Number.isNaN(nz1) || Number.isNaN(nz2)) return null;
-  return {
-    corner1: [nx1, ny1],
-    corner2: [nx2, ny2],
-    z1: nz1,
-    z2: nz2,
-  };
+
+  const corner1: RoiCorner = { x: nx1, y: ny1 };
+  const corner2: RoiCorner = { x: nx2, y: ny2 };
+
+  // z — include when string is non-empty or fallback has it
+  const rawZ1 = c.z1 !== undefined && c.z1 !== "" ? Number(c.z1) : undefined;
+  const rawZ2 = c.z2 !== undefined && c.z2 !== "" ? Number(c.z2) : undefined;
+  const z1 = rawZ1 !== undefined ? rawZ1 : fallback?.corner1.z;
+  const z2 = rawZ2 !== undefined ? rawZ2 : fallback?.corner2.z;
+  if (z1 !== undefined && !Number.isNaN(z1)) corner1.z = z1;
+  if (z2 !== undefined && !Number.isNaN(z2)) corner2.z = z2;
+
+  // t — include when string is non-empty or fallback has it
+  const rawT1 = c.t1 !== undefined && c.t1 !== "" ? Number(c.t1) : undefined;
+  const rawT2 = c.t2 !== undefined && c.t2 !== "" ? Number(c.t2) : undefined;
+  const t1 = rawT1 !== undefined ? rawT1 : fallback?.corner1.t;
+  const t2 = rawT2 !== undefined ? rawT2 : fallback?.corner2.t;
+  if (t1 !== undefined && !Number.isNaN(t1)) corner1.t = t1;
+  if (t2 !== undefined && !Number.isNaN(t2)) corner2.t = t2;
+
+  return { corner1, corner2 };
 }
 
 /** Spatial dimensions of the loaded image, used for bounds clamping. */
@@ -111,22 +151,44 @@ export interface ImageBounds {
   xMax: number;
   yMax: number;
   zMax: number | null;
+  tMax: number | null;
 }
 
 /**
- * Clamp a normalized ROI to the image boundaries so coordinates stay within
- * [0, xMax] × [0, yMax] (and [0, zMax] when a Z axis is present).
+ * Clamp normalized bounds to the image boundaries so coordinates stay within
+ * [0, xMax] × [0, yMax] (and [0, zMax] / [0, tMax] when those axes exist).
  */
-export function clampToBounds(b: NormalizedBounds, image: ImageBounds): NormalizedBounds {
+export function clampToBounds(bounds: NormalizedBounds, image: ImageBounds): NormalizedBounds {
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-  return {
-    x1: clamp(b.x1, 0, image.xMax),
-    y1: clamp(b.y1, 0, image.yMax),
-    x2: clamp(b.x2, 0, image.xMax),
-    y2: clamp(b.y2, 0, image.yMax),
-    z1: image.zMax !== null ? clamp(b.z1, 0, image.zMax) : b.z1,
-    z2: image.zMax !== null ? clamp(b.z2, 0, image.zMax) : b.z2,
+  const min: RoiCorner = {
+    x: clamp(bounds.min.x, 0, image.xMax),
+    y: clamp(bounds.min.y, 0, image.yMax),
   };
+  const max: RoiCorner = {
+    x: clamp(bounds.max.x, 0, image.xMax),
+    y: clamp(bounds.max.y, 0, image.yMax),
+  };
+  if (bounds.min.z !== undefined && image.zMax !== null) {
+    min.z = clamp(bounds.min.z, 0, image.zMax);
+  } else if (bounds.min.z !== undefined) {
+    min.z = bounds.min.z;
+  }
+  if (bounds.max.z !== undefined && image.zMax !== null) {
+    max.z = clamp(bounds.max.z, 0, image.zMax);
+  } else if (bounds.max.z !== undefined) {
+    max.z = bounds.max.z;
+  }
+  if (bounds.min.t !== undefined && image.tMax !== null) {
+    min.t = clamp(bounds.min.t, 0, image.tMax);
+  } else if (bounds.min.t !== undefined) {
+    min.t = bounds.min.t;
+  }
+  if (bounds.max.t !== undefined && image.tMax !== null) {
+    max.t = clamp(bounds.max.t, 0, image.tMax);
+  } else if (bounds.max.t !== undefined) {
+    max.t = bounds.max.t;
+  }
+  return { min, max };
 }
 
 /* Color palette (RGB) cycled through for multi-ROI overlays. */

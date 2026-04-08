@@ -7,7 +7,9 @@ export {
   pendingRoiAtom,
   ROI_COLORS,
   normalizeRoiBounds,
+  boundsToPolygonXY,
+  toXY,
   nextAvailableColor,
   clampToBounds,
 } from "./state";
-export type { RoiDrawState, SavedRoi, PendingRoi, NormalizedBounds, ImageBounds } from "./state";
+export type { RoiCorner as RoiPoint, RoiDrawState, SavedRoi, PendingRoi, NormalizedBounds, ImageBounds } from "./state";
