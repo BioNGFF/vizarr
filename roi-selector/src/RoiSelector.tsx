@@ -30,6 +30,8 @@ function RoiSelector() {
   const {
     coords,
     onCoordChange,
+    roiName,
+    onRoiNameChange,
     hasZAxis,
     hasTAxis,
     zInfo,
@@ -97,9 +99,15 @@ function RoiSelector() {
   };
 
   // ---- Clipboard ----
-  const roiToPayload = (roi: SavedRoi): Record<string, number> => {
+  const roiToPayload = (roi: SavedRoi): Record<string, string | number> => {
     const bounds = normalizeRoiBounds(roi);
-    const payload: Record<string, number> = { x1: bounds.min.x, y1: bounds.min.y, x2: bounds.max.x, y2: bounds.max.y };
+    const payload: Record<string, string | number> = {
+      name: roi.name,
+      x1: bounds.min.x,
+      y1: bounds.min.y,
+      x2: bounds.max.x,
+      y2: bounds.max.y,
+    };
     if (hasZAxis && bounds.min.z !== undefined && bounds.max.z !== undefined) {
       payload.z1 = bounds.min.z;
       payload.z2 = bounds.max.z;
@@ -148,6 +156,8 @@ function RoiSelector() {
             <RoiCoordinateFields
               coords={coords}
               onCoordChange={onCoordChange}
+              roiName={roiName}
+              onRoiNameChange={onRoiNameChange}
               hasZAxis={hasZAxis}
               hasTAxis={hasTAxis}
               zInfo={zInfo}

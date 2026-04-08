@@ -62,12 +62,26 @@ export default function SavedRoiItem({
         </IconButton>
       </Tooltip>
 
-      {/* Coordinates + Z info */}
+      {/* Name + Coordinates + Z info */}
       <Box sx={{ flex: 1, overflow: "hidden", minWidth: 0 }}>
         <Typography
           variant="caption"
           sx={{
             color: "#fff",
+            fontWeight: 600,
+            fontSize: 10,
+            display: "block",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {roi.name}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "grey.400",
             fontFamily: "monospace",
             fontSize: 10,
             display: "block",
@@ -84,7 +98,10 @@ export default function SavedRoiItem({
           </Typography>
         )}
         {hasTAxis && bounds.min.t !== undefined && bounds.max.t !== undefined && (
-          <Typography variant="caption" sx={{ color: "grey.500", fontFamily: "monospace", fontSize: 9, ml: hasZAxis ? 0.5 : 0 }}>
+          <Typography
+            variant="caption"
+            sx={{ color: "grey.500", fontFamily: "monospace", fontSize: 9, ml: hasZAxis ? 0.5 : 0 }}
+          >
             t: {bounds.min.t === bounds.max.t ? bounds.min.t : `${bounds.min.t}–${bounds.max.t}`}
           </Typography>
         )}

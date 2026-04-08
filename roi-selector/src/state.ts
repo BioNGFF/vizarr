@@ -30,6 +30,7 @@ export const roiDrawStateAtom = atom<RoiDrawState>(null);
 /** A saved ROI with its assigned overlay color. */
 export interface SavedRoi {
   id: string;
+  name: string;
   corner1: RoiCorner;
   corner2: RoiCorner;
   color: [number, number, number];
@@ -210,6 +211,17 @@ export const ROI_COLORS: [number, number, number][] = [
   [255, 220, 100], // gold
   [100, 200, 200], // cyan
 ];
+
+/**
+ * Generate the next default ROI name (`roi_0`, `roi_1`, …) that doesn't
+ * collide with any name already used by an existing ROI.
+ */
+export function nextDefaultRoiName(existingRois: SavedRoi[]): string {
+  const usedNames = new Set(existingRois.map((r) => r.name));
+  let i = 0;
+  while (usedNames.has(`roi_${i}`)) i++;
+  return `roi_${i}`;
+}
 
 /*
  * Pick the first color from `ROI_COLORS` that isn't already used by any

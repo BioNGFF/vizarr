@@ -12,6 +12,7 @@ import {
   clampToBounds,
   coordsToRoi,
   nextAvailableColor,
+  nextDefaultRoiName,
   normalizeRoiBounds,
   pendingRoiAtom,
   roiDrawStateAtom,
@@ -24,6 +25,8 @@ export type CoordValues = Record<CoordKey, string>;
 export interface UseRoiFieldsReturn {
   coords: CoordValues;
   onCoordChange: (key: CoordKey, value: string) => void;
+  roiName: string;
+  onRoiNameChange: (value: string) => void;
   // Derived / shared state
   hasZAxis: boolean;
   hasTAxis: boolean;
@@ -67,6 +70,7 @@ export function useRoiFields(): UseRoiFieldsReturn {
   });
 
   const [editingRoiId, setEditingRoiId] = useState<string | null>(null);
+  const [roiName, setRoiName] = useState<string>("");
 
   const zInfo = useAtomValue(currentZInfoAtom);
   const tInfo = useAtomValue(currentTInfoAtom);
@@ -170,17 +174,22 @@ export function useRoiFields(): UseRoiFieldsReturn {
     const raw = coordsToRoi(coords, pendingRoi);
     if (!raw) return;
     const bounds = imageBounds ? clampToBounds(normalizeRoiBounds(raw), imageBounds) : normalizeRoiBounds(raw);
-    setSavedRois((prev) => [
-      ...prev,
-      {
-        id: Math.random().toString(36).slice(2),
-        corner1: bounds.min,
-        corner2: bounds.max,
-        color: nextAvailableColor(prev),
-        visible: true,
-      },
-    ]);
+    setSavedRois((prev) => {
+      const name = roiName.trim() || nextDefaultRoiName(prev);
+      return [
+        ...prev,
+        {
+          id: Math.random().toString(36).slice(2),
+          name,
+          corner1: bounds.min,
+          corner2: bounds.max,
+          color: nextAvailableColor(prev),
+          visible: true,
+        },
+      ];
+    });
     setPendingRoi(null);
+    setRoiName("");
   };
 
   const handleDiscardRoi = () => setPendingRoi(null);
@@ -199,14 +208,22 @@ export function useRoiFields(): UseRoiFieldsReturn {
     if (isDrawing) setRoiDrawState(null);
     editOriginal.current = { ...roi };
     setEditingRoiId(roi.id);
+    setRoiName(roi.name);
     const normalized = normalizeRoiBounds(roi);
     const clamped = imageBounds ? clampToBounds(normalized, imageBounds) : normalized;
     setCoords(boundsToCoords(clamped) as CoordValues);
   };
 
   const handleUpdateRoi = () => {
+    if (editingRoiId) {
+      const name = roiName.trim();
+      if (name) {
+        setSavedRois((prev) => prev.map((r) => (r.id === editingRoiId ? { ...r, name } : r)));
+      }
+    }
     editOriginal.current = null;
     setEditingRoiId(null);
+    setRoiName("");
   };
 
   const handleCancelEdit = () => {
@@ -216,11 +233,14 @@ export function useRoiFields(): UseRoiFieldsReturn {
     }
     editOriginal.current = null;
     setEditingRoiId(null);
+    setRoiName("");
   };
 
   return {
     coords,
     onCoordChange,
+    roiName,
+    onRoiNameChange: setRoiName,
     hasZAxis,
     hasTAxis,
     zInfo,

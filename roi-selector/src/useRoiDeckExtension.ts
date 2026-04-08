@@ -1,7 +1,13 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { type OverlayPolygon, currentImageBoundsAtom, currentTInfoAtom, currentZInfoAtom, deckExtensionsAtom } from "@biongff/vizarr";
+import {
+  type OverlayPolygon,
+  currentImageBoundsAtom,
+  currentTInfoAtom,
+  currentZInfoAtom,
+  deckExtensionsAtom,
+} from "@biongff/vizarr";
 
 import {
   boundsToPolygonXY,
@@ -49,8 +55,20 @@ export function useRoiDeckExtension() {
     for (const roi of savedRois) {
       if (!roi.visible) continue;
       const bounds = normalizeRoiBounds(roi);
-      if (currentZ !== null && bounds.min.z !== undefined && bounds.max.z !== undefined && (currentZ < bounds.min.z || currentZ > bounds.max.z)) continue;
-      if (currentT !== null && bounds.min.t !== undefined && bounds.max.t !== undefined && (currentT < bounds.min.t || currentT > bounds.max.t)) continue;
+      if (
+        currentZ !== null &&
+        bounds.min.z !== undefined &&
+        bounds.max.z !== undefined &&
+        (currentZ < bounds.min.z || currentZ > bounds.max.z)
+      )
+        continue;
+      if (
+        currentT !== null &&
+        bounds.min.t !== undefined &&
+        bounds.max.t !== undefined &&
+        (currentT < bounds.min.t || currentT > bounds.max.t)
+      )
+        continue;
       result.push({
         id: `roi-saved-${roi.id}`,
         polygon: boundsToPolygonXY(bounds),

@@ -7,6 +7,8 @@ import type { ImageBounds } from "../state";
 interface RoiCoordinateFieldsProps {
   coords: CoordValues;
   onCoordChange: (key: CoordKey, value: string) => void;
+  roiName: string;
+  onRoiNameChange: (value: string) => void;
   hasZAxis: boolean;
   hasTAxis: boolean;
   zInfo: { zMax: number } | null;
@@ -19,6 +21,8 @@ const fieldSx = { color: "#fff", fontSize: 12 };
 export default function RoiCoordinateFields({
   coords,
   onCoordChange,
+  roiName,
+  onRoiNameChange,
   hasZAxis,
   hasTAxis,
   zInfo,
@@ -27,6 +31,18 @@ export default function RoiCoordinateFields({
 }: RoiCoordinateFieldsProps) {
   return (
     <>
+      {/* ---- ROI Name ---- */}
+      <TextField
+        label="ROI name"
+        size="small"
+        value={roiName}
+        onChange={(e) => onRoiNameChange(e.target.value)}
+        fullWidth
+        placeholder="roi_0"
+        slotProps={{ input: { sx: { color: "#fff", fontSize: 12 } } }}
+        sx={{ mb: 1 }}
+      />
+
       {/* ---- Top-left ---- */}
       <Typography variant="caption" sx={{ color: "grey.400" }}>
         Top-left (x₁, y₁)
