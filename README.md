@@ -36,7 +36,7 @@
 
 ### 1. Standalone Web App
 
-You can use the standalone web app by copying and pasting a URL to a Zarr store as the `?source` query parameter in the [web app](https://hms-dbmi.github.io/vizarr).
+You can use the standalone web app by copying and pasting a URL to a Zarr store as the `?source` query parameter in the [web app](https://biongff.github.io/vizarr).
 
 For example, to view [this dataset](https://minio-dev.openmicroscopy.org/idr/v0.3/idr0062-blin-nuclearsegmentation/6001240.zarr) from the IDR, navigate to the following URL:
 
