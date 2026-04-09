@@ -171,15 +171,9 @@ export const currentImageBoundsAtom = atom((get) => {
   const xAxisIndex = source.axis_labels.indexOf("x");
   const yAxisIndex = source.axis_labels.indexOf("y");
   if (xAxisIndex === -1 || yAxisIndex === -1) return null;
-  const zAxisIndex = source.axis_labels.indexOf("z");
-  const tAxisIndex = source.axis_labels.indexOf("t");
-  const zSize = zAxisIndex !== -1 ? loader.shape[zAxisIndex] : 0;
-  const tSize = tAxisIndex !== -1 ? loader.shape[tAxisIndex] : 0;
   return {
     xMax: loader.shape[xAxisIndex] - 1,
     yMax: loader.shape[yAxisIndex] - 1,
-    zMax: zSize > 1 ? zSize - 1 : null,
-    tMax: tSize > 1 ? tSize - 1 : null,
   };
 });
 

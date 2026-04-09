@@ -131,10 +131,8 @@ export function useRoiDeckExtension() {
       const clampXY = (v: number, max: number) => Math.max(0, Math.min(Math.round(v), max));
       const x = imageBounds ? clampXY(rawX, imageBounds.xMax) : Math.round(rawX);
       const y = imageBounds ? clampXY(rawY, imageBounds.yMax) : Math.round(rawY);
-      const clampZ = (z: number) =>
-        imageBounds?.zMax !== null && imageBounds?.zMax !== undefined ? Math.max(0, Math.min(z, imageBounds.zMax)) : z;
-      const clampT = (t: number) =>
-        imageBounds?.tMax !== null && imageBounds?.tMax !== undefined ? Math.max(0, Math.min(t, imageBounds.tMax)) : t;
+      const clampZ = (z: number) => (zInfo ? Math.max(0, Math.min(z, zInfo.zMax)) : z);
+      const clampT = (t: number) => (tInfo ? Math.max(0, Math.min(t, tInfo.tMax)) : t);
 
       if (roiDrawState === "waiting-first") {
         const corner: import("./state").RoiCorner = { x, y };

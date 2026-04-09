@@ -75,6 +75,8 @@ export function useRoiFields(): UseRoiFieldsReturn {
   const { zInfo, tInfo, imageBounds } = useViewerPlugin();
   const hasZAxis = zInfo !== null;
   const hasTAxis = tInfo !== null;
+  const zMax = zInfo?.zMax ?? null;
+  const tMax = tInfo?.tMax ?? null;
 
   const [roiDrawState, setRoiDrawState] = useAtom(roiDrawStateAtom);
   const isDrawing = roiDrawState !== null;
@@ -97,10 +99,10 @@ export function useRoiFields(): UseRoiFieldsReturn {
     }
     if (pendingRoi) {
       const normalized = normalizeRoiBounds(pendingRoi);
-      const clamped = imageBounds ? clampToBounds(normalized, imageBounds) : normalized;
+      const clamped = imageBounds ? clampToBounds(normalized, imageBounds, zMax, tMax) : normalized;
       setCoords(boundsToCoords(clamped) as CoordValues);
     }
-  }, [pendingRoi, imageBounds]);
+  }, [pendingRoi, imageBounds, zMax, tMax]);
 
   // ---- Live sync: field changes → atom (for overlay preview) ----
   const syncFieldsToPending = React.useCallback(
@@ -140,8 +142,8 @@ export function useRoiFields(): UseRoiFieldsReturn {
               x2: imageBounds.xMax,
               y1: imageBounds.yMax,
               y2: imageBounds.yMax,
-              ...(imageBounds.zMax !== null ? { z1: imageBounds.zMax, z2: imageBounds.zMax } : {}),
-              ...(imageBounds.tMax !== null ? { t1: imageBounds.tMax, t2: imageBounds.tMax } : {}),
+              ...(zMax !== null ? { z1: zMax, z2: zMax } : {}),
+              ...(tMax !== null ? { t1: tMax, t2: tMax } : {}),
             };
             const max = limits[key];
             if (max !== undefined) {
@@ -154,7 +156,7 @@ export function useRoiFields(): UseRoiFieldsReturn {
         return next;
       });
     },
-    [syncFieldsToPending, imageBounds],
+    [syncFieldsToPending, imageBounds, zMax, tMax],
   );
 
   // ---- Draw-mode toggle ----
@@ -171,7 +173,9 @@ export function useRoiFields(): UseRoiFieldsReturn {
     if (!pendingRoi) return;
     const raw = coordsToRoi(coords, pendingRoi);
     if (!raw) return;
-    const bounds = imageBounds ? clampToBounds(normalizeRoiBounds(raw), imageBounds) : normalizeRoiBounds(raw);
+    const bounds = imageBounds
+      ? clampToBounds(normalizeRoiBounds(raw), imageBounds, zMax, tMax)
+      : normalizeRoiBounds(raw);
     setSavedRois((prev) => {
       const name = roiName.trim() || nextDefaultRoiName(prev);
       return [

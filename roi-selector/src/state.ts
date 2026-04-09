@@ -151,15 +151,18 @@ export function coordsToRoi(
 export interface ImageBounds {
   xMax: number;
   yMax: number;
-  zMax: number | null;
-  tMax: number | null;
 }
 
 /**
  * Clamp normalized bounds to the image boundaries so coordinates stay within
  * [0, xMax] × [0, yMax] (and [0, zMax] / [0, tMax] when those axes exist).
  */
-export function clampToBounds(bounds: NormalizedBounds, image: ImageBounds): NormalizedBounds {
+export function clampToBounds(
+  bounds: NormalizedBounds,
+  image: ImageBounds,
+  zMax?: number | null,
+  tMax?: number | null,
+): NormalizedBounds {
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   const min: RoiCorner = {
     x: clamp(bounds.min.x, 0, image.xMax),
@@ -169,23 +172,23 @@ export function clampToBounds(bounds: NormalizedBounds, image: ImageBounds): Nor
     x: clamp(bounds.max.x, 0, image.xMax),
     y: clamp(bounds.max.y, 0, image.yMax),
   };
-  if (bounds.min.z !== undefined && image.zMax !== null) {
-    min.z = clamp(bounds.min.z, 0, image.zMax);
+  if (bounds.min.z !== undefined && zMax != null) {
+    min.z = clamp(bounds.min.z, 0, zMax);
   } else if (bounds.min.z !== undefined) {
     min.z = bounds.min.z;
   }
-  if (bounds.max.z !== undefined && image.zMax !== null) {
-    max.z = clamp(bounds.max.z, 0, image.zMax);
+  if (bounds.max.z !== undefined && zMax != null) {
+    max.z = clamp(bounds.max.z, 0, zMax);
   } else if (bounds.max.z !== undefined) {
     max.z = bounds.max.z;
   }
-  if (bounds.min.t !== undefined && image.tMax !== null) {
-    min.t = clamp(bounds.min.t, 0, image.tMax);
+  if (bounds.min.t !== undefined && tMax != null) {
+    min.t = clamp(bounds.min.t, 0, tMax);
   } else if (bounds.min.t !== undefined) {
     min.t = bounds.min.t;
   }
-  if (bounds.max.t !== undefined && image.tMax !== null) {
-    max.t = clamp(bounds.max.t, 0, image.tMax);
+  if (bounds.max.t !== undefined && tMax != null) {
+    max.t = clamp(bounds.max.t, 0, tMax);
   } else if (bounds.max.t !== undefined) {
     max.t = bounds.max.t;
   }

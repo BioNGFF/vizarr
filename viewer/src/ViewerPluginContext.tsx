@@ -9,7 +9,7 @@ export interface PluginLayerEntry {
 
 export interface ViewerPluginApi {
   // ---- Read-only viewer data ----
-  imageBounds: { xMax: number; yMax: number; zMax: number | null; tMax: number | null } | null;
+  imageBounds: { xMax: number; yMax: number } | null;
   zInfo: { zValue: number; zMax: number } | null;
   tInfo: { tValue: number; tMax: number } | null;
   viewport: ViewportSize | null;
