@@ -116,7 +116,7 @@ function RoiSelector() {
   };
 
   const handleCopySingleRoi = (roi: SavedRoi) => {
-    navigator.clipboard.writeText(JSON.stringify(roiToPayload(roi))).then(() => setSnackOpen(true));
+    navigator.clipboard.writeText(JSON.stringify([roiToPayload(roi)], null, 2)).then(() => setSnackOpen(true));
   };
 
   const handleCopyAllRois = () => {
