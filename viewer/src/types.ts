@@ -1,3 +1,5 @@
+import type { CoordinateSystem } from "deck.gl";
+
 declare namespace Ome {
   type Version = "0.1";
 
@@ -34,6 +36,11 @@ declare namespace Ome {
     unit?: string;
   }
 
+  interface CoordinateSystem {
+    name: string,
+    axes: Axis[]
+  }
+
   type CoordinateTransformation =
     | {
       type: "scale";
@@ -52,9 +59,11 @@ declare namespace Ome {
   interface Multiscale {
     datasets: Array<Dataset>;
     version?: string;
-    axes?: string[] | Axis[];
+    coordinateSystems: CoordinateSystem[]
     coordinateTransformations?: CoordinateTransformation[]
   }
+
+
 
   interface Bioformats2rawlayout {
     "bioformats2raw.layout": 3;

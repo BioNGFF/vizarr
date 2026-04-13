@@ -10,6 +10,8 @@ import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-la
 import { lru } from "./lru-store";
 import type { ViewState, VizarrLayer } from "./state";
 
+import { Matrix4 } from "math.gl";
+
 export const MAX_CHANNELS = 6;
 
 export const COLORS = {
@@ -151,6 +153,7 @@ export function getDefaultChannelLabels(nChannels: number): string[] {
   return range(nChannels).map((i) => `channel_${i}`);
 }
 
+//schema layer
 export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
   // Returns axes in the latest v0.4+ format.
   // defaults for v0.1 & v0.2
@@ -473,6 +476,10 @@ export async function guessZarrVersion(location: zarr.Location<zarr.Readable>): 
     }
     return 2;
   }
+}
+
+export function isOmeScene(attrs: zarr.Attributes): attrs is { scene: Ome.Scene } {
+  return "scene" in attrs;
 }
 
 export function isOmePlate(attrs: zarr.Attributes): attrs is { plate: Ome.Plate } {

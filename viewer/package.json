@@ -5,7 +5,9 @@
   "main": "dist/biongff-vizarr.cjs.js",
   "module": "dist/biongff-vizarr.es.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -35,7 +37,8 @@
     "quick-lru": "^7.0.0",
     "react-is": "18.3.1",
     "yaml": "^2.8.2",
-    "zarrita": "0.5.0"
+    "zarrita": "0.5.0",
+    "zod": "^3.0.0"
   },
   "peerDependencies": {
     "@emotion/react": "^11.14.0",
@@ -52,7 +55,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.8.2",
     "vite": "^6.2.7",
-    "vite-plugin-dts": "^4.5.4"
+    "vite-plugin-dts": "^4.5.4",
+    "zod-ome-ngff": "^0.3.0"
   },
   "overrides": {
     "react-is": "^18.3.1"

@@ -91,7 +91,7 @@ function applyCoordinateTranslationToMatrix(matrix: Matrix4, translation: Array<
 export function getPhysicalSizes(attrs: zarr.Attributes) {
   if (isMultiscales(attrs)) {
     const axes = getNgffAxes(attrs.multiscales);
-    const ct = coordinateTransformationsToMatrix(attrs.multiscales);
+    const ct = coordinateTransformationsToMatrix(attrs.multiscales[0].datasets[0].coordinateTransformations, axes);
     const matrixIndices = {
       x: 0,
       y: 5,

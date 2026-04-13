@@ -99,7 +99,6 @@ export async function loadWell(
     },
     name: `Well ${row}${col}`,
   };
-
   if (acquisitions.length > 0) {
     // To show acquisition chooser in UI
     sourceData.acquisitions = acquisitions;
@@ -127,7 +126,6 @@ export async function loadWell(
       window.open(`${window.location.origin + window.location.pathname}?source=${imgSource}`);
     }
   };
-
   return sourceData;
 }
 
@@ -247,6 +245,7 @@ export async function loadPlate(
       window.open(`${window.location.origin + window.location.pathname}?source=${imgSource}`);
     }
   };
+  debugger;
   return sourceData;
 }
 
@@ -277,6 +276,7 @@ export async function loadOmeMultiscales(
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
   const axes = utils.getNgffAxes(attrs.multiscales);
+  debugger;
   const axis_labels = utils.getNgffAxisLabels(axes);
   const tileSize = utils.guessTileSize(data[0]);
   let meta: Meta;

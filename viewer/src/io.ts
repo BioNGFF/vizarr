@@ -3,6 +3,7 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadWell } from "./ome";
 import * as utils from "./utils";
 
+
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
@@ -71,17 +72,21 @@ async function loadMultiChannel(
   };
 }
 
+
 export async function createSourceData(config: ImageLayerConfig): Promise<SourceData> {
   const node = await utils.open(config.source);
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
+    console.log('Checking image type')
     let attrs = utils.resolveAttrs(node.attrs);
     if (utils.isOmePlate(attrs)) {
+      console.log('Loading plate')
       return loadPlate(config, node, attrs.plate);
     }
 
     if (utils.isOmeWell(attrs)) {
+      console.log('Loading well')
       return loadWell(config, node, attrs.well);
     }
 
