@@ -43,6 +43,7 @@ export interface UseRoiFieldsReturn {
   handleSaveRoi: () => void;
   handleDiscardRoi: () => void;
   handleDeleteRoi: (id: string) => void;
+  handleDeleteAllRois: () => void;
   handleToggleVisibility: (id: string) => void;
   handleEditRoi: (roi: SavedRoi) => void;
   handleUpdateRoi: () => void;
@@ -201,6 +202,11 @@ export function useRoiFields(): UseRoiFieldsReturn {
     if (editingRoiId === id) setEditingRoiId(null);
   };
 
+  const handleDeleteAllRois = () => {
+    setSavedRois([]);
+    setEditingRoiId(null);
+  };
+
   const handleToggleVisibility = (id: string) => {
     setSavedRois((prev) => prev.map((r) => (r.id === id ? { ...r, visible: !r.visible } : r)));
   };
@@ -257,6 +263,7 @@ export function useRoiFields(): UseRoiFieldsReturn {
     handleSaveRoi,
     handleDiscardRoi,
     handleDeleteRoi,
+    handleDeleteAllRois,
     handleToggleVisibility,
     handleEditRoi,
     handleUpdateRoi,

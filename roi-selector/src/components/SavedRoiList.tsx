@@ -1,6 +1,17 @@
-import { ExpandMore, SelectAll } from "@mui/icons-material";
-import { Box, Button, Collapse, Divider, Typography } from "@mui/material";
-import React from "react";
+import { DeleteSweep, ExpandMore, SelectAll } from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Divider,
+  Typography,
+} from "@mui/material";
+import React, { useState } from "react";
 
 import type { SavedRoi } from "../state";
 import SavedRoiItem from "./SavedRoiItem";
@@ -18,6 +29,7 @@ interface SavedRoiListProps {
   onEdit: (roi: SavedRoi) => void;
   onDelete: (id: string) => void;
   onCopyAll: () => void;
+  onDeleteAll: () => void;
 }
 
 export default function SavedRoiList({
@@ -33,7 +45,10 @@ export default function SavedRoiList({
   onEdit,
   onDelete,
   onCopyAll,
+  onDeleteAll,
 }: SavedRoiListProps) {
+  const [confirmDeleteAllOpen, setConfirmDeleteAllOpen] = useState(false);
+
   if (savedRois.length === 0) return null;
 
   return (
@@ -97,6 +112,44 @@ export default function SavedRoiList({
           >
             Copy all ROIs
           </Button>
+
+          <Button
+            variant="outlined"
+            size="small"
+            fullWidth
+            onClick={() => setConfirmDeleteAllOpen(true)}
+            startIcon={<DeleteSweep sx={{ fontSize: 14 }} />}
+            sx={{
+              textTransform: "none",
+              fontSize: 10,
+              mt: 0.5,
+              color: "error.main",
+              borderColor: "error.dark",
+            }}
+          >
+            Delete all ROIs
+          </Button>
+
+          <Dialog open={confirmDeleteAllOpen} onClose={() => setConfirmDeleteAllOpen(false)}>
+            <DialogTitle>Delete all ROIs</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Are you sure you want to delete all {savedRois.length} ROI{savedRois.length !== 1 ? "s" : ""}?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setConfirmDeleteAllOpen(false)}>Cancel</Button>
+              <Button
+                color="error"
+                onClick={() => {
+                  setConfirmDeleteAllOpen(false);
+                  onDeleteAll();
+                }}
+              >
+                Delete all
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
       </Collapse>
     </>

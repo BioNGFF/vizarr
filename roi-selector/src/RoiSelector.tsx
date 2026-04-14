@@ -45,6 +45,7 @@ function RoiSelector() {
     handleSaveRoi,
     handleDiscardRoi,
     handleDeleteRoi,
+    handleDeleteAllRois,
     handleToggleVisibility,
     handleEditRoi,
     handleUpdateRoi,
@@ -187,6 +188,7 @@ function RoiSelector() {
             onEdit={handleEditRoi}
             onDelete={handleDeleteRoi}
             onCopyAll={handleCopyAllRois}
+            onDeleteAll={handleDeleteAllRois}
           />
         </Box>
       </Collapse>
