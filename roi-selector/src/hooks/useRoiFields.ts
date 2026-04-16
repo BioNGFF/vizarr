@@ -36,6 +36,7 @@ export interface UseRoiFieldsReturn {
   handleEditRoi: (roi: SavedRoi) => void;
   handleUpdateRoi: () => void;
   handleCancelEdit: () => void;
+  handleImportRois: (rois: SavedRoi[]) => void;
 }
 
 export interface UseRoiFieldsProps {
@@ -249,6 +250,10 @@ export function useRoiFields({
     setRoiName("");
   };
 
+  const handleImportRois = (rois: SavedRoi[]) => {
+    setSavedRois((prev) => [...prev, ...rois]);
+  };
+
   return {
     coords,
     onCoordChange,
@@ -267,5 +272,6 @@ export function useRoiFields({
     handleEditRoi,
     handleUpdateRoi,
     handleCancelEdit,
+    handleImportRois,
   };
 }

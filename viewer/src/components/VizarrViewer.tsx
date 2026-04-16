@@ -30,6 +30,7 @@ import Viewer from "./Viewer";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
 export interface ViewerInfo {
+  sourceUrl: string;
   imageBounds: { xMin: number; yMin: number; xMax: number; yMax: number; spatialUnit: string } | null;
   zInfo: { zValue: number; zMax: number } | null;
   tInfo: { tValue: number; tMax: number } | null;
@@ -57,6 +58,7 @@ export interface VizarrViewerProps {
  * and renders <Menu/> + <Viewer/> + children.
  */
 function ViewerBridge({
+  sourceUrls,
   onViewStateChange,
   onViewerStateChange,
   additionalLayers = [],
@@ -65,6 +67,7 @@ function ViewerBridge({
   onPluginHover,
   children,
 }: {
+  sourceUrls: string[];
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
   additionalLayers?: Layer[];
@@ -92,6 +95,7 @@ function ViewerBridge({
   // Notify host application when viewer state changes
   React.useEffect(() => {
     onViewerStateChange?.({
+      sourceUrl: sourceUrls[0] ?? "",
       imageBounds,
       zInfo,
       tInfo,
@@ -100,7 +104,7 @@ function ViewerBridge({
       setZSlice,
       setTSlice,
     });
-  }, [imageBounds, zInfo, tInfo, viewport, stableSetViewState, setZSlice, setTSlice, onViewerStateChange]);
+  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, stableSetViewState, setZSlice, setTSlice, onViewerStateChange]);
 
   return (
     <>
@@ -198,6 +202,7 @@ function VizarrViewerComponent({
       {redirectObj === null && (
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
           <ViewerBridge
+            sourceUrls={sources}
             onViewStateChange={onViewStateChange}
             onViewerStateChange={onViewerStateChange}
             additionalLayers={additionalLayers}

@@ -240,6 +240,7 @@ export function nextAvailableColor(existingRois: SavedRoi[]): [number, number, n
 
 /** Viewer information passed from the host application. */
 export interface ViewerInfo {
+  sourceUrl: string;
   imageBounds: ImageBounds | null;
   zInfo: { zValue: number; zMax: number } | null;
   tInfo: { tValue: number; tMax: number } | null;

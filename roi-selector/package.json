@@ -20,7 +20,10 @@
     "preview": "vite preview",
     "check": "tsc"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@biongff/vizarr": "workspace:*",
+    "zarrita": "0.5.0"
+  },
   "peerDependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",

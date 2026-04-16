@@ -1,12 +1,14 @@
-import { CropFree } from "@mui/icons-material";
-import { Box, Collapse, IconButton, Snackbar, Tooltip, Typography } from "@mui/material";
+import { CropFree, FileDownload } from "@mui/icons-material";
+import { Box, Button, Collapse, IconButton, Snackbar, Tooltip, Typography } from "@mui/material";
 import type React from "react";
 import { useState } from "react";
 
+import ImportRoiDialog from "./components/ImportRoiDialog";
 import RoiCoordinateFields from "./components/RoiCoordinateFields";
 import RoiDrawControls from "./components/RoiDrawControls";
 import SavedRoiList from "./components/SavedRoiList";
 import { useRoiFields } from "./hooks/useRoiFields";
+import { importRoisFromZarr } from "./importRois";
 import {
   type ImageBounds,
   type PendingRoi,
@@ -67,6 +69,7 @@ function RoiSelector({
     handleEditRoi,
     handleUpdateRoi,
     handleCancelEdit,
+    handleImportRois,
   } = useRoiFields({
     roiDrawState,
     setRoiDrawState,
@@ -83,6 +86,9 @@ function RoiSelector({
   const [open, setOpen] = useState(false);
   const [roiMenuOpen, setRoiMenuOpen] = useState(false);
   const [snackOpen, setSnackOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+
+  const sourceUrl = viewerInfo.sourceUrl ?? "";
 
   /** Navigate the viewer to a saved ROI (XY + Z) and make it visible. */
   const handleGoToSavedRoi = (roi: SavedRoi) => {
@@ -147,6 +153,32 @@ function RoiSelector({
     navigator.clipboard.writeText(JSON.stringify(savedRois.map(roiToPayload), null, 2)).then(() => setSnackOpen(true));
   };
 
+  // ---- Import ROIs from zarr tables ----
+  const handleImport = async (selectedTables: string[]) => {
+    if (!sourceUrl || !imageBounds) {
+      console.warn("[ROI Import] No source URL or image bounds available");
+      return;
+    }
+    try {
+      const imported = await importRoisFromZarr(
+        sourceUrl,
+        selectedTables,
+        imageBounds,
+        savedRois,
+        zInfo?.zMax,
+        tInfo?.tMax,
+      );
+      if (imported.length > 0) {
+        handleImportRois(imported);
+        console.log(`[ROI Import] Imported ${imported.length} ROI(s)`);
+      } else {
+        console.warn("[ROI Import] No ROIs were imported from the selected tables");
+      }
+    } catch (err) {
+      console.error("[ROI Import] Import failed:", err);
+    }
+  };
+
   // ---- Render ----
   return (
     <Box
@@ -201,6 +233,26 @@ function RoiSelector({
             onCancelEdit={handleCancelEdit}
           />
 
+          {sourceUrl && (
+            <Button
+              variant="outlined"
+              size="small"
+              fullWidth
+              onClick={() => setImportDialogOpen(true)}
+              startIcon={<FileDownload fontSize="small" />}
+              sx={{
+                textTransform: "none",
+                fontSize: 11,
+                mt: 0.5,
+                mb: 0.5,
+                color: "grey.300",
+                borderColor: "grey.600",
+              }}
+            >
+              Import ROIs
+            </Button>
+          )}
+
           <SavedRoiList
             savedRois={savedRois}
             hasZAxis={hasZAxis}
@@ -226,6 +278,15 @@ function RoiSelector({
         message="ROI coordinates copied!"
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
+
+      {sourceUrl && (
+        <ImportRoiDialog
+          open={importDialogOpen}
+          onClose={() => setImportDialogOpen(false)}
+          onImport={handleImport}
+          sourceUrl={sourceUrl}
+        />
+      )}
     </Box>
   );
 }
