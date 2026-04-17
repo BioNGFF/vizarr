@@ -234,23 +234,25 @@ function RoiSelector({
           />
 
           {sourceUrl && (
-            <Button
-              variant="outlined"
-              size="small"
-              fullWidth
-              onClick={() => setImportDialogOpen(true)}
-              startIcon={<FileDownload fontSize="small" />}
-              sx={{
-                textTransform: "none",
-                fontSize: 11,
-                mt: 0.5,
-                mb: 0.5,
-                color: "grey.300",
-                borderColor: "grey.600",
-              }}
-            >
-              Import ROIs
-            </Button>
+            <Tooltip title="Import ROI tables saved in this Zarr source" placement="top" arrow>
+              <Button
+                variant="outlined"
+                size="small"
+                fullWidth
+                onClick={() => setImportDialogOpen(true)}
+                startIcon={<FileDownload fontSize="small" />}
+                sx={{
+                  textTransform: "none",
+                  fontSize: 11,
+                  mt: 0.5,
+                  mb: 0.5,
+                  color: "grey.300",
+                  borderColor: "grey.600",
+                }}
+              >
+                Import ROIs
+              </Button>
+            </Tooltip>
           )}
 
           <SavedRoiList
