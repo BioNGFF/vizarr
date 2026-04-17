@@ -222,33 +222,49 @@ async function readRoiTable(
   tablesLocation: zarr.Location<zarr.Readable>,
   tableName: string,
 ): Promise<PhysicalRoi[]> {
-  // Read ROI names from obs/_index
+  // Read ROI names from obs index column.
   let roiNames: string[] = [];
   try {
+    const obsGroup = await zarr.open(
+      tablesLocation.resolve(`${tableName}/obs`),
+      { kind: "group" },
+    );
+    const indexColumnName = obsGroup.attrs._index as string | undefined;
+    if (!indexColumnName) {
+      throw new Error("obs group has no _index attribute");
+    }
     const obsIndex = await zarr.open(
-      tablesLocation.resolve(`${tableName}/obs/_index`),
+      tablesLocation.resolve(`${tableName}/obs/${indexColumnName}`),
       { kind: "array" },
     );
     const indexData = await zarr.get(obsIndex);
     roiNames = Array.from(indexData.data as Iterable<string>);
   } catch {
     console.warn(
-      `[ROI Import] Could not read obs/_index for table "${tableName}", will generate names`,
+      `[ROI Import] Could not read obs index for table "${tableName}", will generate names`,
     );
   }
 
-  // Read column names from var/_index
+  // Read column names from var index column (same AnnData convention as obs).
   let columnNames: string[];
   try {
+    const varGroup = await zarr.open(
+      tablesLocation.resolve(`${tableName}/var`),
+      { kind: "group" },
+    );
+    const indexColumnName = varGroup.attrs._index as string | undefined;
+    if (!indexColumnName) {
+      throw new Error("var group has no _index attribute");
+    }
     const varIndex = await zarr.open(
-      tablesLocation.resolve(`${tableName}/var/_index`),
+      tablesLocation.resolve(`${tableName}/var/${indexColumnName}`),
       { kind: "array" },
     );
     const varData = await zarr.get(varIndex);
     columnNames = Array.from(varData.data as Iterable<string>);
   } catch {
     console.warn(
-      `[ROI Import] Could not read var/_index for table "${tableName}"`,
+      `[ROI Import] Could not read var index for table "${tableName}"`,
     );
     return [];
   }
