@@ -7,15 +7,12 @@ const source = process.env.VIZARR_DATA || "https://uk1s3.embassy.ebi.ac.uk/idr/z
 
 export default defineConfig(({ mode }) => {
   return {
+    base: "./",
     plugins: [react()],
     resolve: {
       alias: {
-        ...(mode === "development"
-          ? {
-              "@biongff/vizarr": path.resolve(__dirname, "../../viewer/src/index.tsx"),
-              "@biongff/roi-selector": path.resolve(__dirname, "../../roi-selector/src/index.tsx"),
-            }
-          : {}),
+        "@biongff/vizarr": path.resolve(__dirname, "../../viewer/src/index.tsx"),
+        "@biongff/roi-selector": path.resolve(__dirname, "../../roi-selector/src/index.tsx"),
       },
     },
     server: { open: `?source=${source}` },
