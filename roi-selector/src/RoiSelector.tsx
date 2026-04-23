@@ -1,15 +1,30 @@
 import { CropFree } from "@mui/icons-material";
 import { Box, Collapse, IconButton, Snackbar, Tooltip, Typography } from "@mui/material";
-import React, { useState } from "react";
-
-import { useViewerPlugin } from "@biongff/vizarr";
+import type React from "react";
+import { useState } from "react";
 
 import RoiCoordinateFields from "./components/RoiCoordinateFields";
 import RoiDrawControls from "./components/RoiDrawControls";
 import SavedRoiList from "./components/SavedRoiList";
 import { useRoiFields } from "./hooks/useRoiFields";
-import { type SavedRoi, normalizeRoiBounds } from "./state";
-import { useRoiDeckExtension } from "./useRoiDeckExtension";
+import {
+  type ImageBounds,
+  type PendingRoi,
+  type RoiDrawState,
+  type SavedRoi,
+  type ViewerInfo,
+  normalizeRoiBounds,
+} from "./state";
+
+export interface RoiSelectorProps {
+  roiDrawState: RoiDrawState;
+  setRoiDrawState: React.Dispatch<React.SetStateAction<RoiDrawState>>;
+  savedRois: SavedRoi[];
+  setSavedRois: React.Dispatch<React.SetStateAction<SavedRoi[]>>;
+  pendingRoi: PendingRoi | null;
+  setPendingRoi: React.Dispatch<React.SetStateAction<PendingRoi | null>>;
+  viewerInfo: ViewerInfo;
+}
 
 /**
  * RoiSelector — a collapsible panel that lets you:
@@ -23,8 +38,16 @@ import { useRoiDeckExtension } from "./useRoiDeckExtension";
  * deck.gl interaction (overlays, clicks) is handled by `useRoiDeckExtension`.
  * This component is responsible only for panel layout, navigation, and clipboard.
  */
-function RoiSelector() {
-  useRoiDeckExtension();
+function RoiSelector({
+  roiDrawState,
+  setRoiDrawState,
+  savedRois,
+  setSavedRois,
+  pendingRoi,
+  setPendingRoi,
+  viewerInfo,
+}: RoiSelectorProps) {
+  const { imageBounds, zInfo, tInfo, viewport, setViewState, setZSlice, setTSlice } = viewerInfo;
 
   const {
     coords,
@@ -33,13 +56,7 @@ function RoiSelector() {
     onRoiNameChange,
     hasZAxis,
     hasTAxis,
-    zInfo,
-    tInfo,
-    imageBounds,
     isDrawing,
-    roiDrawState,
-    pendingRoi,
-    savedRois,
     editingRoiId,
     handleToggleDraw,
     handleSaveRoi,
@@ -50,15 +67,22 @@ function RoiSelector() {
     handleEditRoi,
     handleUpdateRoi,
     handleCancelEdit,
-  } = useRoiFields();
+  } = useRoiFields({
+    roiDrawState,
+    setRoiDrawState,
+    savedRois,
+    setSavedRois,
+    pendingRoi,
+    setPendingRoi,
+    imageBounds,
+    zInfo,
+    tInfo,
+  });
 
   // ---- Panel toggle state ----
   const [open, setOpen] = useState(false);
   const [roiMenuOpen, setRoiMenuOpen] = useState(false);
   const [snackOpen, setSnackOpen] = useState(false);
-
-  // ---- Viewer navigation ----
-  const { viewport, setViewState, setZSlice, setTSlice } = useViewerPlugin();
 
   /** Navigate the viewer to a saved ROI (XY + Z) and make it visible. */
   const handleGoToSavedRoi = (roi: SavedRoi) => {
@@ -90,7 +114,6 @@ function RoiSelector() {
       }
     }
     if (!roi.visible) {
-      // reuse the atom setter via handleToggleVisibility — ROI is currently hidden
       handleToggleVisibility(roi.id);
     }
   };

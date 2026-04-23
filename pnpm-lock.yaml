@@ -67,9 +67,6 @@ importers:
 
   roi-selector:
     dependencies:
-      '@biongff/vizarr':
-        specifier: workspace:*
-        version: link:../viewer
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@18.3.18)(react@18.3.1)
@@ -85,9 +82,6 @@ importers:
       deck.gl:
         specifier: ~9.0.0
         version: 9.0.41(@arcgis/core@4.32.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      jotai:
-        specifier: ^1.0.0
-        version: 1.13.1(@babel/core@7.26.9)(@babel/template@7.26.9)(react@18.3.1)
       react:
         specifier: ^18.2.0
         version: 18.3.1

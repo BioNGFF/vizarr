@@ -1,5 +1,3 @@
-import { atom } from "jotai";
-
 /** An ROI corner. x/y are always required; z and t are present only when the image has those axes. */
 export interface RoiCorner {
   x: number;
@@ -25,7 +23,6 @@ export function toXY(p: RoiCorner): [number, number] {
  *   { corner1 }       → first corner placed, waiting for second click
  */
 export type RoiDrawState = null | "waiting-first" | { corner1: RoiCorner };
-export const roiDrawStateAtom = atom<RoiDrawState>(null);
 
 /** A saved ROI with its assigned overlay color. */
 export interface SavedRoi {
@@ -42,9 +39,6 @@ export interface PendingRoi {
   corner1: RoiCorner;
   corner2: RoiCorner;
 }
-
-export const savedRoisAtom = atom<SavedRoi[]>([]);
-export const pendingRoiAtom = atom<PendingRoi | null>(null);
 
 /** Normalized bounding box with guaranteed min/max ordering. */
 export interface NormalizedBounds {
@@ -237,4 +231,15 @@ export function nextAvailableColor(existingRois: SavedRoi[]): [number, number, n
   }
   // All colors in use — cycle based on count
   return ROI_COLORS[existingRois.length % ROI_COLORS.length];
+}
+
+/** Viewer information passed from the host application. */
+export interface ViewerInfo {
+  imageBounds: ImageBounds | null;
+  zInfo: { zValue: number; zMax: number } | null;
+  tInfo: { tValue: number; tMax: number } | null;
+  viewport: { width: number; height: number } | null;
+  setViewState: (vs: { zoom: number; target: [number, number]; width: number; height: number }) => void;
+  setZSlice: (z: number) => void;
+  setTSlice: (t: number) => void;
 }

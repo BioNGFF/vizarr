@@ -1,10 +1,11 @@
 export { default as RoiSelector } from "./RoiSelector";
+export type { RoiSelectorProps } from "./RoiSelector";
 
-// Re-export ROI state for programmatic access
+export { useRoiDeckExtension } from "./useRoiDeckExtension";
+export type { UseRoiDeckExtensionProps, RoiDeckExtension } from "./useRoiDeckExtension";
+
+// Re-export ROI state utilities for programmatic access
 export {
-  roiDrawStateAtom,
-  savedRoisAtom,
-  pendingRoiAtom,
   ROI_COLORS,
   normalizeRoiBounds,
   boundsToPolygonXY,
@@ -12,4 +13,12 @@ export {
   nextAvailableColor,
   clampToBounds,
 } from "./state";
-export type { RoiCorner as RoiPoint, RoiDrawState, SavedRoi, PendingRoi, NormalizedBounds, ImageBounds } from "./state";
+export type {
+  RoiCorner as RoiPoint,
+  RoiDrawState,
+  SavedRoi,
+  PendingRoi,
+  NormalizedBounds,
+  ImageBounds,
+  ViewerInfo,
+} from "./state";

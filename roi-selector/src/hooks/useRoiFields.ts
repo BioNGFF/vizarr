@@ -1,7 +1,4 @@
-import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
-
-import { useViewerPlugin } from "@biongff/vizarr";
 
 import {
   type ImageBounds,
@@ -14,9 +11,6 @@ import {
   nextAvailableColor,
   nextDefaultRoiName,
   normalizeRoiBounds,
-  pendingRoiAtom,
-  roiDrawStateAtom,
-  savedRoisAtom,
 } from "../state";
 
 export type CoordKey = "x1" | "y1" | "x2" | "y2" | "z1" | "z2" | "t1" | "t2";
@@ -27,16 +21,10 @@ export interface UseRoiFieldsReturn {
   onCoordChange: (key: CoordKey, value: string) => void;
   roiName: string;
   onRoiNameChange: (value: string) => void;
-  // Derived / shared state
+  // Derived state
   hasZAxis: boolean;
   hasTAxis: boolean;
-  zInfo: { zValue: number; zMax: number } | null;
-  tInfo: { tValue: number; tMax: number } | null;
-  imageBounds: ImageBounds | null;
   isDrawing: boolean;
-  roiDrawState: RoiDrawState;
-  pendingRoi: PendingRoi | null;
-  savedRois: SavedRoi[];
   editingRoiId: string | null;
   // Handlers
   handleToggleDraw: () => void;
@@ -50,6 +38,18 @@ export interface UseRoiFieldsReturn {
   handleCancelEdit: () => void;
 }
 
+export interface UseRoiFieldsProps {
+  roiDrawState: RoiDrawState;
+  setRoiDrawState: React.Dispatch<React.SetStateAction<RoiDrawState>>;
+  savedRois: SavedRoi[];
+  setSavedRois: React.Dispatch<React.SetStateAction<SavedRoi[]>>;
+  pendingRoi: PendingRoi | null;
+  setPendingRoi: React.Dispatch<React.SetStateAction<PendingRoi | null>>;
+  imageBounds: ImageBounds | null;
+  zInfo: { zValue: number; zMax: number } | null;
+  tInfo: { tValue: number; tMax: number } | null;
+}
+
 /**
  * Manages all ROI coordinate field state, draw-mode state, and the full
  * save / edit / delete / discard lifecycle.
@@ -58,7 +58,17 @@ export interface UseRoiFieldsReturn {
  * parent component because they depend on viewer state and the `hasZAxis`
  * display flag that is already computed here and forwarded.
  */
-export function useRoiFields(): UseRoiFieldsReturn {
+export function useRoiFields({
+  roiDrawState,
+  setRoiDrawState,
+  savedRois,
+  setSavedRois,
+  pendingRoi,
+  setPendingRoi,
+  imageBounds,
+  zInfo,
+  tInfo,
+}: UseRoiFieldsProps): UseRoiFieldsReturn {
   const [coords, setCoords] = useState<CoordValues>({
     x1: "",
     y1: "",
@@ -73,17 +83,12 @@ export function useRoiFields(): UseRoiFieldsReturn {
   const [editingRoiId, setEditingRoiId] = useState<string | null>(null);
   const [roiName, setRoiName] = useState<string>("");
 
-  const { zInfo, tInfo, imageBounds } = useViewerPlugin();
   const hasZAxis = zInfo !== null;
   const hasTAxis = tInfo !== null;
   const zMax = zInfo?.zMax ?? null;
   const tMax = tInfo?.tMax ?? null;
 
-  const [roiDrawState, setRoiDrawState] = useAtom(roiDrawStateAtom);
   const isDrawing = roiDrawState !== null;
-
-  const [savedRois, setSavedRois] = useAtom(savedRoisAtom);
-  const [pendingRoi, setPendingRoi] = useAtom(pendingRoiAtom);
 
   // Prevents the pendingRoi → fields effect from re-running when we are the ones
   // writing to pendingRoi (e.g. while the user types in the fields).
@@ -105,7 +110,7 @@ export function useRoiFields(): UseRoiFieldsReturn {
     }
   }, [pendingRoi, imageBounds, zMax, tMax]);
 
-  // ---- Live sync: field changes → atom (for overlay preview) ----
+  // ---- Live sync: field changes → state (for overlay preview) ----
   const syncFieldsToPending = React.useCallback(
     (next: CoordValues) => {
       if (editingRoiId) {
@@ -251,13 +256,7 @@ export function useRoiFields(): UseRoiFieldsReturn {
     onRoiNameChange: setRoiName,
     hasZAxis,
     hasTAxis,
-    zInfo,
-    tInfo,
-    imageBounds,
     isDrawing,
-    roiDrawState,
-    pendingRoi,
-    savedRois,
     editingRoiId,
     handleToggleDraw,
     handleSaveRoi,

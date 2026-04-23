@@ -1,36 +1,53 @@
+import type { Layer } from "deck.gl";
 import { PolygonLayer } from "deck.gl";
-import { useAtom, useAtomValue } from "jotai";
-import { useCallback, useEffect, useMemo, useState } from "react";
-
-import { useViewerPlugin } from "@biongff/vizarr";
+import { useCallback, useMemo, useState } from "react";
 
 import {
+  type ImageBounds,
+  type PendingRoi,
+  type RoiDrawState,
+  type SavedRoi,
   boundsToPolygonXY,
   nextAvailableColor,
   normalizeRoiBounds,
-  pendingRoiAtom,
-  roiDrawStateAtom,
-  savedRoisAtom,
   toXY,
 } from "./state";
 
-const PLUGIN_ID = "roi-selector";
+export interface UseRoiDeckExtensionProps {
+  roiDrawState: RoiDrawState;
+  setRoiDrawState: React.Dispatch<React.SetStateAction<RoiDrawState>>;
+  savedRois: SavedRoi[];
+  pendingRoi: PendingRoi | null;
+  setPendingRoi: React.Dispatch<React.SetStateAction<PendingRoi | null>>;
+  imageBounds: ImageBounds | null;
+  zInfo: { zValue: number; zMax: number } | null;
+  tInfo: { tValue: number; tMax: number } | null;
+}
+
+export interface RoiDeckExtension {
+  layers: Layer[];
+  cursor: string | undefined;
+  onClick: (coordinate: [number, number]) => boolean;
+  onHover: (coordinate: [number, number] | null) => void;
+}
 
 /**
- * Hook that builds ROI overlay layers and registers click/hover handlers
- * with the viewer via ViewerPluginContext.
+ * Hook that builds ROI overlay layers and click/hover handlers.
  *
- * The plugin owns the layer creation — the viewer just renders whatever layers
- * are handed to it, with no knowledge of ROI internals.
+ * Returns layers and handlers for the caller (App) to pass to the viewer.
+ * The hook has no viewer dependency — all viewer data arrives via props.
  */
-export function useRoiDeckExtension() {
-  const plugin = useViewerPlugin();
-  const { imageBounds, zInfo, tInfo } = plugin;
-
-  const [roiDrawState, setRoiDrawState] = useAtom(roiDrawStateAtom);
+export function useRoiDeckExtension({
+  roiDrawState,
+  setRoiDrawState,
+  savedRois,
+  pendingRoi,
+  setPendingRoi,
+  imageBounds,
+  zInfo,
+  tInfo,
+}: UseRoiDeckExtensionProps): RoiDeckExtension {
   const isDrawing = roiDrawState !== null;
-  const savedRois = useAtomValue(savedRoisAtom);
-  const [pendingRoi, setPendingRoi] = useAtom(pendingRoiAtom);
   const currentZ = zInfo?.zValue ?? null;
   const currentT = tInfo?.tValue ?? null;
 
@@ -171,30 +188,10 @@ export function useRoiDeckExtension() {
     [roiCorner1],
   );
 
-  // ---- Register layers with the viewer ----
-  useEffect(() => {
-    plugin.addLayers(PLUGIN_ID, {
-      layers: roiLayers,
-      cursor: isDrawing ? "crosshair" : undefined,
-    });
-  }, [roiLayers, isDrawing, plugin]);
-
-  // ---- Register click handler ----
-  useEffect(() => {
-    plugin.addClickHandler(PLUGIN_ID, onClick);
-  }, [onClick, plugin]);
-
-  // ---- Register hover handler ----
-  useEffect(() => {
-    plugin.addHoverHandler(PLUGIN_ID, onHover);
-  }, [onHover, plugin]);
-
-  // ---- Cleanup on unmount ----
-  useEffect(() => {
-    return () => {
-      plugin.removeLayers(PLUGIN_ID);
-      plugin.removeClickHandler(PLUGIN_ID);
-      plugin.removeHoverHandler(PLUGIN_ID);
-    };
-  }, [plugin]);
+  return {
+    layers: roiLayers,
+    cursor: isDrawing ? ("crosshair" as const) : undefined,
+    onClick,
+    onHover,
+  };
 }
