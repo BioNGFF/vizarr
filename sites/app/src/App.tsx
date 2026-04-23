@@ -8,6 +8,8 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import debounce from "just-debounce-it";
 import * as React from "react";
 
+import "@biongff/anndata-zarr/dist/anndata-zarr.css";
+
 const darkTheme = createTheme({
   palette: {
     mode: "dark",
@@ -46,6 +48,7 @@ export default function App() {
   }, [urlString]);
 
   const [colors, setColors] = React.useState((): labelColor[][] => Array(sources.length).fill([]));
+
   // Debounced viewState change handler
   const handleViewStateChange = React.useMemo(
     () =>
@@ -62,11 +65,13 @@ export default function App() {
       }, 200),
     [],
   );
-  const selectCallback = (colorData: any, i: any) => {
+
+  const selectCallback = React.useCallback((colorData: any, i: any) => {
     setColors((prev) => {
       return prev.map((c, ci) => (ci === i ? colorData : c));
     });
-  };
+  }, []);
+
   const anndataControllers = React.useMemo(() => {
     return sources.map((_s, i) => {
       if (!anndatas?.[i]?.url) return null;
@@ -74,7 +79,8 @@ export default function App() {
         <AnndataController key={i} adata={anndatas[i]} callback={(colorData: any) => selectCallback(colorData, i)} />
       );
     });
-  }, [anndatas, sources]);
+  }, [anndatas, sources, selectCallback]);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />

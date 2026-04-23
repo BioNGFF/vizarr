@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => ({
       ...(mode === "development"
         ? {
             "@biongff/vizarr": path.resolve(__dirname, "../../viewer/src/index.tsx"),
+            "@biongff/anndata-zarr/dist/anndata-zarr.css": path.resolve(__dirname, "../../anndata-zarr/src/index.css"),
             "@biongff/anndata-zarr": path.resolve(__dirname, "../../anndata-zarr/src/index.js"),
           }
         : {}),
