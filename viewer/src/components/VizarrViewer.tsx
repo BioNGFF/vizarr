@@ -75,7 +75,7 @@ function VizarrViewerComponent({
       const sourceData = sourceDatas.filter((s) => s !== null);
       setSourceInfo(sourceData);
     });
-  }, [sources, labelColours, setSourceInfo]);
+  }, [sources, labelColours, setSourceInfo, setSourceError]);
 
   return (
     <>

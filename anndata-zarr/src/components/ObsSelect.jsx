@@ -54,7 +54,7 @@ const CategoricalCol = ({ col, showColor = false }) => {
                       height: 10,
                       bgcolor: `rgba(${getColor({ value: i / (categories.length - 1), colorscale: COLORSCALES.Accent })})`,
                     }}
-                  ></Box>
+                  />
                 </ListItemIcon>
               )}
               <ListItemText primary={cat} />

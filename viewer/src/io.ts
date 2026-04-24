@@ -282,15 +282,14 @@ export async function loadSources(sources: string[], labelColors?: OmeColor[][])
       if (!sourceData.name) {
         sourceData.name = `image_${index}`;
       }
-      if (labelColors && labelColors[index].length) {
+      if (labelColors?.[index].length) {
         if (!sourceData.labels || !sourceData.labels.length) {
           throw new utils.AssertionError("Feature colours provided but source image has no label.");
-        } else {
-          //Really not the best way to do this but the layer state is heavily wrapped up in
-          //being derived directly from the sourceData and would require a fairly large refactor to find
-          sourceData.labels[0].colors = labelColors[index];
-          sourceData.labels[0].on = true;
         }
+        //Really not the best way to do this but the layer state is heavily wrapped up in
+        //being derived directly from the sourceData and would require a fairly large refactor to find
+        sourceData.labels[0].colors = labelColors[index];
+        sourceData.labels[0].on = true;
       }
       return { id, ...sourceData };
     }),

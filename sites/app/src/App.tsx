@@ -66,7 +66,7 @@ export default function App() {
     [],
   );
 
-  const selectCallback = React.useCallback((colorData: any, i: any) => {
+  const selectCallback = React.useCallback((colorData: labelColor[], i: number) => {
     setColors((prev) => {
       return prev.map((c, ci) => (ci === i ? colorData : c));
     });
@@ -76,7 +76,11 @@ export default function App() {
     return sources.map((_s, i) => {
       if (!anndatas?.[i]?.url) return null;
       return (
-        <AnndataController key={i} adata={anndatas[i]} callback={(colorData: any) => selectCallback(colorData, i)} />
+        <AnndataController
+          key={anndatas[i]?.url}
+          adata={anndatas[i]}
+          callback={(colorData: labelColor[]) => selectCallback(colorData, i)}
+        />
       );
     });
   }, [anndatas, sources, selectCallback]);

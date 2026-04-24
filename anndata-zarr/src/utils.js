@@ -26,6 +26,7 @@ export const fetchDataFromZarr = async (url, path, s) => {
 
     return result;
   } catch (error) {
+    // biome-ignore lint/complexity/noUselessCatch: @TODO: better error handling
     throw error;
   }
 };
@@ -90,7 +91,8 @@ export const getZarrPath = async (url, matrixProps) => {
   if (feature) {
     if (feature.index !== undefined && feature.index !== null) {
       return { url, path: "X", s: [null, feature.index] };
-    } else if (feature.name) {
+    }
+    if (feature.name) {
       return {
         url,
         path: "X",
@@ -130,11 +132,13 @@ const interpolateColor = (color1, color2, factor) => {
 };
 
 const computeColor = (colormap, value) => {
-  if (!colormap || isNaN(value)) {
+  if (!colormap || Number.isNaN(value)) {
     return [0, 0, 0, 255];
-  } else if (value <= 0) {
+  }
+  if (value <= 0) {
     return parseHexColor(colormap[0]);
-  } else if (value >= 1) {
+  }
+  if (value >= 1) {
     return parseHexColor(colormap[colormap.length - 1]);
   }
   const index1 = Math.floor(value * (colormap.length - 1));
