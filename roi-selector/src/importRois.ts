@@ -39,71 +39,6 @@ function resolveAttrs(attrs: zarr.Attributes): zarr.Attributes {
   return attrs;
 }
 
-// ---- Physical pixel sizes ----
-
-interface PixelScales {
-  x: number;
-  y: number;
-  z?: number;
-  t?: number;
-}
-
-async function getPixelScales(
-  location: zarr.Location<zarr.Readable>,
-): Promise<PixelScales> {
-  const group = await zarr.open(location, { kind: "group" });
-  const attrs = resolveAttrs(group.attrs);
-
-  if (!("multiscales" in attrs)) {
-    throw new Error("Source zarr has no multiscales metadata");
-  }
-
-  const multiscales = attrs.multiscales as Array<{
-    axes?: Array<string | { name: string; type?: string }>;
-    datasets: Array<{
-      path: string;
-      coordinateTransformations?: Array<
-        { type: "scale"; scale: number[] } | { type: "translation"; translation: number[] }
-      >;
-    }>;
-  }>;
-
-  const rawAxes = multiscales[0].axes ?? [];
-  const axes = rawAxes.map((a) =>
-    typeof a === "string"
-      ? { name: a, type: a === "t" ? "time" : a === "c" ? "channel" : "space" }
-      : a,
-  );
-
-  const xIdx = axes.findIndex((a) => a.name === "x");
-  const yIdx = axes.findIndex((a) => a.name === "y");
-  const zIdx = axes.findIndex((a) => a.name === "z");
-  const tIdx = axes.findIndex((a) => a.name === "t");
-
-  const transforms = multiscales[0].datasets[0]?.coordinateTransformations ?? [];
-
-  let scaleX = 1;
-  let scaleY = 1;
-  let scaleZ: number | undefined;
-  let scaleT: number | undefined;
-
-  for (const tr of transforms) {
-    if (tr.type === "scale") {
-      if (xIdx >= 0) scaleX = tr.scale[xIdx];
-      if (yIdx >= 0) scaleY = tr.scale[yIdx];
-      if (zIdx >= 0) scaleZ = tr.scale[zIdx];
-      if (tIdx >= 0) scaleT = tr.scale[tIdx];
-    }
-  }
-
-  return {
-    x: scaleX,
-    y: scaleY,
-    ...(scaleZ !== undefined ? { z: scaleZ } : {}),
-    ...(scaleT !== undefined ? { t: scaleT } : {}),
-  };
-}
-
 // ---- Column matching ----
 
 const ORIGIN_X_PATTERNS = ["x_micrometer", "x_origin", "origin_x", "x"];
@@ -346,8 +281,7 @@ async function readRoiTable(
 // ---- Main import function ----
 
 /**
- * Import ROIs from selected zarr tables, converting from physical-unit
- * (origin + length) to pixel-unit (corner1, corner2) representation.
+ * Import ROIs from selected zarr tables.
  */
 export async function importRoisFromZarr(
   sourceUrl: string,
@@ -360,8 +294,6 @@ export async function importRoisFromZarr(
   const location = openZarrLocation(sourceUrl);
   const tablesLocation = location.resolve("tables");
 
-  const pixelSizes = await getPixelScales(location);
-
   const importedRois: SavedRoi[] = [];
   let allRois = [...existingRois];
 
@@ -370,26 +302,22 @@ export async function importRoisFromZarr(
       const physicalRois = await readRoiTable(tablesLocation, tableName);
 
       for (const pRoi of physicalRois) {
-        // Convert physical origin+length → pixel corners
-        const pixelX1 = Math.round(pRoi.originX / pixelSizes.x);
-        const pixelY1 = Math.round(pRoi.originY / pixelSizes.y);
-        const pixelX2 = Math.round(
-          (pRoi.originX + pRoi.lengthX) / pixelSizes.x,
-        );
-        const pixelY2 = Math.round(
-          (pRoi.originY + pRoi.lengthY) / pixelSizes.y,
-        );
+        // Physical origin+length → physical corners (no conversion needed)
+        const x1 = pRoi.originX;
+        const y1 = pRoi.originY;
+        const x2 = pRoi.originX + pRoi.lengthX;
+        const y2 = pRoi.originY + pRoi.lengthY;
 
         // Warn about out-of-bounds
         if (
-          pixelX1 < imageBounds.xMin ||
-          pixelY1 < imageBounds.yMin ||
-          pixelX2 > imageBounds.xMax ||
-          pixelY2 > imageBounds.yMax
+          x1 < imageBounds.xMin ||
+          y1 < imageBounds.yMin ||
+          x2 > imageBounds.xMax ||
+          y2 > imageBounds.yMax
         ) {
           console.warn(
             `[ROI Import] "${tableName}/${pRoi.name}" extends outside image bounds ` +
-              `(${pixelX1},${pixelY1})→(${pixelX2},${pixelY2}), ` +
+              `(${x1},${y1})→(${x2},${y2}), ` +
               `image: (${imageBounds.xMin},${imageBounds.yMin})→(${imageBounds.xMax},${imageBounds.yMax}). Clamping.`,
           );
         }
@@ -398,48 +326,42 @@ export async function importRoisFromZarr(
           Math.max(lo, Math.min(hi, v));
 
         const corner1: RoiCorner = {
-          x: clamp(pixelX1, imageBounds.xMin, imageBounds.xMax),
-          y: clamp(pixelY1, imageBounds.yMin, imageBounds.yMax),
+          x: clamp(x1, imageBounds.xMin, imageBounds.xMax),
+          y: clamp(y1, imageBounds.yMin, imageBounds.yMax),
         };
         const corner2: RoiCorner = {
-          x: clamp(pixelX2, imageBounds.xMin, imageBounds.xMax),
-          y: clamp(pixelY2, imageBounds.yMin, imageBounds.yMax),
+          x: clamp(x2, imageBounds.xMin, imageBounds.xMax),
+          y: clamp(y2, imageBounds.yMin, imageBounds.yMax),
         };
 
-        // Z axis conversion
+        // Z axis (still index-based, no physical conversion)
         if (
           pRoi.originZ !== undefined &&
-          pRoi.lengthZ !== undefined &&
-          pixelSizes.z
+          pRoi.lengthZ !== undefined
         ) {
-          const pz1 = Math.round(pRoi.originZ / pixelSizes.z);
-          const pz2 = Math.round(
-            (pRoi.originZ + pRoi.lengthZ) / pixelSizes.z,
-          );
-          corner1.z = clamp(pz1, 0, zMax ?? pz1);
-          corner2.z = clamp(pz2, 0, zMax ?? pz2);
-          if (zMax != null && (pz1 > zMax || pz2 > zMax)) {
+          const z1 = Math.round(pRoi.originZ);
+          const z2 = Math.round(pRoi.originZ + pRoi.lengthZ);
+          corner1.z = clamp(z1, 0, zMax ?? z1);
+          corner2.z = clamp(z2, 0, zMax ?? z2);
+          if (zMax != null && (z1 > zMax || z2 > zMax)) {
             console.warn(
-              `[ROI Import] "${tableName}/${pRoi.name}" Z range (${pz1}–${pz2}) exceeds zMax (${zMax}). Clamping.`,
+              `[ROI Import] "${tableName}/${pRoi.name}" Z range (${z1}–${z2}) exceeds zMax (${zMax}). Clamping.`,
             );
           }
         }
 
-        // T axis conversion
+        // T axis (still index-based, no physical conversion)
         if (
           pRoi.originT !== undefined &&
-          pRoi.lengthT !== undefined &&
-          pixelSizes.t
+          pRoi.lengthT !== undefined
         ) {
-          const pt1 = Math.round(pRoi.originT / pixelSizes.t);
-          const pt2 = Math.round(
-            (pRoi.originT + pRoi.lengthT) / pixelSizes.t,
-          );
-          corner1.t = clamp(pt1, 0, tMax ?? pt1);
-          corner2.t = clamp(pt2, 0, tMax ?? pt2);
-          if (tMax != null && (pt1 > tMax || pt2 > tMax)) {
+          const t1 = Math.round(pRoi.originT);
+          const t2 = Math.round(pRoi.originT + pRoi.lengthT);
+          corner1.t = clamp(t1, 0, tMax ?? t1);
+          corner2.t = clamp(t2, 0, tMax ?? t2);
+          if (tMax != null && (t1 > tMax || t2 > tMax)) {
             console.warn(
-              `[ROI Import] "${tableName}/${pRoi.name}" T range (${pt1}–${pt2}) exceeds tMax (${tMax}). Clamping.`,
+              `[ROI Import] "${tableName}/${pRoi.name}" T range (${t1}–${t2}) exceeds tMax (${tMax}). Clamping.`,
             );
           }
         }
