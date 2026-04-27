@@ -1,4 +1,3 @@
-import type { CoordinateSystem } from "deck.gl";
 
 declare namespace Ome {
   type Version = "0.1";
@@ -42,6 +41,9 @@ declare namespace Ome {
   }
 
   type CoordinateTransformation =
+    {
+      type: "identity"
+    }
     | {
       type: "scale";
       scale: Array<number>;
@@ -49,6 +51,14 @@ declare namespace Ome {
     | {
       type: "translation";
       translation: Array<number>;
+    }
+    | {
+      type: "sequence",
+      transformations: Array<CoordinateTransformation>
+    }
+    | {
+      type: "rotation",
+      rotation: Array<number>
     };
 
   interface Dataset {

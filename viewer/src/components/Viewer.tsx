@@ -134,7 +134,6 @@ export default function Viewer() {
       far: minZ ? 10000 * Math.abs(minZ) : 1000,
     };
   }, [layers]);
-
   return (
     <>
       <DeckGL

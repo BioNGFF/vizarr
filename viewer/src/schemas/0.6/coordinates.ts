@@ -23,8 +23,14 @@ const CoordinateSystemSchema = z.object({
   axes: z.array(AxesSchema)
 })
 
-export const Scene = z.object({
+const Scene = z.object({
   coordinateTransformations: z.array(CoordinateTransformationSchema),
   coordinateSystems: z.array(CoordinateSystemSchema).optional()
+})
+
+export const SceneSchema = z.object({
+  ome: z.object({
+    scene: Scene
+  })
 })
 

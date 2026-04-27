@@ -596,3 +596,755 @@ index ca2a1cad28515636de467ea554b223a0e16bdd13..0c1556a6632140d5428be584107a6a94
 -    .describe("JSON from OME-NGFF .zattrs");
 +  .object({ well: StrictInnerWellSchema })
 +  .describe("JSON from OME-NGFF .zattrs");
+diff --git a/dist/0.6.d.ts b/dist/0.6.d.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b694ed70111b203d02ff79dbf1c0b93aab62fff
+--- /dev/null
++++ b/dist/0.6.d.ts
+@@ -0,0 +1,396 @@
++import { z } from "zod";
++export declare const VersionSchema: z.ZodEnum<["0.5"]>;
++export declare const PlateSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const StrictPlateSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const Bf2RawSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const OmeSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const ImageSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const StrictImageSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const LabelSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const StrictLabelSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const WellSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const StrictWellSchema: z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>;
++export declare const OmeZarrSchema: z.ZodUnion<[z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>, z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>, z.ZodObject<{
++  colors: z.ZodOptional<z.ZodEffects<z.ZodArray<z.ZodObject<{
++    "label-value": z.ZodNumber;
++    rgba: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
++  }, "strip", z.ZodTypeAny, {
++    "label-value": number;
++    rgba?: number[] | undefined;
++  }, {
++    "label-value": number;
++    rgba?: number[] | undefined;
++  }>, "many">, {
++    "label-value": number;
++    rgba?: number[] | undefined;
++  }[], {
++    "label-value": number;
++    rgba?: number[] | undefined;
++  }[]>>;
++  properties: z.ZodOptional<z.ZodArray<z.ZodObject<{
++    "label-value": z.ZodNumber;
++  }, "strip", z.ZodTypeAny, {
++    "label-value": number;
++  }, {
++    "label-value": number;
++  }>, "many">>;
++  source: z.ZodOptional<z.ZodObject<{
++    image: z.ZodOptional<z.ZodString>;
++  }, "strip", z.ZodTypeAny, {
++    image?: string | undefined;
++  }, {
++    image?: string | undefined;
++  }>>;
++}, "strip", z.ZodTypeAny, {
++  colors?: {
++    "label-value": number;
++    rgba?: number[] | undefined;
++  }[] | undefined;
++  properties?: {
++    "label-value": number;
++  }[] | undefined;
++  source?: {
++    image?: string | undefined;
++  } | undefined;
++}, {
++  colors?: {
++    "label-value": number;
++    rgba?: number[] | undefined;
++  }[] | undefined;
++  properties?: {
++    "label-value": number;
++  }[] | undefined;
++  source?: {
++    image?: string | undefined;
++  } | undefined;
++}>, z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>, z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>, z.ZodObject<{
++  ome: z.ZodObject<{
++    [x: string]: z.ZodTypeAny;
++  } & {
++    version: z.ZodEnum<["0.5"]>;
++  }, z.UnknownKeysParam, z.ZodTypeAny, {
++    [x: string]: any;
++    version?: unknown;
++  }, {
++    [x: string]: any;
++    version?: unknown;
++  }>;
++}, "strip", z.ZodTypeAny, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}, {
++  ome: {
++    [x: string]: any;
++    version?: unknown;
++  };
++}>]>;
+diff --git a/dist/0.6.js b/dist/0.6.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..d100da7a202f33f780f8bb70013939b3cb237b98
+--- /dev/null
++++ b/dist/0.6.js
+@@ -0,0 +1,320 @@
++import { z } from "zod";
++import { to_date } from "./shared.js";
++export const VersionSchema = z
++  .enum(["0.6.dev3"])
++  .describe("The version of the OME-Zarr Metadata");
++function withVersion(InnerSchema) {
++  return z.object({
++    ome: InnerSchema.extend({
++      version: VersionSchema,
++    }).describe("The versioned OME-Zarr Metadata namespace"),
++  }).describe("The zarr.json attributes key");
++}
++// PLATE                                                                                                                     
++const StrictAquisition = z.object({
++  id: z
++    .number()
++    .int()
++    .gte(0)
++    .describe("A unique identifier within the context of the plate"),
++  maximumfieldcount: z
++    .number()
++    .int()
++    .gt(0)
++    .describe("The maximum number of fields of view for the acquisition"),
++  name: z.string().describe("The name of the acquisition"),
++  description: z
++    .string()
++    .describe("The description of the acquisition")
++    .optional(),
++  starttime: z
++    .number()
++    .int()
++    .gte(0)
++    .describe("The start timestamp of the acquisition, expressed as epoch time i.e. the number seconds since the Epoch")
++    .transform(to_date)
++    .optional(),
++  endtime: z
++    .number()
++    .int()
++    .gte(0)
++    .describe("The end timestamp of the acquisition, expressed as epoch time i.e. the number seconds since the Epoch")
++    .transform(to_date)
++    .optional(),
++});
++const Aquisition = StrictAquisition.partial({
++  maximumfieldcount: true,
++  name: true,
++});
++const Columns = z
++  .array(z.object({
++    name: z
++      .string()
++      .regex(new RegExp("^[A-Za-z0-9]+$"))
++      .describe("The column name"),
++  }))
++  .min(1)
++  .superRefine((rows, ctx) => {
++    let names = rows.map((row) => row.name);
++    if (rows.length !== new Set(names).size) {
++      ctx.addIssue({
++        code: z.ZodIssueCode.custom,
++        message: `No duplicates columns allowed.`,
++      });
++    }
++  })
++  .describe("The columns of the plate");
++const Rows = z
++  .array(z.object({
++    name: z
++      .string()
++      .regex(new RegExp("^[A-Za-z0-9]+$"))
++      .describe("The row name"),
++  }))
++  .min(1)
++  .superRefine((rows, ctx) => {
++    let names = rows.map((row) => row.name);
++    if (rows.length !== new Set(names).size) {
++      ctx.addIssue({
++        code: z.ZodIssueCode.custom,
++        message: `No duplicates rows allowed.`,
++      });
++    }
++  })
++  .describe("The rows of the plate");
++const PlateWells = z
++  .array(z.object({
++    path: z
++      .string()
++      .regex(new RegExp("^[A-Za-z0-9]+/[A-Za-z0-9]+$"))
++      .describe("The path to the well subgroup"),
++    rowIndex: z
++      .number()
++      .int()
++      .gte(0)
++      .describe("The index of the well in the rows list"),
++    columnIndex: z
++      .number()
++      .int()
++      .gte(0)
++      .describe("The index of the well in the columns list"),
++  }))
++  .min(1)
++  .describe("The wells of the plate");
++const FieldCount = z
++  .number()
++  .int()
++  .gt(0)
++  .describe("The maximum number of fields per view across all wells")
++  .optional();
++function createPlateSchema(Aquisition) {
++  return z.object({
++    name: z.string().describe("The name of the plate"),
++    acquisitions: z.array(Aquisition)
++      .describe("The acquisitions for this plate")
++      .optional(),
++    field_count: FieldCount,
++    columns: Columns,
++    rows: Rows,
++    wells: PlateWells,
++  });
++}
++export const PlateSchema = withVersion(z.object({
++  plate: createPlateSchema(Aquisition).partial({ name: true }),
++}));
++export const StrictPlateSchema = withVersion(z.object({
++  plate: createPlateSchema(StrictAquisition),
++}));
++// BF2Raw                                                                                                                    
++export const Bf2RawSchema = withVersion(z.object({
++  "bioformats2raw.layout": z
++    .literal(3)
++    .describe("The top-level identifier metadata added by bioformats2raw"),
++}));
++// OME                                                                                                                       
++export const OmeSchema = withVersion(z.object({
++  series: z
++    .array(z.string())
++    .describe("An array of the same length and the same order as the images defined in the OME-XML")
++}));
++// Image                                                                                                                     
++const Axis = z.object({
++  name: z.string(),
++  type: z.string().default("space"),
++  unit: z.string().optional(),
++});
++const Axes = z.array(Axis)
++  .min(2)
++  .superRefine((axes, ctx) => {
++    let names = axes.map((ax) => ax.name);
++    if (axes.length !== new Set(names).size) {
++      ctx.addIssue({
++        code: z.ZodIssueCode.custom,
++        message: `No duplicate axes allowed.`,
++      });
++    }
++    if (axes.length > 5) {
++      ctx.addIssue({
++        code: z.ZodIssueCode.custom,
++        message: `Too many axes.`,
++      });
++    }
++    let total_space_axes = axes.filter((ax) => ax.type === "space").length;
++    if (total_space_axes <= 1) {
++      ctx.addIssue({
++        code: z.ZodIssueCode.custom,
++        message: "Missing space axes.",
++      });
++    }
++    if (total_space_axes > 3) {
++      ctx.addIssue({
++        code: z.ZodIssueCode.custom,
++        message: "Too many space axes.",
++      });
++    }
++  });
++const CoordinateTransformation = z.union([
++  z.object({
++    type: z.enum(["sequence"]),
++    transformations: z.array(z.object({}))
++  }),
++  z.object({ type: z.enum(["identity"]) }),
++  z.object({
++    type: z.enum(["scale"]),
++    scale: z.array(z.number()).min(2),
++  }),
++  z.object({
++    type: z.enum(["translation"]),
++    translation: z.array(z.number()).min(2),
++  })
++
++]);
++const CoordinateTransformations = z.array(CoordinateTransformation)
++
++const StrictMultiscale = z.object({
++  name: z.string(),
++  datasets: z
++    .array(z.object({
++      path: z.string(),
++      coordinateTransformations: CoordinateTransformations,
++    }))
++    .min(1),
++  coordinateSystems: z.array(z.object({ name: z.string(), axes: Axes })),
++  coordinateTransformations: CoordinateTransformations.optional(),
++});
++const Multiscale = StrictMultiscale.partial({
++  name: true,
++});
++const Omero = z.object({
++  channels: z.array(z.object({
++    window: z
++      .object({
++        end: z.number(),
++        max: z.number(),
++        min: z.number(),
++        start: z.number(),
++      })
++      .optional(),
++    label: z.string().optional(),
++    family: z.string().optional(),
++    color: z.string().optional(),
++    active: z.boolean().optional(),
++  })),
++});
++function createImageSchema(Multiscale) {
++  return z.object({
++    multiscales: z.array(Multiscale)
++      .min(1)
++      .describe("The multiscale datasets for this image"),
++    omero: Omero.optional(),
++  });
++}
++export const ImageSchema = withVersion(createImageSchema(Multiscale));
++export const StrictImageSchema = withVersion(createImageSchema(StrictMultiscale));
++// Label                                                                                                                     
++const StrictImageLabelSchema = z.object({
++  colors: z
++    .array(z.object({
++      "label-value": z.number().describe("The value of the label"),
++      rgba: z
++        .array(z.number().int().gte(0).lte(255))
++        .min(4)
++        .max(4)
++        .describe("The RGBA color stored as an array of four integers between 0 and 255")
++        .optional(),
++    }))
++    .min(1)
++    .describe("The colors for this label image")
++    .superRefine((colors, ctx) => {
++      let label_values = colors.map((color) => color["label-value"]);
++      if (colors.length !== new Set(label_values).size) {
++        ctx.addIssue({
++          code: z.ZodIssueCode.custom,
++          message: `No duplicate color_labels allowed.`,
++        });
++      }
++    }),
++  properties: z
++    .array(z.object({
++      "label-value": z
++        .number()
++        .int()
++        .describe("The pixel value for this label"),
++    }))
++    .min(1)
++    .describe("The properties for this label image")
++    .optional(),
++  source: z
++    .object({ image: z.string().optional() })
++    .describe("The source of this label image")
++    .optional(),
++});
++const ImageLabelSchema = StrictImageLabelSchema.partial({
++  colors: true,
++});
++export const LabelSchema = withVersion(z.object({
++  "image-label": ImageLabelSchema
++}));
++export const StrictLabelSchema = withVersion(z.object({
++  "image-label": StrictImageLabelSchema
++}));
++// Well                                                                                                                      
++const StrictInnerWellSchema = z.object({
++  images: z
++    .array(z.object({
++      acquisition: z
++        .number()
++        .int()
++        .describe("A unique identifier within the context of the plate")
++        .optional(),
++      path: z
++        .string()
++        .regex(new RegExp("^[A-Za-z0-9]+$"))
++        .describe("The path for this field of view subgroup"),
++    }))
++    .min(1)
++    .describe("The fields of view for this well")
++    .superRefine((imgs, ctx) => {
++      let paths = imgs.map((img) => img.path);
++      if (imgs.length !== new Set(paths).size) {
++        ctx.addIssue({
++          code: z.ZodIssueCode.custom,
++          message: `No duplicate images allowed.`,
++        });
++      }
++    }),
++});
++export const WellSchema = withVersion(z.object({
++  well: StrictInnerWellSchema.partial({})
++}));
++export const StrictWellSchema = withVersion(z.object({
++  well: StrictInnerWellSchema
++}));
++export const OmeZarrSchema = z.union([
++  Bf2RawSchema,
++  ImageSchema,
++  ImageLabelSchema,
++  OmeSchema,
++  PlateSchema,
++  WellSchema,
++]);                                                                                                                          
+diff --git a/dist/index.js b/dist/index.js
+index 8a0bcc398eba0f369fe4917300acd1f7880d6808..d8c7fb13b099275f43324cdee8f496fe9e708cd2 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -3,4 +3,5 @@ export * as v02 from "./0.2.js";
+ export * as v03 from "./0.3.js";
+ export * as v04 from "./0.4.js";
+ export * as v05 from "./0.5.js";
++export * as v06 from "./0.6.js"
+ export * as latest from "./latest.js";
+diff --git a/package.json b/package.json
+index cd2227452079144dbe963248fa95c8e5cbf32991..af2f55c3c3273619bd955b3d8a502ff26caefd77 100644
+--- a/package.json
++++ b/package.json
+@@ -29,6 +29,9 @@
+       "types": "./dist/0.5.d.ts",
+       "import": "./dist/0.5.js"
+     },
++    "./0.6": {
++      "import": "./dist/0.6.js"
++    },
+     "./latest": {
+       "types": "./dist/latest.d.ts",
+       "import": "./dist/latest.js"

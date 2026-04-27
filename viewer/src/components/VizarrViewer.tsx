@@ -88,7 +88,10 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
         }
       }
       sourceDatas = sourceDatas.filter((s) => s !== null);
-      setSourceInfo(sourceDatas);
+
+      //const sourceDatasSpread = [sourceDatas[0][0], sourceDatas[0][1], sourceDatas[0][2]]
+      debugger;
+      setSourceInfo(sourceDatas[0]);
     }
 
     loadSources();

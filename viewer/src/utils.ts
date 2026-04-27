@@ -158,7 +158,6 @@ export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
   // Returns axes in the latest v0.4+ format.
   // defaults for v0.1 & v0.2
   const default_axes = [
-    { type: "time", name: "t" },
     { type: "channel", name: "c" },
     { type: "space", name: "z" },
     { type: "space", name: "y" },

@@ -11,10 +11,6 @@
     "jsx": "preserve",
     "types": [
       "vite/client",
-      "./src/types"
     ],
-    "typeRoots": [
-      "./src/types"
-    ]
   }
 }

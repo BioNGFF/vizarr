@@ -6,6 +6,26 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import * as utils from "./utils";
 
 import { getPhysicalSizes, coordinateTransformationsToMatrix } from "./coordinate-transformations";
+import { SceneSchema } from "./schemas/0.6/coordinates";
+import * as z from 'zod';
+import { createSourceData } from "./io";
+
+
+export async function loadScene(
+  config: ImageLayerConfig,
+  grp: zarr.Group<zarr.Readable>,
+  data: z.infer<typeof SceneSchema>
+): Promise<SourceData[]> {
+
+  const results = await Promise.all(data.ome.scene.coordinateTransformations.map(async (transformation) => {
+    const path = transformation.input.path
+    return createSourceData({ source: config.source + '/' + path })
+  })
+  )
+  return results.flat()
+
+}
+
 
 export async function loadWell(
   config: ImageLayerConfig,
@@ -32,6 +52,7 @@ export async function loadWell(
     const plate = await zarr.open(grp.resolve(platePath));
     const plateAttrs = utils.resolveAttrs(plate.attrs) as { plate: Ome.Plate };
     acquisitions = plateAttrs.plate.acquisitions ?? [];
+
     // filter imagePaths by acquisition
     if (acquisitionId && acqIds.includes(acquisitionId)) {
       images = images.filter((img) => img.acquisition === acquisitionId);
@@ -245,7 +266,6 @@ export async function loadPlate(
       window.open(`${window.location.origin + window.location.pathname}?source=${imgSource}`);
     }
   };
-  debugger;
   return sourceData;
 }
 
@@ -260,9 +280,8 @@ function isDownsampledZ(
 function getOrderedTransformations(metadata: Ome.Multiscale[]): Ome.CoordinateTransformation[] {
   const resolutionTransformations = metadata[0].datasets[0]?.coordinateTransformations ? metadata[0].datasets[0]?.coordinateTransformations : []
   const imageTransformations = metadata[0].coordinateTransformations ? metadata[0].coordinateTransformations : []
-
-
-  return [...resolutionTransformations, ...imageTransformations]
+  const transformations = [...resolutionTransformations, ...imageTransformations]
+  return transformations
 }
 
 /**
@@ -276,7 +295,6 @@ export async function loadOmeMultiscales(
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
   const axes = utils.getNgffAxes(attrs.multiscales);
-  debugger;
   const axis_labels = utils.getNgffAxisLabels(axes);
   const tileSize = utils.guessTileSize(data[0]);
   let meta: Meta;

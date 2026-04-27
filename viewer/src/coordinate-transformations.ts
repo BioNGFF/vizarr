@@ -23,6 +23,7 @@ export function coordinateTransformationsToMatrix(coordinateTransformations: Ome
   // Reference: https://ngff.openmicroscopy.org/0.4/#trafo-md
   for (const transform of coordinateTransformations ?? []) {
     if (transform.type === "translation") {
+      console.log("Translating image")
       const { translation: axisOrderedTranslation } = transform;
       if (axisOrderedTranslation.length !== axes.length) {
         throw new Error("Length of translation array was expected to match length of axes.");
@@ -32,6 +33,7 @@ export function coordinateTransformationsToMatrix(coordinateTransformations: Ome
 
     }
     if (transform.type === "scale") {
+      console.log('Scaling image')
       const { scale: axisOrderedScale } = transform;
       // Add in z dimension needed for Matrix4 scale API.
       if (axisOrderedScale.length !== axes.length) {
@@ -40,6 +42,19 @@ export function coordinateTransformationsToMatrix(coordinateTransformations: Ome
       const cartesianTranslation = getCartesianTransformation(axes, axisOrderedScale, 1)
       mat = coordinateTransformationToMatrix('scale', cartesianTranslation, mat)
     }
+    if (transform.type === "rotation") {
+      console.log('Rotating image')
+      const { rotation: axisOrderedTranslation } = transform;
+      const cartesianRotation = getCartesianTransformation(axes, axisOrderedTranslation, 1)
+      mat = coordinateTransformationToMatrix('rotation', cartesianRotation, mat)
+    }
+    if (transform.type === "sequence") {
+      console.log("Sequence tranformation detected")
+      mat = coordinateTransformationsToMatrix(transform.transformations, axes)
+    }
+
+
+
   }
 
   return mat;
@@ -63,6 +78,8 @@ function coordinateTransformationToMatrix(type: string, transformation: Array<nu
       return applyCoordinateTranslationToMatrix(modelMatrix, transformation)
     case 'scale':
       return applyCoordinateScalingToMatrix(modelMatrix, transformation)
+    case 'rotation':
+      return applyCoordinateRotationToMatrix(modelMatrix, transformation)
     default:
       assert(type === 'translation' || type === 'scale')
   }
@@ -73,6 +90,12 @@ function coordinateTransformationToMatrix(type: string, transformation: Array<nu
 function applyCoordinateScalingToMatrix(matrix: Matrix4, scale: Array<number>): Matrix4 {
   // Get the scale values for [x, y, z].
   const nextMat = new Matrix4().scale(scale);
+  return matrix.multiplyLeft(nextMat);
+}
+
+function applyCoordinateRotationToMatrix(matrix: Matrix4, rotation: Array<number>): Matrix4 {
+  // Get the scale values for [x, y, z].
+  const nextMat = new Matrix4().rotateXYZ(rotation)
   return matrix.multiplyLeft(nextMat);
 }
 

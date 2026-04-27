@@ -2,8 +2,7 @@ import * as z from "zod";
 import * as schemas from "zod-ome-ngff";
 
 
-function multiscaleTransformer(schema: z.infer<typeof schemas.v04.ImageSchema>): Ome.Multiscale[] {
-
+export function multiscaleTransformer(schema: z.infer<typeof schemas.v04.ImageSchema>): Ome.Multiscale[] {
   return schema.multiscales.map((multiscale) => {
     return ({
       datasets: multiscale.datasets,

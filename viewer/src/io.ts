@@ -1,8 +1,9 @@
 import * as zarr from "zarrita";
 import { ZarrPixelSource } from "./ZarrPixelSource";
-import { loadOmeMultiscales, loadPlate, loadWell } from "./ome";
+import { loadOmeMultiscales, loadPlate, loadWell, loadScene } from "./ome";
 import * as utils from "./utils";
-
+import * as schemas from 'zod-ome-ngff';
+import { SceneSchema } from "./schemas/0.6/coordinates";
 
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
@@ -72,27 +73,73 @@ async function loadMultiChannel(
   };
 }
 
+function getSchemaVersion(node: {}): { type: string, version: string } {
+  const versions = ['v01', 'v02', 'v03', 'v04', 'v05', 'v06']
+  const imageTypes = ['WellSchema', 'PlateSchema', 'ImageSchema']
+  const schemasToCheck = versions.flatMap((version) => {
+    return imageTypes.map((imageType) => {
+      return schemas[version][imageType].safeParse(node).success ? { 'type': imageType, 'version': version } : null
+    })
+  })
 
-export async function createSourceData(config: ImageLayerConfig): Promise<SourceData> {
+  const schemaInfo = schemasToCheck.filter((schema) => schema != null)
+
+
+  //Return latest successfully parsed version if multiple are valid.
+  //In theory only possible if the version number is missing and data happens to match multiple schema version
+  return schemaInfo[schemaInfo.length - 1]
+
+}
+
+export async function createSourceData(config: ImageLayerConfig): Promise<SourceData[]> {
   const node = await utils.open(config.source);
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
-    console.log('Checking image type')
+    const schemaVersion = getSchemaVersion(node.attrs)
+    let versionedSchema
+    if (schemaVersion != undefined) {
+      versionedSchema = schemas[schemaVersion.version][schemaVersion.type]
+    } else {
+      console.log('Could not read schema for: ' + config.source)
+      if (SceneSchema.safeParse(node.attrs)) {
+        console.log('Detected scene')
+        const parsedData = SceneSchema.safeParse(node.attrs).data
+        return loadScene(config, node, parsedData)
+      }
+    }
+    const parsedData = versionedSchema.safeParse(node.attrs)
     let attrs = utils.resolveAttrs(node.attrs);
-    if (utils.isOmePlate(attrs)) {
-      console.log('Loading plate')
-      return loadPlate(config, node, attrs.plate);
+    console.log('Parsed data with type: ', schemaVersion.type)
+    console.log(parsedData.success)
+    if (parsedData.success) {
+      if (schemaVersion.type == "WellSchema") {
+        return [await loadWell(config, node, parsedData.data.ome.well)]
+      }
+      if (schemaVersion.type == "PlateSchema") {
+        return [await loadPlate(config, node, parsedData.data.ome.plate)]
+      }
+
+      if (schemaVersion.type == "ImageSchema") {
+        console.log("Loading multiscales")
+        return [await loadOmeMultiscales(config, node, parsedData.data.ome)]
+      }
+
     }
 
-    if (utils.isOmeWell(attrs)) {
-      console.log('Loading well')
-      return loadWell(config, node, attrs.well);
-    }
+    //if (utils.isOmePlate(attrs)) {
+    //  console.log('Loading plate')
+    //   return loadPlate(config, node, attrs.plate);
+    // }
 
-    if (utils.isMultiscales(attrs)) {
-      return loadOmeMultiscales(config, node, attrs);
-    }
+    // if (utils.isOmeWell(attrs)) {
+    //   console.log('Loading well')
+    //   return loadWell(config, node, attrs.well);
+    // }
+
+    // if (utils.isMultiscales(attrs)) {
+    //   return loadOmeMultiscales(config, node, attrs);
+    // }
 
     if (Object.keys(attrs).length === 0 && node.path) {
       // No rootAttrs in this group.
@@ -225,19 +272,19 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
   }
 
   let labels = undefined;
-  if (source.labels && source.labels.length > 0) {
-    labels = source.labels.map((label, i) => ({
-      on: false,
-      transformSourceSelection: getSourceSelectionTransform(label.loader[0], source.loader[0]),
-      layerProps: {
-        id: `${source.id}_${i}`,
-        loader: label.loader,
-        modelMatrix: label.modelMatrix,
-        opacity: DEFAULT_LABEL_OPACITY,
-        colors: label.colors,
-      },
-    }));
-  }
+  //if (source.labels && source.labels.length > 0) {
+  // labels = source.labels.map((label, i) => ({
+  //    on: false,
+  //    transformSourceSelection: getSourceSelectionTransform(label.loader[0], source.loader[0]),
+  //    layerProps: {
+  //      id: `${source.id}_${i}`,
+  //      loader: label.loader,
+  //      modelMatrix: label.modelMatrix,
+  //      opacity: DEFAULT_LABEL_OPACITY,
+  //      colors: label.colors,
+  //    },
+  // }));
+  //}
 
   return {
     kind: "multiscale",

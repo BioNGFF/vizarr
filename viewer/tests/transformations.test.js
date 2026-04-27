@@ -5,7 +5,6 @@ import path from 'node:path'
 import { createSourceData } from '../src/io'
 import { open } from '../src/utils'
 import { Scene } from '../src/schemas/0.6/coordinates'
-import { v04 } from "zod-ome-ngff";
 
 test('Resolution-level transformations should be applied', async () => {
   const sourcePath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "resolution_transformationsv0.5.yaml"))
@@ -30,8 +29,6 @@ test('Image-level transformations should be applied', async () => {
 test("Can read a scene image's metadata", async () => {
   const sourcePath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "scene.yaml"))
   const source = yaml.parse(fs.readFileSync(sourcePath, 'utf-8'))
-  const config = { source: source.source }
-  const node = await open(config.source);
-  const scene = Scene.parse(node.attrs.ome.scene)
+  const sourceData = await createSourceData(source)
 })
 
