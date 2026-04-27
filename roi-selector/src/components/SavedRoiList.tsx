@@ -80,21 +80,23 @@ export default function SavedRoiList({
       </Box>
 
       <Collapse in={roiMenuOpen}>
-        <Box sx={{ mt: 0.5 }}>
-          {savedRois.map((roi) => (
-            <SavedRoiItem
-              key={roi.id}
-              roi={roi}
-              hasZAxis={hasZAxis}
-              hasTAxis={hasTAxis}
-              isEditing={editingRoiId === roi.id}
-              onToggleVisibility={() => onToggleVisibility(roi.id)}
-              onGoTo={() => onGoTo(roi)}
-              onCopy={() => onCopy(roi)}
-              onEdit={() => onEdit(roi)}
-              onDelete={() => onDelete(roi.id)}
-            />
-          ))}
+        <Box sx={{ mt: 0.5, display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <Box sx={{ overflowY: "auto", maxHeight: "40vh", minHeight: 0 }}>
+            {savedRois.map((roi) => (
+              <SavedRoiItem
+                key={roi.id}
+                roi={roi}
+                hasZAxis={hasZAxis}
+                hasTAxis={hasTAxis}
+                isEditing={editingRoiId === roi.id}
+                onToggleVisibility={() => onToggleVisibility(roi.id)}
+                onGoTo={() => onGoTo(roi)}
+                onCopy={() => onCopy(roi)}
+                onEdit={() => onEdit(roi)}
+                onDelete={() => onDelete(roi.id)}
+              />
+            ))}
+          </Box>
 
           <Button
             variant="outlined"

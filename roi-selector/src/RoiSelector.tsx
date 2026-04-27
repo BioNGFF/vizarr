@@ -159,6 +159,9 @@ function RoiSelector({
         top: "5px",
         padding: "4px 8px",
         minWidth: 210,
+        maxHeight: "calc(100vh - 20px)",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <Tooltip title="Select Region of Interest">
@@ -170,8 +173,8 @@ function RoiSelector({
         </IconButton>
       </Tooltip>
 
-      <Collapse in={open}>
-        <Box sx={{ mt: 1 }}>
+      <Collapse in={open} sx={{ overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <Box sx={{ mt: 1, overflowY: "auto", minHeight: 0 }}>
           {(pendingRoi || editingRoiId) && (
             <RoiCoordinateFields
               coords={coords}
