@@ -18,6 +18,9 @@ interface RoiCoordinateFieldsProps {
 
 const fieldSx = { color: "#fff", fontSize: 12 };
 
+/** Format a physical coordinate for display in labels (up to 2 dp). */
+const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+
 export default function RoiCoordinateFields({
   coords,
   onCoordChange,
@@ -29,8 +32,18 @@ export default function RoiCoordinateFields({
   tInfo,
   imageBounds,
 }: RoiCoordinateFieldsProps) {
+  const unit = imageBounds?.spatialUnit || "";
+  const unitLabel = unit ? ` (${unit})` : "";
+
   return (
     <>
+      {/* ---- Unit indicator ---- */}
+      {unit && (
+        <Typography variant="caption" sx={{ color: "grey.500", mb: 0.5, display: "block" }}>
+          Coordinates in <b>{unit}</b>
+        </Typography>
+      )}
+
       {/* ---- ROI Name ---- */}
       <TextField
         label="ROI name"
@@ -50,7 +63,7 @@ export default function RoiCoordinateFields({
       <Grid container spacing={1} sx={{ mb: 1 }}>
         <Grid size={{ xs: 6 }}>
           <TextField
-            label={imageBounds ? `x₁ (0–${imageBounds.xMax})` : "x₁"}
+            label={imageBounds ? `x₁ (${fmt(imageBounds.xMin)}–${fmt(imageBounds.xMax)})` : "x₁"}
             size="small"
             type="number"
             value={coords.x1}
@@ -58,13 +71,13 @@ export default function RoiCoordinateFields({
             fullWidth
             slotProps={{
               input: { sx: fieldSx },
-              htmlInput: { min: 0, max: imageBounds?.xMax },
+              htmlInput: { min: imageBounds?.xMin, max: imageBounds?.xMax, step: "any" },
             }}
           />
         </Grid>
         <Grid size={{ xs: 6 }}>
           <TextField
-            label={imageBounds ? `y₁ (0–${imageBounds.yMax})` : "y₁"}
+            label={imageBounds ? `y₁ (${fmt(imageBounds.yMin)}–${fmt(imageBounds.yMax)})` : "y₁"}
             size="small"
             type="number"
             value={coords.y1}
@@ -72,7 +85,7 @@ export default function RoiCoordinateFields({
             fullWidth
             slotProps={{
               input: { sx: fieldSx },
-              htmlInput: { min: 0, max: imageBounds?.yMax },
+              htmlInput: { min: imageBounds?.yMin, max: imageBounds?.yMax, step: "any" },
             }}
           />
         </Grid>
@@ -85,7 +98,7 @@ export default function RoiCoordinateFields({
       <Grid container spacing={1} sx={{ mb: 1 }}>
         <Grid size={{ xs: 6 }}>
           <TextField
-            label={imageBounds ? `x₂ (0–${imageBounds.xMax})` : "x₂"}
+            label={imageBounds ? `x₂ (${fmt(imageBounds.xMin)}–${fmt(imageBounds.xMax)})` : "x₂"}
             size="small"
             type="number"
             value={coords.x2}
@@ -93,13 +106,13 @@ export default function RoiCoordinateFields({
             fullWidth
             slotProps={{
               input: { sx: fieldSx },
-              htmlInput: { min: 0, max: imageBounds?.xMax },
+              htmlInput: { min: imageBounds?.xMin, max: imageBounds?.xMax, step: "any" },
             }}
           />
         </Grid>
         <Grid size={{ xs: 6 }}>
           <TextField
-            label={imageBounds ? `y₂ (0–${imageBounds.yMax})` : "y₂"}
+            label={imageBounds ? `y₂ (${fmt(imageBounds.yMin)}–${fmt(imageBounds.yMax)})` : "y₂"}
             size="small"
             type="number"
             value={coords.y2}
@@ -107,7 +120,7 @@ export default function RoiCoordinateFields({
             fullWidth
             slotProps={{
               input: { sx: fieldSx },
-              htmlInput: { min: 0, max: imageBounds?.yMax },
+              htmlInput: { min: imageBounds?.yMin, max: imageBounds?.yMax, step: "any" },
             }}
           />
         </Grid>

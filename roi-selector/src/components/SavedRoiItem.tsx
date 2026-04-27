@@ -15,6 +15,9 @@ import React, { useState } from "react";
 
 import { type SavedRoi, normalizeRoiBounds } from "../state";
 
+/** Format a physical coordinate for compact display (up to 2 dp). */
+const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+
 interface SavedRoiItemProps {
   roi: SavedRoi;
   hasZAxis: boolean;
@@ -121,7 +124,7 @@ export default function SavedRoiItem({
               whiteSpace: "nowrap",
             }}
           >
-            ({bounds.min.x}, {bounds.min.y}) → ({bounds.max.x}, {bounds.max.y})
+            ({fmt(bounds.min.x)}, {fmt(bounds.min.y)}) → ({fmt(bounds.max.x)}, {fmt(bounds.max.y)})
           </Typography>
           {hasZAxis && bounds.min.z !== undefined && bounds.max.z !== undefined && (
             <Typography variant="caption" sx={{ color: "grey.500", fontFamily: "monospace", fontSize: 9 }}>

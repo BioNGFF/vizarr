@@ -145,9 +145,10 @@ export function useRoiDeckExtension({
       if (!isDrawing) return false;
 
       const [rawX, rawY] = coordinate;
-      const clampXY = (v: number, max: number) => Math.max(0, Math.min(Math.round(v), max));
-      const x = imageBounds ? clampXY(rawX, imageBounds.xMax) : Math.round(rawX);
-      const y = imageBounds ? clampXY(rawY, imageBounds.yMax) : Math.round(rawY);
+      const round2 = (v: number) => Math.round(v * 100) / 100;
+      const clampV = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(v, hi));
+      const x = round2(imageBounds ? clampV(rawX, imageBounds.xMin, imageBounds.xMax) : rawX);
+      const y = round2(imageBounds ? clampV(rawY, imageBounds.yMin, imageBounds.yMax) : rawY);
       const clampZ = (z: number) => (zInfo ? Math.max(0, Math.min(z, zInfo.zMax)) : z);
       const clampT = (t: number) => (tInfo ? Math.max(0, Math.min(t, tInfo.tMax)) : t);
 

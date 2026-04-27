@@ -158,8 +158,12 @@ export const currentTInfoAtom = atom((get) => {
 });
 
 /**
- * Derived atom that exposes the spatial X/Y (and optionally Z) size of the
- * first loaded source. This is the authoritative bound for ROI coordinates.
+ * Derived atom that exposes the spatial X/Y extent of the first loaded source
+ * in **physical / world coordinates** (after applying the model matrix from
+ * OME-Zarr coordinateTransformations).  This is the authoritative bound for
+ * ROI coordinates and matches the coordinate system used by deck.gl click
+ * events.
+ *
  * Returns null when no source has been loaded yet, or when x/y axes cannot
  * be found in the axis labels.
  */
@@ -171,9 +175,27 @@ export const currentImageBoundsAtom = atom((get) => {
   const xAxisIndex = source.axis_labels.indexOf("x");
   const yAxisIndex = source.axis_labels.indexOf("y");
   if (xAxisIndex === -1 || yAxisIndex === -1) return null;
+
+  const pixelW = loader.shape[xAxisIndex];
+  const pixelH = loader.shape[yAxisIndex];
+  const mat = source.model_matrix;
+
+  // Transform the four pixel-space corners to world coordinates.
+  const corners = [
+    [0, 0, 0],
+    [pixelW, 0, 0],
+    [pixelW, pixelH, 0],
+    [0, pixelH, 0],
+  ].map((c) => mat.transformAsPoint(c));
+
+  const unit = loader.meta?.physicalSizes?.x?.unit ?? "";
+
   return {
-    xMax: loader.shape[xAxisIndex] - 1,
-    yMax: loader.shape[yAxisIndex] - 1,
+    xMin: Math.min(...corners.map((p) => p[0])),
+    yMin: Math.min(...corners.map((p) => p[1])),
+    xMax: Math.max(...corners.map((p) => p[0])),
+    yMax: Math.max(...corners.map((p) => p[1])),
+    spatialUnit: unit,
   };
 });
 

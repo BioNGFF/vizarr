@@ -143,17 +143,17 @@ export function useRoiFields({
         if (value !== "" && imageBounds) {
           const num = Number(value);
           if (!Number.isNaN(num)) {
-            const limits: Partial<Record<CoordKey, number>> = {
-              x1: imageBounds.xMax,
-              x2: imageBounds.xMax,
-              y1: imageBounds.yMax,
-              y2: imageBounds.yMax,
-              ...(zMax !== null ? { z1: zMax, z2: zMax } : {}),
-              ...(tMax !== null ? { t1: tMax, t2: tMax } : {}),
+            const limits: Partial<Record<CoordKey, { lo: number; hi: number }>> = {
+              x1: { lo: imageBounds.xMin, hi: imageBounds.xMax },
+              x2: { lo: imageBounds.xMin, hi: imageBounds.xMax },
+              y1: { lo: imageBounds.yMin, hi: imageBounds.yMax },
+              y2: { lo: imageBounds.yMin, hi: imageBounds.yMax },
+              ...(zMax !== null ? { z1: { lo: 0, hi: zMax }, z2: { lo: 0, hi: zMax } } : {}),
+              ...(tMax !== null ? { t1: { lo: 0, hi: tMax }, t2: { lo: 0, hi: tMax } } : {}),
             };
-            const max = limits[key];
-            if (max !== undefined) {
-              clamped = String(Math.max(0, Math.min(num, max)));
+            const range = limits[key];
+            if (range !== undefined) {
+              clamped = String(Math.max(range.lo, Math.min(num, range.hi)));
             }
           }
         }

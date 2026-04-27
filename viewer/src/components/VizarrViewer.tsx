@@ -30,7 +30,7 @@ import Viewer from "./Viewer";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
 export interface ViewerInfo {
-  imageBounds: { xMax: number; yMax: number } | null;
+  imageBounds: { xMin: number; yMin: number; xMax: number; yMax: number; spatialUnit: string } | null;
   zInfo: { zValue: number; zMax: number } | null;
   tInfo: { tValue: number; tMax: number } | null;
   viewport: ViewportSize | null;

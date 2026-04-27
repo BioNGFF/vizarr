@@ -90,11 +90,12 @@ export function normalizeRoiBounds(roi: {
 
 /** Convert NormalizedBounds to string-keyed form for text fields. */
 export function boundsToCoords(bounds: NormalizedBounds): Record<string, string> {
+  const round2 = (v: number) => Math.round(v * 100) / 100;
   const c: Record<string, string> = {
-    x1: String(bounds.min.x),
-    y1: String(bounds.min.y),
-    x2: String(bounds.max.x),
-    y2: String(bounds.max.y),
+    x1: String(round2(bounds.min.x)),
+    y1: String(round2(bounds.min.y)),
+    x2: String(round2(bounds.max.x)),
+    y2: String(round2(bounds.max.y)),
   };
   c.z1 = bounds.min.z !== undefined ? String(bounds.min.z) : "";
   c.z2 = bounds.max.z !== undefined ? String(bounds.max.z) : "";
@@ -141,10 +142,14 @@ export function coordsToRoi(
   return { corner1, corner2 };
 }
 
-/** Spatial dimensions of the loaded image, used for bounds clamping. */
+/** Spatial extent of the loaded image in physical / world coordinates. */
 export interface ImageBounds {
+  xMin: number;
+  yMin: number;
   xMax: number;
   yMax: number;
+  /** Spatial unit from OME-Zarr metadata (e.g. "micrometer"). Empty string when unknown. */
+  spatialUnit: string;
 }
 
 /**
@@ -159,12 +164,12 @@ export function clampToBounds(
 ): NormalizedBounds {
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   const min: RoiCorner = {
-    x: clamp(bounds.min.x, 0, image.xMax),
-    y: clamp(bounds.min.y, 0, image.yMax),
+    x: clamp(bounds.min.x, image.xMin, image.xMax),
+    y: clamp(bounds.min.y, image.yMin, image.yMax),
   };
   const max: RoiCorner = {
-    x: clamp(bounds.max.x, 0, image.xMax),
-    y: clamp(bounds.max.y, 0, image.yMax),
+    x: clamp(bounds.max.x, image.xMin, image.xMax),
+    y: clamp(bounds.max.y, image.yMin, image.yMax),
   };
   if (bounds.min.z !== undefined && zMax != null) {
     min.z = clamp(bounds.min.z, 0, zMax);
