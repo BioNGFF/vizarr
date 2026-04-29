@@ -82,6 +82,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.85.3
         version: 5.90.21(react@18.3.1)
+      hyparquet:
+        specifier: ^1.25.6
+        version: 1.25.6
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -2374,6 +2377,9 @@ packages:
   human-signals@8.0.1:
     resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
     engines: {node: '>=18.18.0'}
+
+  hyparquet@1.25.6:
+    resolution: {integrity: sha512-Q9W5IjkVch3ZMnYd4qFv2q8suu5Jc36yt7J+zUNM9grwnP1S189icp0jdEQKM5HJvQkTVy8NMiQ8n/dM5QAt1A==}
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
@@ -6268,6 +6274,8 @@ snapshots:
   human-signals@5.0.0: {}
 
   human-signals@8.0.1: {}
+
+  hyparquet@1.25.6: {}
 
   ieee754@1.2.1: {}
 

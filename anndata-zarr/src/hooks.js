@@ -5,27 +5,43 @@ import _ from "lodash";
 
 import { COLORSCALES } from "./constants/colorscales";
 import { fetchDataFromZarr, getColors, getObs, getVarNames, getZarrPath } from "./utils";
+import {
+  getTableData,
+  getFeatureNamesFromTable,
+  getObsFromTable,
+  getFeatureDataFromTable,
+  getColumnDataFromTable,
+} from "./table-loader";
 
-const getAnndataColors = async (url, matrixProps, colorProps) => {
-  let zarrData;
-  try {
-    const zarrPath = await getZarrPath(url, matrixProps);
-    zarrData = await fetchDataFromZarr(zarrPath.url, zarrPath.path, zarrPath.s);
-  } catch (error) {
-    console.error(error);
-    return null;
+// ---------------------------------------------------------------------------
+// Backend-aware data fetching functions
+// ---------------------------------------------------------------------------
+
+async function getFeatureNames(url, namesCol) {
+  const { meta, data } = await getTableData(url);
+  if (meta.backend === "anndata") {
+    return getVarNames(url, namesCol);
   }
-  if (!zarrData) return null;
+  return getFeatureNamesFromTable(data, meta.indexKey, meta);
+}
 
-  const { categories } = zarrData;
+async function getObsColumns(url) {
+  const { meta, data } = await getTableData(url);
+  if (meta.backend === "anndata") {
+    return getObs(url);
+  }
+  return getObsFromTable(data, meta.indexKey, meta);
+}
 
-  const max = categories ? categories.length - 1 : colorProps?.max || _.max(zarrData.data);
-  const min = categories ? 0 : colorProps?.min || _.min(zarrData.data);
+function computeColorResult(columnData, colorProps) {
+  if (!columnData) return null;
+  const { categories } = columnData;
+  const max = categories ? categories.length - 1 : colorProps?.max || _.max(columnData.data);
+  const min = categories ? 0 : colorProps?.min || _.min(columnData.data);
   const colorscale = categories ? COLORSCALES.Accent : colorProps?.colorscale;
-
   return {
     colors: getColors({
-      data: zarrData.data,
+      data: columnData.data,
       max,
       min,
       colorProps: { ...colorProps, colorscale },
@@ -36,7 +52,42 @@ const getAnndataColors = async (url, matrixProps, colorProps) => {
     ...(categories ? { categories } : {}),
     colorscale,
   };
-};
+}
+
+async function getColorData(url, matrixProps, colorProps) {
+  const { meta, data } = await getTableData(url);
+
+  let columnData;
+  if (meta.backend === "anndata") {
+    try {
+      const zarrPath = await getZarrPath(url, matrixProps);
+      columnData = await fetchDataFromZarr(zarrPath.url, zarrPath.path, zarrPath.s);
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  } else {
+    const { feature, obs } = matrixProps || {};
+    try {
+      if (feature?.index !== undefined && feature?.index !== null) {
+        columnData = getFeatureDataFromTable(data, feature.index, meta.indexKey, meta);
+      } else if (feature?.name) {
+        columnData = getColumnDataFromTable(data, feature.name);
+      } else if (obs?.col) {
+        columnData = getColumnDataFromTable(data, obs.col);
+      }
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  return computeColorResult(columnData, colorProps);
+}
+
+// ---------------------------------------------------------------------------
+// Hooks
+// ---------------------------------------------------------------------------
 
 export const useAnndataColors = (adata = { url: null }, opts = {}) => {
   const {
@@ -44,8 +95,8 @@ export const useAnndataColors = (adata = { url: null }, opts = {}) => {
     isLoading = false,
     serverError = null,
   } = useQuery({
-    queryKey: ["anndataColor", adata.url, adata.matrixProps, adata.colorProps],
-    queryFn: () => getAnndataColors(adata.url, adata.matrixProps, adata.colorProps),
+    queryKey: ["tableColor", adata.url, adata.matrixProps, adata.colorProps],
+    queryFn: () => getColorData(adata.url, adata.matrixProps, adata.colorProps),
     ...opts,
   });
 
@@ -67,8 +118,8 @@ export const useAnndatasColors = (adatas = [], opts = {}) => {
     serverError = null,
   } = useQueries({
     queries: adatas.map(({ url, matrixProps, colorProps }) => ({
-      queryKey: ["anndataColor", url, matrixProps, colorProps],
-      queryFn: () => getAnndataColors(url, matrixProps, colorProps),
+      queryKey: ["tableColor", url, matrixProps, colorProps],
+      queryFn: () => getColorData(url, matrixProps, colorProps),
     })),
     ...opts,
     combine,
@@ -83,8 +134,8 @@ export const useAnndataFeatures = (adata = { url: null, namesCol: null }) => {
     isLoading = false,
     serverError = null,
   } = useQuery({
-    queryKey: ["anndataFeatures", adata.url, adata.namesCol],
-    queryFn: () => getVarNames(adata.url, adata.namesCol),
+    queryKey: ["tableFeatures", adata.url, adata.namesCol],
+    queryFn: () => getFeatureNames(adata.url, adata.namesCol),
   });
 
   return { data, isLoading, serverError };
@@ -96,8 +147,8 @@ export const useAnndataObs = (adata = { url: null }) => {
     isLoading = false,
     serverError = null,
   } = useQuery({
-    queryKey: ["anndataObs", adata.url],
-    queryFn: () => getObs(adata.url),
+    queryKey: ["tableObs", adata.url],
+    queryFn: () => getObsColumns(adata.url),
   });
 
   return { data, isLoading, serverError };
