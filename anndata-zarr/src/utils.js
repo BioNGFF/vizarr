@@ -10,7 +10,13 @@ export const fetchDataFromZarr = async (url, path, s) => {
 
     const dataNode = await open(node.resolve(path));
     let result;
-    if (dataNode.attrs?.["encoding-type"] === "array" || dataNode.attrs?.["encoding-type"] === "string-array") {
+    if (dataNode.attrs?.["encoding-type"] === "array" && dataNode.dtype === "bool") {
+      const boolData = await get(dataNode, s);
+      result = {
+        data: Array.from(boolData.data),
+        categories: ["false", "true"],
+      };
+    } else if (dataNode.attrs?.["encoding-type"] === "array" || dataNode.attrs?.["encoding-type"] === "string-array") {
       result = await get(dataNode, s);
     } else if (dataNode.attrs?.["encoding-type"] === "categorical") {
       const categoriesArr = await open(dataNode.resolve("categories"), {
@@ -62,7 +68,11 @@ export const getObs = async (url) => {
         const { data: categories } = await get(categoriesArr);
         obs.categorical.push({ name: col, categories });
       } else if (encodingType === "array") {
-        obs.numerical.push({ name: col });
+        if (dataNode.dtype === "bool") {
+          obs.categorical.push({ name: col, categories: ["false", "true"] });
+        } else {
+          obs.numerical.push({ name: col });
+        }
       }
     }
     return obs;
@@ -155,6 +165,6 @@ export const getColors = ({ data, max, min, colorProps, categories }) => {
   return _.map(data, (v, i) => ({
     labelValue: i + 1,
     rgba: getColor({ value: (v - min) / (max - min), ...colorProps }),
-    value: categories ? categories[v] : v,
+    value: categories ? (categories[v] ?? v) : v,
   }));
 };
