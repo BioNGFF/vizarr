@@ -36,12 +36,17 @@ async function getObsColumns(url) {
 function computeColorResult(columnData, colorProps) {
   if (!columnData) return null;
   const { categories } = columnData;
-  const max = categories ? categories.length - 1 : colorProps?.max || _.max(columnData.data);
-  const min = categories ? 0 : colorProps?.min || _.min(columnData.data);
+  // Convert BigInt data (from int64 zarr arrays or parquet) to Number
+  let data = columnData.data;
+  if (data?.length > 0 && typeof data[0] === "bigint") {
+    data = Array.from(data, Number);
+  }
+  const max = categories ? categories.length - 1 : Number(colorProps?.max || _.max(data));
+  const min = categories ? 0 : Number(colorProps?.min || _.min(data));
   const colorscale = categories ? COLORSCALES.Accent : colorProps?.colorscale;
   return {
     colors: getColors({
-      data: columnData.data,
+      data,
       max,
       min,
       colorProps: { ...colorProps, colorscale },

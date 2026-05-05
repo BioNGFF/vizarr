@@ -195,7 +195,7 @@ export function getFeatureNamesFromTable(tableData, indexKey, meta = {}) {
   return Object.keys(tableData).filter((key) => {
     if (key === indexKey) return false;
     const col = tableData[key];
-    return col.length > 0 && typeof col[0] === "number";
+    return col.length > 0 && (typeof col[0] === "number" || typeof col[0] === "bigint");
   });
 }
 
@@ -205,9 +205,11 @@ export function getFeatureNamesFromTable(tableData, indexKey, meta = {}) {
  * the shape returned by getObs() for anndata.
  */
 export function getObsFromTable(tableData, indexKey, meta = {}) {
+  const featureNames = new Set(getFeatureNamesFromTable(tableData, indexKey, meta));
   const obs = { categorical: [], numerical: [] };
   for (const [key, values] of Object.entries(tableData)) {
     if (key === indexKey) continue;
+    if (featureNames.has(key)) continue;
     const isCategorical =
       meta.categoricalColumns?.length > 0
         ? meta.categoricalColumns.includes(key)
@@ -215,6 +217,8 @@ export function getObsFromTable(tableData, indexKey, meta = {}) {
     if (isCategorical) {
       const categories = [...new Set(values)].map(String);
       obs.categorical.push({ name: key, categories });
+    } else if (values.length > 0 && (typeof values[0] === "number" || typeof values[0] === "bigint")) {
+      obs.numerical.push({ name: key });
     }
   }
   return obs;
@@ -233,6 +237,10 @@ export function getColumnDataFromTable(tableData, colName) {
     const categoryMap = new Map(categories.map((c, i) => [c, i]));
     return { data: values.map((v) => categoryMap.get(v)), categories };
   }
+  // Convert BigInt values (e.g. from parquet int64) to Number
+  if (values.length > 0 && typeof values[0] === "bigint") {
+    return { data: values.map(Number) };
+  }
   return { data: values };
 }
 
@@ -244,5 +252,10 @@ export function getFeatureDataFromTable(tableData, featureIndex, indexKey, meta 
   if (featureIndex < 0 || featureIndex >= featureNames.length) {
     throw new Error(`Feature index ${featureIndex} out of range (0-${featureNames.length - 1})`);
   }
-  return { data: tableData[featureNames[featureIndex]] };
+  const values = tableData[featureNames[featureIndex]];
+  // Convert BigInt values (e.g. from parquet int64) to Number
+  if (values.length > 0 && typeof values[0] === "bigint") {
+    return { data: values.map(Number) };
+  }
+  return { data: values };
 }
