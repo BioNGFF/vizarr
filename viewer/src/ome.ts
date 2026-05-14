@@ -6,7 +6,7 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import * as utils from "./utils";
 
 import { getPhysicalSizes, coordinateTransformationsToMatrix } from "./coordinate-transformations";
-import { SceneSchema } from "./schemas/0.6/coordinates";
+import { SceneSchema } from "./parsers/0.6/coordinates";
 import * as z from 'zod';
 import { createSourceData } from "./io";
 
@@ -16,16 +16,33 @@ export async function loadScene(
   grp: zarr.Group<zarr.Readable>,
   data: z.infer<typeof SceneSchema>
 ): Promise<SourceData[]> {
-
+  console.log('Loading scene: ', config.source)
   const results = await Promise.all(data.ome.scene.coordinateTransformations.map(async (transformation) => {
     const path = transformation.input.path
-    return createSourceData({ source: config.source + '/' + path })
+    const sourceDatas = await createSourceData({ source: config.source + '/' + path, coordinateSystem: transformation.input.name })
+
+    sourceDatas.map((sourceData) => {
+      const transformations = data.ome.scene.coordinateTransformations.filter((transformation) => {
+        return (transformation.input.path == path)
+      }
+      )
+      console.log('Applying scene transformations to image: ', config.source)
+      const sceneModelMatrix = coordinateTransformationsToMatrix(transformations, [
+        { type: "channel", name: "c" },
+        { type: "space", name: "z" },
+        { type: "space", name: "y" },
+        { type: "space", name: "x" },
+      ])
+      const modelMatrix = sourceData.model_matrix.multiplyLeft(sceneModelMatrix)
+      sourceData.model_matrix = modelMatrix
+    })
+
+    return sourceDatas
   })
   )
   return results.flat()
 
 }
-
 
 export async function loadWell(
   config: ImageLayerConfig,
@@ -277,11 +294,35 @@ function isDownsampledZ(
   return !data.every((element) => element.shape[zIndex] === originalSizeZ);
 }
 
-function getOrderedTransformations(metadata: Ome.Multiscale[]): Ome.CoordinateTransformation[] {
+function getOrderedTransformations(metadata: Ome.Multiscale[], coordinateSystem): Ome.CoordinateTransformation[] {
   const resolutionTransformations = metadata[0].datasets[0]?.coordinateTransformations ? metadata[0].datasets[0]?.coordinateTransformations : []
   const imageTransformations = metadata[0].coordinateTransformations ? metadata[0].coordinateTransformations : []
-  const transformations = [...resolutionTransformations, ...imageTransformations]
+  const transformations = [...resolutionTransformations, ...imageTransformations.filter((transformation) => { return transformation.output === coordinateSystem.name })]
   return transformations
+
+}
+
+//Updating pre-0.6 axes to use the 0.6 coordinate systems metadata
+//Should be moved to the parsing layer
+function getDefaultCoordinateSystem(attrs) {
+  if (attrs.multiscales[0].axes) {
+    return [
+      {
+        name: 'default',
+        axes: attrs.multiscales[0].axes
+      }]
+  }
+  return [
+    {
+      name: 'default',
+      axes: [
+        { type: "channel", name: "c" },
+        { type: "space", name: "z" },
+        { type: "space", name: "y" },
+        { type: "space", name: "x" },
+      ]
+    }
+  ]
 }
 
 /**
@@ -292,11 +333,14 @@ export async function loadOmeMultiscales(
   grp: zarr.Group<zarr.Readable>,
   attrs: { multiscales: Ome.Multiscale[] },
 ): Promise<SourceData> {
+  console.log('Loading image: ', config.source)
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
   const axes = utils.getNgffAxes(attrs.multiscales);
   const axis_labels = utils.getNgffAxisLabels(axes);
   const tileSize = utils.guessTileSize(data[0]);
+  const coordinateSystems = attrs.multiscales[0].coordinateSystems ? attrs.multiscales[0].coordinateSystems : getDefaultCoordinateSystem(attrs)
+  const selectedCoordinateSystem = config.coordinateSystem ? coordinateSystems.filter((coordinateSystem) => { return coordinateSystem.name === config.coordinateSystem })[0] : coordinateSystems[0]
   let meta: Meta;
   if (utils.isOmeMultiscales(attrs)) {
     meta = parseOmeroMeta(attrs.omero, axes);
@@ -308,23 +352,22 @@ export async function loadOmeMultiscales(
   }
   const originalSizeZ = data[0].shape[axis_labels.indexOf("z")];
   const zDownsampled = isDownsampledZ(data, axis_labels.indexOf("z"), originalSizeZ);
-  const physicalSizes = getPhysicalSizes(utils.resolveAttrs(attrs));
+  //const physicalSizes = getPhysicalSizes(utils.resolveAttrs(attrs));
   const loader = data.map(
     (arr, i) =>
       new ZarrPixelSource(arr, {
         labels: axis_labels,
         tileSize,
-        ...(i === 0 ? { meta: { physicalSizes } } : {}),
+        //...(i === 0 ? { meta: { physicalSizes } } : {}),
         originalSizeZ: zDownsampled ? originalSizeZ : undefined,
       }),
   );
   const labels = await resolveOmeLabelsFromMultiscales(grp);
+  const modelMatrix = coordinateTransformationsToMatrix(getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem), coordinateSystems[0].axes)
   return {
     loader: loader,
     axis_labels,
-    model_matrix: config.model_matrix
-      ? utils.parseMatrix(config.model_matrix)
-      : coordinateTransformationsToMatrix(getOrderedTransformations(attrs.multiscales), utils.getNgffAxes(attrs.multiscales)),
+    model_matrix: modelMatrix,
     defaults: {
       selection: meta.defaultSelection,
       colormap,

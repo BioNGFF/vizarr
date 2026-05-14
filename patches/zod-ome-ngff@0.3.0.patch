@@ -1000,10 +1000,10 @@ index 0000000000000000000000000000000000000000..8b694ed70111b203d02ff79dbf1c0b93
 +}>]>;
 diff --git a/dist/0.6.js b/dist/0.6.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..d100da7a202f33f780f8bb70013939b3cb237b98
+index 0000000000000000000000000000000000000000..5590d0337e052a60b021c92cde3ccf0fd610ebe5
 --- /dev/null
 +++ b/dist/0.6.js
-@@ -0,0 +1,320 @@
+@@ -0,0 +1,341 @@
 +import { z } from "zod";
 +import { to_date } from "./shared.js";
 +export const VersionSchema = z
@@ -1182,19 +1182,40 @@ index 0000000000000000000000000000000000000000..d100da7a202f33f780f8bb70013939b3
 +const CoordinateTransformation = z.union([
 +  z.object({
 +    type: z.enum(["sequence"]),
-+    transformations: z.array(z.object({}))
++    transformations: z.any(),
++    input: z.any(),
++    output: z.any()
 +  }),
 +  z.object({ type: z.enum(["identity"]) }),
 +  z.object({
 +    type: z.enum(["scale"]),
 +    scale: z.array(z.number()).min(2),
++    input: z.any(),
++    output: z.any()
 +  }),
 +  z.object({
 +    type: z.enum(["translation"]),
 +    translation: z.array(z.number()).min(2),
++    input: z.any(),
++    output: z.any()
++  }),
++
++  z.object({
++    type: z.enum(["rotation"]),
++    rotation: z.array(z.number()).min(2),
++    input: z.any(),
++    output: z.any()
++  }),
++  z.object({
++    type: z.enum(["affine"]),
++    affine: z.array(z.array(z.number().min(2))),
++    input: z.any(),
++    output: z.any()
 +  })
 +
 +]);
++
++
 +const CoordinateTransformations = z.array(CoordinateTransformation)
 +
 +const StrictMultiscale = z.object({
@@ -1335,7 +1356,7 @@ index 8a0bcc398eba0f369fe4917300acd1f7880d6808..d8c7fb13b099275f43324cdee8f496fe
 +export * as v06 from "./0.6.js"
  export * as latest from "./latest.js";
 diff --git a/package.json b/package.json
-index cd2227452079144dbe963248fa95c8e5cbf32991..af2f55c3c3273619bd955b3d8a502ff26caefd77 100644
+index cd2227452079144dbe963248fa95c8e5cbf32991..d2ee98b9310aab07ed84ac630e6e896b3606d5bc 100644
 --- a/package.json
 +++ b/package.json
 @@ -29,6 +29,9 @@

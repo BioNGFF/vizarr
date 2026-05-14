@@ -3,7 +3,7 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadWell, loadScene } from "./ome";
 import * as utils from "./utils";
 import * as schemas from 'zod-ome-ngff';
-import { SceneSchema } from "./schemas/0.6/coordinates";
+import { parse } from './parsers/parse'
 
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
@@ -96,50 +96,32 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
-    const schemaVersion = getSchemaVersion(node.attrs)
-    let versionedSchema
-    if (schemaVersion != undefined) {
-      versionedSchema = schemas[schemaVersion.version][schemaVersion.type]
-    } else {
-      console.log('Could not read schema for: ' + config.source)
-      if (SceneSchema.safeParse(node.attrs)) {
-        console.log('Detected scene')
-        const parsedData = SceneSchema.safeParse(node.attrs).data
-        return loadScene(config, node, parsedData)
-      }
-    }
-    const parsedData = versionedSchema.safeParse(node.attrs)
-    let attrs = utils.resolveAttrs(node.attrs);
-    console.log('Parsed data with type: ', schemaVersion.type)
-    console.log(parsedData.success)
-    if (parsedData.success) {
-      if (schemaVersion.type == "WellSchema") {
-        return [await loadWell(config, node, parsedData.data.ome.well)]
-      }
-      if (schemaVersion.type == "PlateSchema") {
-        return [await loadPlate(config, node, parsedData.data.ome.plate)]
-      }
 
-      if (schemaVersion.type == "ImageSchema") {
-        console.log("Loading multiscales")
+
+    const parsedData = parse(node.attrs)
+    if (parsedData.version.version === 'v06') {
+      if (parsedData.version.type === 'SceneSchema') {
+        return loadScene(config, node, parsedData.data)
+      } else if (parsedData.version.type === 'ImageSchema') {
+        console.log('Loading multiscale image')
         return [await loadOmeMultiscales(config, node, parsedData.data.ome)]
       }
 
+
     }
 
-    //if (utils.isOmePlate(attrs)) {
-    //  console.log('Loading plate')
-    //   return loadPlate(config, node, attrs.plate);
-    // }
+    let attrs = utils.resolveAttrs(node.attrs);
+    if (utils.isOmePlate(attrs)) {
+      return [await loadPlate(config, node, attrs.plate)];
+    }
 
-    // if (utils.isOmeWell(attrs)) {
-    //   console.log('Loading well')
-    //   return loadWell(config, node, attrs.well);
-    // }
+    if (utils.isOmeWell(attrs)) {
+      return [await loadWell(config, node, attrs.well)];
+    }
 
-    // if (utils.isMultiscales(attrs)) {
-    //   return loadOmeMultiscales(config, node, attrs);
-    // }
+    if (utils.isMultiscales(attrs)) {
+      return [await loadOmeMultiscales(config, node, attrs)];
+    }
 
     if (Object.keys(attrs).length === 0 && node.path) {
       // No rootAttrs in this group.
@@ -174,12 +156,12 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
 
   if ("channel_axis" in config || channel_axis > -1) {
     config = config as MultichannelConfig;
-    return loadMultiChannel(config, loader, Number(config.channel_axis ?? channel_axis));
+    return [loadMultiChannel(config, loader, Number(config.channel_axis ?? channel_axis))];
   }
 
   const nDims = base.shape.length;
   if (nDims === 2 || !("channel_axis" in config)) {
-    return loadSingleChannel(config as SingleChannelConfig, loader);
+    return [loadSingleChannel(config as SingleChannelConfig, loader)];
   }
 
   throw Error("Failed to load image.");

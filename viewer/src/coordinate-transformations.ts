@@ -15,10 +15,7 @@ import type * as viv from "@vivjs/types";
  *
  * @returns Array of 16 numbers representing the Matrix4.
  */
-export function coordinateTransformationsToMatrix(coordinateTransformations: Ome.CoordinateTransformation[], axes: Ome.Axis[]) {
-  let mat = new Matrix4().identity();
-
-
+export function coordinateTransformationsToMatrix(coordinateTransformations: Ome.CoordinateTransformation[], axes: Ome.Axis[], mat = new Matrix4().identity()) {
   // Apply each transformation sequentially and in order according to the OME-NGFF v0.4 spec.
   // Reference: https://ngff.openmicroscopy.org/0.4/#trafo-md
   for (const transform of coordinateTransformations ?? []) {
@@ -32,7 +29,7 @@ export function coordinateTransformationsToMatrix(coordinateTransformations: Ome
       mat = coordinateTransformationToMatrix('translation', cartesianTranslation, mat)
 
     }
-    if (transform.type === "scale") {
+    else if (transform.type === "scale") {
       console.log('Scaling image')
       const { scale: axisOrderedScale } = transform;
       // Add in z dimension needed for Matrix4 scale API.
@@ -42,23 +39,27 @@ export function coordinateTransformationsToMatrix(coordinateTransformations: Ome
       const cartesianTranslation = getCartesianTransformation(axes, axisOrderedScale, 1)
       mat = coordinateTransformationToMatrix('scale', cartesianTranslation, mat)
     }
-    if (transform.type === "rotation") {
+    else if (transform.type === "rotation") {
       console.log('Rotating image')
       const { rotation: axisOrderedTranslation } = transform;
-      const cartesianRotation = getCartesianTransformation(axes, axisOrderedTranslation, 1)
+      const cartesianRotation = getCartesianMatrixTransformation(axes, transform.rotation)
       mat = coordinateTransformationToMatrix('rotation', cartesianRotation, mat)
     }
-    if (transform.type === "sequence") {
+    else if (transform.type === "sequence") {
       console.log("Sequence tranformation detected")
-      mat = coordinateTransformationsToMatrix(transform.transformations, axes)
+      mat = coordinateTransformationsToMatrix(transform.transformations, axes, mat)
     }
-
-
-
+    if (transform.type === "affine") {
+      //console.log('Affine transformation detected')
+      //const cartestianAffine = getCartesianMatrixTransformation(axes, transform.affine)
+      //const affineMat = new Matrix4(cartestianAffine)
+      //mat = mat.multiplyLeft(affineMat)
+    }
   }
 
   return mat;
 }
+
 
 function getCartesianTransformation(axes: Ome.Axis[], transformation: Array<number>, defaultValue: number): Array<number> {
   const xyzIndices = ["x", "y", "z"].map((name) =>
@@ -70,6 +71,25 @@ function getCartesianTransformation(axes: Ome.Axis[], transformation: Array<numb
     axisIndex >= 0 ? transformation[axisIndex] : defaultValue,
   );
 
+}
+
+function getCartesianMatrixTransformation(axes: Ome.Axis[], transformation: Array<Array<number>>): Array<number> {
+  const xyzIndices = ["x", "y", "z"].map((name) =>
+    axes.findIndex((axisObj) => axisObj.type === "space" && axisObj.name === name),
+  );
+
+  const mat = xyzIndices.map((outerIndex) => {
+    return xyzIndices.map((innerIndex) => {
+      return transformation[outerIndex][innerIndex]
+    })
+  })
+
+  mat[0] = [...mat[0], 0]
+  mat[1] = [...mat[1], 0]
+  mat[2] = [...mat[2], 0]
+  mat[3] = [0, 0, 0, 1]
+  console.log('Rotation matrix: ', mat)
+  return [mat[0][0], mat[1][0], mat[2][0], mat[3][0], mat[0][1], mat[1][1], mat[2][1], mat[3][1], mat[0][2], mat[1][2], mat[2][2], mat[3][2], mat[0][3], mat[1][3], mat[2][3], mat[3][3]]
 }
 
 function coordinateTransformationToMatrix(type: string, transformation: Array<number>, modelMatrix: Matrix4 = new Matrix4().identity()): Matrix4 {
@@ -90,13 +110,15 @@ function coordinateTransformationToMatrix(type: string, transformation: Array<nu
 function applyCoordinateScalingToMatrix(matrix: Matrix4, scale: Array<number>): Matrix4 {
   // Get the scale values for [x, y, z].
   const nextMat = new Matrix4().scale(scale);
+
   return matrix.multiplyLeft(nextMat);
 }
 
 function applyCoordinateRotationToMatrix(matrix: Matrix4, rotation: Array<number>): Matrix4 {
   // Get the scale values for [x, y, z].
-  const nextMat = new Matrix4().rotateXYZ(rotation)
-  return matrix.multiplyLeft(nextMat);
+  const rotationMat = new Matrix4()
+  rotationMat.set(...rotation)
+  return matrix.multiplyLeft(rotationMat);
 }
 
 function applyCoordinateTranslationToMatrix(matrix: Matrix4, translation: Array<number>): Matrix4 {

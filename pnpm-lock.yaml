@@ -9,7 +9,7 @@ patchedDependencies:
     hash: auxsjwuajoz3k5rha2oxpwrlfm
     path: patches/@vivjs__loaders@0.17.2.patch
   zod-ome-ngff@0.3.0:
-    hash: wtt327zaivire6yz36vzaycniu
+    hash: k2z6kd5pp6itfhbvoivqnegs2a
     path: patches/zod-ome-ngff@0.3.0.patch
 
 importers:
@@ -21,25 +21,25 @@ importers:
         version: 1.9.4
       '@semantic-release/changelog':
         specifier: ^6.0.3
-        version: 6.0.3(semantic-release@25.0.2(typescript@5.8.2))
+        version: 6.0.3(semantic-release@25.0.2(typescript@5.4.3))
       '@semantic-release/commit-analyzer':
         specifier: ^13.0.1
-        version: 13.0.1(semantic-release@25.0.2(typescript@5.8.2))
+        version: 13.0.1(semantic-release@25.0.2(typescript@5.4.3))
       '@semantic-release/exec':
         specifier: ^7.1.0
-        version: 7.1.0(semantic-release@25.0.2(typescript@5.8.2))
+        version: 7.1.0(semantic-release@25.0.2(typescript@5.4.3))
       '@semantic-release/git':
         specifier: ^10.0.1
-        version: 10.0.1(semantic-release@25.0.2(typescript@5.8.2))
+        version: 10.0.1(semantic-release@25.0.2(typescript@5.4.3))
       '@semantic-release/github':
         specifier: ^12.0.2
-        version: 12.0.2(semantic-release@25.0.2(typescript@5.8.2))
+        version: 12.0.2(semantic-release@25.0.2(typescript@5.4.3))
       '@semantic-release/npm':
         specifier: ^13.1.1
-        version: 13.1.1(semantic-release@25.0.2(typescript@5.8.2))
+        version: 13.1.1(semantic-release@25.0.2(typescript@5.4.3))
       '@semantic-release/release-notes-generator':
         specifier: ^14.1.0
-        version: 14.1.0(semantic-release@25.0.2(typescript@5.8.2))
+        version: 14.1.0(semantic-release@25.0.2(typescript@5.4.3))
       '@types/node':
         specifier: ^24.3.0
         version: 24.3.0
@@ -57,10 +57,10 @@ importers:
         version: 4.0.15(vitest@4.0.15(@types/node@24.3.0)(yaml@2.8.2))
       semantic-release:
         specifier: ^25.0.2
-        version: 25.0.2(typescript@5.8.2)
+        version: 25.0.2(typescript@5.4.3)
       typescript:
-        specifier: ^5.8.2
-        version: 5.8.2
+        specifier: ^5.4.3
+        version: 5.4.3
       vite:
         specifier: ^6.2.7
         version: 6.2.7(@types/node@24.3.0)(yaml@2.8.2)
@@ -203,7 +203,7 @@ importers:
         version: 4.5.4(@types/node@24.3.0)(rollup@4.40.1)(typescript@5.8.2)(vite@6.2.7(@types/node@24.3.0)(yaml@2.8.2))
       zod-ome-ngff:
         specifier: ^0.3.0
-        version: 0.3.0(patch_hash=wtt327zaivire6yz36vzaycniu)(zod@3.24.2)
+        version: 0.3.0(patch_hash=k2z6kd5pp6itfhbvoivqnegs2a)(zod@3.24.2)
 
 packages:
 
@@ -3364,6 +3364,11 @@ packages:
     resolution: {integrity: sha512-xxCJm+Bckc6kQBknN7i9fnP/xobQRsRQxR01CztFkp/h++yfVxUUcmMgfR2HttJx/dpWjS9ubVuyspJv24Q9DA==}
     engines: {node: '>=20'}
 
+  typescript@5.4.3:
+    resolution: {integrity: sha512-KrPd3PKaCLr78MalgiwJnA25Nm8HAmdwN3mYUYZgG/wizIo9EainNVQI9/yDavtVFRN2h3k8uf3GLHuhDMgEHg==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   typescript@5.8.2:
     resolution: {integrity: sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==}
     engines: {node: '>=14.17'}
@@ -4838,15 +4843,15 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@semantic-release/changelog@6.0.3(semantic-release@25.0.2(typescript@5.8.2))':
+  '@semantic-release/changelog@6.0.3(semantic-release@25.0.2(typescript@5.4.3))':
     dependencies:
       '@semantic-release/error': 3.0.0
       aggregate-error: 3.1.0
       fs-extra: 11.3.2
       lodash: 4.17.21
-      semantic-release: 25.0.2(typescript@5.8.2)
+      semantic-release: 25.0.2(typescript@5.4.3)
 
-  '@semantic-release/commit-analyzer@13.0.1(semantic-release@25.0.2(typescript@5.8.2))':
+  '@semantic-release/commit-analyzer@13.0.1(semantic-release@25.0.2(typescript@5.4.3))':
     dependencies:
       conventional-changelog-angular: 8.1.0
       conventional-changelog-writer: 8.2.0
@@ -4856,7 +4861,7 @@ snapshots:
       import-from-esm: 2.0.0
       lodash-es: 4.17.21
       micromatch: 4.0.8
-      semantic-release: 25.0.2(typescript@5.8.2)
+      semantic-release: 25.0.2(typescript@5.4.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -4864,7 +4869,7 @@ snapshots:
 
   '@semantic-release/error@4.0.0': {}
 
-  '@semantic-release/exec@7.1.0(semantic-release@25.0.2(typescript@5.8.2))':
+  '@semantic-release/exec@7.1.0(semantic-release@25.0.2(typescript@5.4.3))':
     dependencies:
       '@semantic-release/error': 4.0.0
       aggregate-error: 3.1.0
@@ -4872,11 +4877,11 @@ snapshots:
       execa: 9.6.0
       lodash-es: 4.17.21
       parse-json: 8.3.0
-      semantic-release: 25.0.2(typescript@5.8.2)
+      semantic-release: 25.0.2(typescript@5.4.3)
     transitivePeerDependencies:
       - supports-color
 
-  '@semantic-release/git@10.0.1(semantic-release@25.0.2(typescript@5.8.2))':
+  '@semantic-release/git@10.0.1(semantic-release@25.0.2(typescript@5.4.3))':
     dependencies:
       '@semantic-release/error': 3.0.0
       aggregate-error: 3.1.0
@@ -4886,11 +4891,11 @@ snapshots:
       lodash: 4.17.21
       micromatch: 4.0.8
       p-reduce: 2.1.0
-      semantic-release: 25.0.2(typescript@5.8.2)
+      semantic-release: 25.0.2(typescript@5.4.3)
     transitivePeerDependencies:
       - supports-color
 
-  '@semantic-release/github@12.0.2(semantic-release@25.0.2(typescript@5.8.2))':
+  '@semantic-release/github@12.0.2(semantic-release@25.0.2(typescript@5.4.3))':
     dependencies:
       '@octokit/core': 7.0.6
       '@octokit/plugin-paginate-rest': 14.0.0(@octokit/core@7.0.6)
@@ -4906,14 +4911,14 @@ snapshots:
       lodash-es: 4.17.21
       mime: 4.1.0
       p-filter: 4.1.0
-      semantic-release: 25.0.2(typescript@5.8.2)
+      semantic-release: 25.0.2(typescript@5.4.3)
       tinyglobby: 0.2.15
       undici: 7.16.0
       url-join: 5.0.0
     transitivePeerDependencies:
       - supports-color
 
-  '@semantic-release/npm@13.1.1(semantic-release@25.0.2(typescript@5.8.2))':
+  '@semantic-release/npm@13.1.1(semantic-release@25.0.2(typescript@5.4.3))':
     dependencies:
       '@actions/core': 1.11.1
       '@semantic-release/error': 4.0.0
@@ -4928,11 +4933,11 @@ snapshots:
       rc: 1.2.8
       read-pkg: 9.0.1
       registry-auth-token: 5.1.0
-      semantic-release: 25.0.2(typescript@5.8.2)
+      semantic-release: 25.0.2(typescript@5.4.3)
       semver: 7.7.3
       tempy: 3.1.0
 
-  '@semantic-release/release-notes-generator@14.1.0(semantic-release@25.0.2(typescript@5.8.2))':
+  '@semantic-release/release-notes-generator@14.1.0(semantic-release@25.0.2(typescript@5.4.3))':
     dependencies:
       conventional-changelog-angular: 8.1.0
       conventional-changelog-writer: 8.2.0
@@ -4944,7 +4949,7 @@ snapshots:
       into-stream: 7.0.0
       lodash-es: 4.17.21
       read-package-up: 11.0.0
-      semantic-release: 25.0.2(typescript@5.8.2)
+      semantic-release: 25.0.2(typescript@5.4.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -5637,14 +5642,14 @@ snapshots:
       path-type: 4.0.0
       yaml: 1.10.2
 
-  cosmiconfig@9.0.0(typescript@5.8.2):
+  cosmiconfig@9.0.0(typescript@5.4.3):
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.1
       js-yaml: 4.1.0
       parse-json: 5.2.0
     optionalDependencies:
-      typescript: 5.8.2
+      typescript: 5.4.3
 
   cross-spawn@7.0.6:
     dependencies:
@@ -6728,15 +6733,15 @@ snapshots:
     dependencies:
       loose-envify: 1.4.0
 
-  semantic-release@25.0.2(typescript@5.8.2):
+  semantic-release@25.0.2(typescript@5.4.3):
     dependencies:
-      '@semantic-release/commit-analyzer': 13.0.1(semantic-release@25.0.2(typescript@5.8.2))
+      '@semantic-release/commit-analyzer': 13.0.1(semantic-release@25.0.2(typescript@5.4.3))
       '@semantic-release/error': 4.0.0
-      '@semantic-release/github': 12.0.2(semantic-release@25.0.2(typescript@5.8.2))
-      '@semantic-release/npm': 13.1.1(semantic-release@25.0.2(typescript@5.8.2))
-      '@semantic-release/release-notes-generator': 14.1.0(semantic-release@25.0.2(typescript@5.8.2))
+      '@semantic-release/github': 12.0.2(semantic-release@25.0.2(typescript@5.4.3))
+      '@semantic-release/npm': 13.1.1(semantic-release@25.0.2(typescript@5.4.3))
+      '@semantic-release/release-notes-generator': 14.1.0(semantic-release@25.0.2(typescript@5.4.3))
       aggregate-error: 5.0.0
-      cosmiconfig: 9.0.0(typescript@5.8.2)
+      cosmiconfig: 9.0.0(typescript@5.4.3)
       debug: 4.4.0
       env-ci: 11.2.0
       execa: 9.6.0
@@ -6979,6 +6984,8 @@ snapshots:
     dependencies:
       tagged-tag: 1.0.0
 
+  typescript@5.4.3: {}
+
   typescript@5.8.2: {}
 
   ufo@1.6.1: {}
@@ -7184,7 +7191,7 @@ snapshots:
       '@zarrita/storage': 0.1.4
       numcodecs: 0.3.2
 
-  zod-ome-ngff@0.3.0(patch_hash=wtt327zaivire6yz36vzaycniu)(zod@3.24.2):
+  zod-ome-ngff@0.3.0(patch_hash=k2z6kd5pp6itfhbvoivqnegs2a)(zod@3.24.2):
     dependencies:
       zod: 3.24.2
 

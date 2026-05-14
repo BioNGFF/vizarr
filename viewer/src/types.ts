@@ -58,8 +58,14 @@ declare namespace Ome {
     }
     | {
       type: "rotation",
-      rotation: Array<number>
-    };
+      rotation: Array<Array<number>>
+    } |
+    {
+      type: "affine",
+      affine: Array<Array<number>>
+    }
+
+    ;
 
   interface Dataset {
     path: string;
@@ -70,6 +76,7 @@ declare namespace Ome {
     datasets: Array<Dataset>;
     version?: string;
     coordinateSystems: CoordinateSystem[]
+    selectedCoordinateSystem: string
     coordinateTransformations?: CoordinateTransformation[]
   }
 

@@ -2,7 +2,7 @@ import { type Atom, atom } from "jotai";
 import { atomFamily, splitAtom, waitForAll } from "jotai/utils";
 import { RedirectError, rethrowUnless } from "./utils";
 
-import type { Deck, Layer } from "deck.gl";
+import type { CoordinateSystem, Deck, Layer } from "deck.gl";
 import type { PrimitiveAtom } from "jotai";
 import type { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import type { Matrix4 } from "math.gl";
@@ -51,7 +51,11 @@ export interface SingleChannelConfig extends BaseConfig {
   visibility?: boolean;
 }
 
-export type ImageLayerConfig = MultichannelConfig | SingleChannelConfig;
+export interface MultiscaleParentSceneConfig extends BaseConfig {
+  coordinateSystem: string
+}
+
+export type ImageLayerConfig = MultichannelConfig | SingleChannelConfig | MultiscaleParentSceneConfig;
 
 export type OnClickData = Record<string, unknown> & {
   gridCoord?: { row: number; column: number };
@@ -186,10 +190,10 @@ const imageLabelsIstanceFamily = atomFamily((a: Atom<LayerState>) =>
     return labels.map((label) =>
       label.on
         ? new LabelLayer({
-            ...label.layerProps,
-            selection: label.transformSourceSelection(layerProps.selections[0]),
-            pickable: true,
-          })
+          ...label.layerProps,
+          selection: label.transformSourceSelection(layerProps.selections[0]),
+          pickable: true,
+        })
         : null,
     );
   }),

@@ -28,7 +28,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "4.0.15",
     "semantic-release": "^25.0.2",
-    "typescript": "^5.8.2",
+    "typescript": "^5.4.3",
     "vite": "^6.2.7",
     "vitest": "^4.0.15"
   },
