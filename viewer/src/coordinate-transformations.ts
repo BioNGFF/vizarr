@@ -50,10 +50,9 @@ export function coordinateTransformationsToMatrix(coordinateTransformations: Ome
       mat = coordinateTransformationsToMatrix(transform.transformations, axes, mat)
     }
     if (transform.type === "affine") {
-      //console.log('Affine transformation detected')
-      //const cartestianAffine = getCartesianMatrixTransformation(axes, transform.affine)
-      //const affineMat = new Matrix4(cartestianAffine)
-      //mat = mat.multiplyLeft(affineMat)
+      const cartestianAffine = getCartesianMatrixTransformation(axes, transform.affine)
+      const affineMat = new Matrix4(cartestianAffine)
+      mat = mat.multiplyLeft(affineMat)
     }
   }
 
