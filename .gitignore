@@ -39,4 +39,4 @@ coverage/
 *.tmp
 *.swp
 
-viewer/docs
+docs/build

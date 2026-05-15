@@ -1,0 +1,12 @@
+{
+  "entryPointStrategy": "packages",
+  "entryPoints": [
+    "./viewer"
+  ],
+  "packageOptions": {
+    "entryPoints": [
+      "src/index.tsx"
+    ]
+  },
+  "out": "./docs/build"
+}
