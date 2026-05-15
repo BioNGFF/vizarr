@@ -375,11 +375,11 @@ export async function loadOmeMultiscales(
     },
     ...meta,
     name: meta.name ?? name,
-    labels: await Promise.all(labels.map((name) => loadOmeImageLabel(grp.resolve("labels"), name))),
+    labels: await Promise.all(labels.map((name) => loadOmeImageLabel(grp.resolve("labels"), name, config.coordinateSystem))),
   };
 }
 
-async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: string): Promise<ImageLabels[number]> {
+async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: string, coordinateSystemName: string): Promise<ImageLabels[number]> {
   const grp = await zarr.open(root.resolve(name), { kind: "group" });
   const attrs = utils.resolveAttrs(grp.attrs);
   utils.assert(utils.isOmeImageLabel(attrs), "No 'image-label' metadata.");
@@ -387,12 +387,14 @@ async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: strin
   const baseResolution = data.at(0);
   utils.assert(baseResolution, "No base resolution found for multiscale labels.");
   const tileSize = utils.guessTileSize(baseResolution);
-  const axes = utils.getNgffAxes(attrs.multiscales);
-  const labels = utils.getNgffAxisLabels(axes);
+  const coordinateSystems = attrs.multiscales[0].coordinateSystems ? attrs.multiscales[0].coordinateSystems : getDefaultCoordinateSystem(attrs)
+  const selectedCoordinateSystem = coordinateSystemName ? coordinateSystems.filter((coordinateSystem) => { return coordinateSystem.name === coordinateSystemName })[0] : coordinateSystems[0]
+
+  const labels = utils.getNgffAxisLabels(selectedCoordinateSystem.axes);
   const colors = (attrs["image-label"].colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));
   return {
     name,
-    modelMatrix: coordinateTransformationsToMatrix(attrs.multiscales),
+    modelMatrix: coordinateTransformationsToMatrix(getOrderedTransformations(attrs.multiscales, coordinateSystemName), selectedCoordinateSystem.axes),
     loader: data.map((arr) => new ZarrPixelSource(arr, { labels, tileSize })),
     colors: colors.length > 0 ? colors : undefined,
   };

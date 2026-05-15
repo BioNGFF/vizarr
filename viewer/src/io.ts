@@ -193,7 +193,6 @@ function getAxisLabelsAndChannelAxis(
 
 export function initLayerStateFromSource(source: SourceData & { id: string }): LayerState {
   const { selection, opacity, colormap } = source.defaults;
-
   const selections: number[][] = [];
   const colors: [number, number, number][] = [];
   const contrastLimits: [start: number, end: number][] = [];
