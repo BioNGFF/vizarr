@@ -24,9 +24,12 @@ export function getYamlFileNames(filepath) {
 }
 
 export function writeUntestableYaml(url, imageName, savePath, testable) {
-  fs.writeFileSync(path.join(savePath, `${imageName}.yaml`), stringify({
-    'source': url,
-    'name': imageName,
-    'testable': false
-  }))
+  fs.writeFileSync(
+    path.join(savePath, `${imageName}.yaml`),
+    stringify({
+      source: url,
+      name: imageName,
+      testable: false,
+    }),
+  );
 }

@@ -19,6 +19,5 @@ files.map(async (file) => {
       });
       await writeImageYaml(description.source, description.name, imagesPath);
     }
-
   }, 20000);
 });
