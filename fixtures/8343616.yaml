@@ -1,0 +1,6 @@
+source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0066/ExpD_chicken_embryo_MIP.ome.zarr
+name: 8343616
+testable: true
+version: "0.5"
+features:
+  multiscale: true
