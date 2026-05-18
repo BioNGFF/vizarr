@@ -41,8 +41,14 @@ export default function ImportRoiDialog({
     discoverRoiTables(sourceUrl)
       .then((discovered) => {
         setTables(discovered);
-        // Select all by default
-        setSelected(new Set(discovered.map((t) => t.name)));
+        // Select only roi_table by default (not masking_roi_table)
+        setSelected(
+          new Set(
+            discovered
+              .filter((t) => t.type === "roi_table")
+              .map((t) => t.name),
+          ),
+        );
       })
       .catch((err) => {
         console.error("[ROI Import] Failed to discover ROI tables:", err);

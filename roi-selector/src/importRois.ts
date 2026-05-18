@@ -138,13 +138,16 @@ export async function discoverRoiTables(
           }
         }
 
+        console.log(`[ROI Import] Table "${name}" has type: "${type}"`);
         tables.push({ name, roiCount, type });
       } catch (err) {
         console.warn(`[ROI Import] Failed to read table "${name}":`, err);
       }
     }
 
-    return tables;
+    return tables.filter(
+      (t) => t.type === "roi_table" || t.type === "masking_roi_table",
+    );
   } catch (err) {
     console.warn("[ROI Import] Failed to open /tables group:", err);
     return [];
