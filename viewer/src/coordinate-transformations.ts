@@ -22,6 +22,7 @@ export function coordinateTransformationsToMatrix(coordinateTransformations: Ome
     if (transform.type === "translation") {
       console.log("Translating image")
       const { translation: axisOrderedTranslation } = transform;
+      console.log(transform)
       if (axisOrderedTranslation.length !== axes.length) {
         throw new Error("Length of translation array was expected to match length of axes.");
       }
@@ -50,9 +51,9 @@ export function coordinateTransformationsToMatrix(coordinateTransformations: Ome
       mat = coordinateTransformationsToMatrix(transform.transformations, axes, mat)
     }
     if (transform.type === "affine") {
-      const cartestianAffine = getCartesianMatrixTransformation(axes, transform.affine)
-      const affineMat = new Matrix4(cartestianAffine)
-      mat = mat.multiplyLeft(affineMat)
+      //const cartestianAffine = getCartesianMatrixTransformation(axes, transform.affine)
+      //const affineMat = new Matrix4(cartestianAffine)
+      //mat = mat.multiplyLeft(affineMat)
     }
   }
 

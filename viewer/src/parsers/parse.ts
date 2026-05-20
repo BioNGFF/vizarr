@@ -1,36 +1,45 @@
+import * as omeNgffSchemas from 'zod-ome-ngff';
 
-import { parsers } from './index'
-import { assert } from '../utils'
+const imageTypes = ['ImageSchema', 'WellSchema', 'PlateSchema'] as const;
+const versions = ['v01', 'v02', 'v03', 'v04', 'v05', 'v06'] as const;
+
+interface Schema {
+  type: typeof imageTypes[number] | 'SceneSchema',
+  version: typeof versions[number],
+  schema: any
+}
+
+const schemas: Schema[] = imageTypes.flatMap((type: typeof imageTypes[number]) => {
+  return versions.flatMap((version: typeof versions[number]) => {
+    return (
+      {
+        type: type,
+        version: version,
+        schema: omeNgffSchemas[version][type]
+      }
+    )
+  })
+})
+
+
+schemas.push(
+  { type: 'SceneSchema', version: 'v06', schema: omeNgffSchemas.v06.SceneSchema }
+)
+
 
 export function parse(data: {}) {
-  const schemaVersion = getSchemaVersion(data)
-  const parser = new parsers[schemaVersion.version](data)
-  const parsedData = parser.parse(schemaVersion.type)
-  return {
-    data: parsedData,
-    version: schemaVersion
-  }
-}
-
-
-function getSchemaVersion(data: {}): { type: string, version: string } {
-  const versions = Object.keys(parsers)
-
-  const schemasToCheck = versions.flatMap((version) => {
-
-    const parser = new parsers[version](data)
-    const parsedData = parser.getImageType(data)
-    return parsedData.success ? { 'type': parsedData.schemaInfo.type, 'version': parsedData.schemaInfo.version } : null
-
+  const validParsers = schemas.filter((schema) => {
+    return schema.schema.safeParse(data).success
   })
 
-  const schemaInfo = schemasToCheck.filter((schema) => schema != null)
-  //Return latest successfully parsed version if multiple are valid.
-  //In theory only possible if the version number is missing and data happens to match multiple schema version
-  return schemaInfo[schemaInfo.length - 1]
+  const parser = validParsers[validParsers.length - 1]
 
+  return {
+    data: parser.schema.parse(data),
+    version: parser.version,
+    type: parser.type
+  }
 }
-
 
 
 

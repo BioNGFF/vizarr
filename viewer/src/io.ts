@@ -73,36 +73,17 @@ async function loadMultiChannel(
   };
 }
 
-function getSchemaVersion(node: {}): { type: string, version: string } {
-  const versions = ['v01', 'v02', 'v03', 'v04', 'v05', 'v06']
-  const imageTypes = ['WellSchema', 'PlateSchema', 'ImageSchema']
-  const schemasToCheck = versions.flatMap((version) => {
-    return imageTypes.map((imageType) => {
-      return schemas[version][imageType].safeParse(node).success ? { 'type': imageType, 'version': version } : null
-    })
-  })
-
-  const schemaInfo = schemasToCheck.filter((schema) => schema != null)
-
-
-  //Return latest successfully parsed version if multiple are valid.
-  //In theory only possible if the version number is missing and data happens to match multiple schema version
-  return schemaInfo[schemaInfo.length - 1]
-
-}
 
 export async function createSourceData(config: ImageLayerConfig): Promise<SourceData[]> {
   const node = await utils.open(config.source);
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
-
-
     const parsedData = parse(node.attrs)
-    if (parsedData.version.version === 'v06') {
-      if (parsedData.version.type === 'SceneSchema') {
+    if (parsedData.version === 'v06') {
+      if (parsedData.type === 'SceneSchema') {
         return loadScene(config, node, parsedData.data)
-      } else if (parsedData.version.type === 'ImageSchema') {
+      } else if (parsedData.type === 'ImageSchema') {
         console.log('Loading multiscale image')
         return [await loadOmeMultiscales(config, node, parsedData.data.ome)]
       }

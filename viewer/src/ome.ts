@@ -6,16 +6,15 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import * as utils from "./utils";
 
 import { getPhysicalSizes, coordinateTransformationsToMatrix } from "./coordinate-transformations";
-import { SceneSchema } from "./parsers/0.6/coordinates";
-import * as z from 'zod';
-import { createSourceData } from "./io";
 
+import { createSourceData } from "./io";
 
 export async function loadScene(
   config: ImageLayerConfig,
   grp: zarr.Group<zarr.Readable>,
-  data: z.infer<typeof SceneSchema>
+  data: any
 ): Promise<SourceData[]> {
+
   console.log('Loading scene: ', config.source)
   const results = await Promise.all(data.ome.scene.coordinateTransformations.map(async (transformation) => {
     const path = transformation.input.path

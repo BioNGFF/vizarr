@@ -598,10 +598,10 @@ index ca2a1cad28515636de467ea554b223a0e16bdd13..0c1556a6632140d5428be584107a6a94
 +  .describe("JSON from OME-NGFF .zattrs");
 diff --git a/dist/0.6.d.ts b/dist/0.6.d.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..8b694ed70111b203d02ff79dbf1c0b93aab62fff
+index 0000000000000000000000000000000000000000..ae5976225409ecc1903e8f90fc2d9945683acdad
 --- /dev/null
 +++ b/dist/0.6.d.ts
-@@ -0,0 +1,396 @@
+@@ -0,0 +1,398 @@
 +import { z } from "zod";
 +export declare const VersionSchema: z.ZodEnum<["0.5"]>;
 +export declare const PlateSchema: z.ZodObject<{
@@ -998,12 +998,14 @@ index 0000000000000000000000000000000000000000..8b694ed70111b203d02ff79dbf1c0b93
 +    version?: unknown;
 +  };
 +}>]>;
++
++export declare const SceneSchema: z.infer<typeof SceneSchema>
 diff --git a/dist/0.6.js b/dist/0.6.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..5590d0337e052a60b021c92cde3ccf0fd610ebe5
+index 0000000000000000000000000000000000000000..1eba090c229b08d2df8b709c389e27b411db17fd
 --- /dev/null
 +++ b/dist/0.6.js
-@@ -0,0 +1,341 @@
+@@ -0,0 +1,399 @@
 +import { z } from "zod";
 +import { to_date } from "./shared.js";
 +export const VersionSchema = z
@@ -1331,6 +1333,64 @@ index 0000000000000000000000000000000000000000..5590d0337e052a60b021c92cde3ccf0f
 +      }
 +    }),
 +});
++
++
++const AxesSchema = z.object({
++  name: z.string(),
++  type: z.string()
++})
++
++const TransformationSchema = z.union([
++  z.object({
++    type: z.enum(["sequence"]),
++    transformations: z.any(),
++
++  }),
++  z.object({ type: z.enum(["identity"]) }),
++  z.object({
++    type: z.enum(["scale"]),
++    scale: z.array(z.number()),
++  }),
++  z.object({
++    type: z.enum(["translation"]),
++    translation: z.array(z.number()),
++  }),
++
++  z.object({
++    type: z.enum(["rotation"]),
++    rotation: z.array(z.number())
++  }),
++  z.object({
++    type: z.enum(["affine"]),
++    affine: z.array(z.array(z.number()))
++  })
++
++]);
++
++const CoordinateTransformationSchema = z.object({
++  input: z.object({ path: z.string(), name: z.string() }),
++  output: z.object({ name: z.string() }),
++  type: z.string(),
++  transformations: z.array(TransformationSchema)
++})
++
++
++const CoordinateSystemSchema = z.object({
++  name: z.string(),
++  axes: z.array(AxesSchema)
++})
++
++const Scene = z.object({
++  coordinateTransformations: z.array(CoordinateTransformationSchema),
++  coordinateSystems: z.array(CoordinateSystemSchema).optional()
++})
++
++export const SceneSchema = z.object({
++  ome: z.object({
++    scene: Scene
++  })
++})
++
 +export const WellSchema = withVersion(z.object({
 +  well: StrictInnerWellSchema.partial({})
 +}));
@@ -1345,6 +1405,16 @@ index 0000000000000000000000000000000000000000..5590d0337e052a60b021c92cde3ccf0f
 +  PlateSchema,
 +  WellSchema,
 +]);                                                                                                                          
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 8a0bcc398eba0f369fe4917300acd1f7880d6808..bb81a8c17ef0cc852033eec63213cc4803f1b23b 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -3,4 +3,5 @@ export * as v02 from "./0.2.js";
+ export * as v03 from "./0.3.js";
+ export * as v04 from "./0.4.js";
+ export * as v05 from "./0.5.js";
++export * as v06 from './0.6.js';
+ export * as latest from "./latest.js";
 diff --git a/dist/index.js b/dist/index.js
 index 8a0bcc398eba0f369fe4917300acd1f7880d6808..d8c7fb13b099275f43324cdee8f496fe9e708cd2 100644
 --- a/dist/index.js

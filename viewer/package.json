@@ -55,7 +55,8 @@
     "typescript": "^5.8.2",
     "vite": "^6.2.7",
     "vite-plugin-dts": "^4.5.4",
-    "zod-ome-ngff": "^0.3.0"
+    "zod-ome-ngff": "^0.3.0",
+    "zod": "3.21.0"
   },
   "overrides": {
     "react-is": "^18.3.1"

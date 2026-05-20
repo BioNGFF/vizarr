@@ -477,10 +477,6 @@ export async function guessZarrVersion(location: zarr.Location<zarr.Readable>): 
   }
 }
 
-export function isOmeScene(attrs: zarr.Attributes): attrs is { scene: Ome.Scene } {
-  return "scene" in attrs;
-}
-
 export function isOmePlate(attrs: zarr.Attributes): attrs is { plate: Ome.Plate } {
   return "plate" in attrs;
 }

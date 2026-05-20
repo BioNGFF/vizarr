@@ -9,7 +9,7 @@ patchedDependencies:
     hash: auxsjwuajoz3k5rha2oxpwrlfm
     path: patches/@vivjs__loaders@0.17.2.patch
   zod-ome-ngff@0.3.0:
-    hash: k2z6kd5pp6itfhbvoivqnegs2a
+    hash: g7oy3ds6hw475x2xu2v6gv5wv4
     path: patches/zod-ome-ngff@0.3.0.patch
 
 importers:
@@ -201,9 +201,12 @@ importers:
       vite-plugin-dts:
         specifier: ^4.5.4
         version: 4.5.4(@types/node@24.3.0)(rollup@4.40.1)(typescript@5.8.2)(vite@6.2.7(@types/node@24.3.0)(yaml@2.8.2))
+      zod:
+        specifier: 3.21.0
+        version: 3.21.0
       zod-ome-ngff:
         specifier: ^0.3.0
-        version: 0.3.0(patch_hash=k2z6kd5pp6itfhbvoivqnegs2a)(zod@3.24.2)
+        version: 0.3.0(patch_hash=g7oy3ds6hw475x2xu2v6gv5wv4)(zod@3.21.0)
 
 packages:
 
@@ -3621,6 +3624,9 @@ packages:
     engines: {pnpm: ^9.0.0}
     peerDependencies:
       zod: ^3.0.0
+
+  zod@3.21.0:
+    resolution: {integrity: sha512-UYdykTcVxB6lfdyLzAqLyyYAlOcpoluECvjsdoaqfQmz9p+3LRaIqYcNiL/J2kFYp66fBM8wwBvIGVEjq7KtZw==}
 
   zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
@@ -7191,9 +7197,11 @@ snapshots:
       '@zarrita/storage': 0.1.4
       numcodecs: 0.3.2
 
-  zod-ome-ngff@0.3.0(patch_hash=k2z6kd5pp6itfhbvoivqnegs2a)(zod@3.24.2):
+  zod-ome-ngff@0.3.0(patch_hash=g7oy3ds6hw475x2xu2v6gv5wv4)(zod@3.21.0):
     dependencies:
-      zod: 3.24.2
+      zod: 3.21.0
+
+  zod@3.21.0: {}
 
   zod@3.24.2: {}
 
