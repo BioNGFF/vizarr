@@ -32,7 +32,7 @@
 
 ## Getting started
 
-**Vizarr**  provides two primary interfaces for interacting with the core viewer:
+**Vizarr** provides two primary interfaces for interacting with the core viewer:
 
 ### 1. Standalone Web App
 
