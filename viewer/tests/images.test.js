@@ -5,7 +5,7 @@ import yaml from "yaml";
 import { createSourceData } from "../src/io";
 import { getYamlFileNames, writeImageYaml, writeUntestableYaml } from "./metadata";
 
-const imagesPath = path.resolve(path.join(__dirname, "..", "..", "fixtures"));
+const imagesPath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "generic"));
 
 const files = getYamlFileNames(imagesPath);
 
