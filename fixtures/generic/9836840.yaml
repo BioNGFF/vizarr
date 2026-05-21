@@ -1,5 +1,0 @@
-source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.1/9836840.zarr
-name: 9836840
-testable: true
-features:
-  multiscale: true
