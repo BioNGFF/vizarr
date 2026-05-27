@@ -3,7 +3,7 @@ import path from "node:path";
 import { test } from "vitest";
 import yaml from "yaml";
 import { createSourceData } from "../src/io";
-import { getYamlFileNames, writeImageYaml, writeUntestableYaml } from "./metadata";
+import { getYamlFileNames, writeImageYaml } from "./metadata";
 
 const imagesPath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "generic"));
 
@@ -18,7 +18,7 @@ files.map(async (file) => {
       await createSourceData({
         source: description.source,
       });
-      await writeImageYaml(description.source, description.name, imagesPath);
+      await writeImageYaml(description.source, file, imagesPath);
     }, 20000);
   }
 });

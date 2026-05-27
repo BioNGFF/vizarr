@@ -16,16 +16,16 @@ export async function writeImageYaml(url, imageName, savePath) {
       multiscale: utils.isMultiscales(attrs),
     },
   };
-  fs.writeFileSync(path.join(savePath, `${imageName}.yaml`), stringify(metadata));
+  fs.writeFileSync(path.join(savePath, imageName), stringify(metadata));
 }
 
 export function getYamlFileNames(filepath) {
   return fs.readdirSync(filepath).filter((fileName) => fileName.endsWith(".yaml"));
 }
 
-export function writeUntestableYaml(url, imageName, savePath, testable) {
+export function writeUntestableYaml(url, imageName, savePath) {
   fs.writeFileSync(
-    path.join(savePath, `${imageName}.yaml`),
+    path.join(savePath, imageName),
     stringify({
       source: url,
       name: imageName,

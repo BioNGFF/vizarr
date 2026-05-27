@@ -1,5 +1,5 @@
 source: https://ome-zarr-scivis.s3.us-east-1.amazonaws.com/v0.5/96x2-ozx/kingsnake.ozx
-name: kingsnake
+name: b702ca85-9fd8-4598-8d90-64b484a1b695.yaml
 testable: true
 type: dask_image_gaussian
 version: "0.5"

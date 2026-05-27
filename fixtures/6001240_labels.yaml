@@ -1,6 +1,0 @@
-source: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr
-name: 6001240_labels
-testable: true
-version: "0.5"
-features:
-  multiscale: true
