@@ -1,5 +1,6 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr
-name: 6001240_labels
+name: ef272493-28b8-4a46-a5b4-744ab8556e13.yaml
+testable: true
 version: "0.5"
 features:
   multiscale: true
