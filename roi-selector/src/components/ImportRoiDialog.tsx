@@ -20,12 +20,7 @@ interface ImportRoiDialogProps {
   sourceUrl: string;
 }
 
-export default function ImportRoiDialog({
-  open,
-  onClose,
-  onImport,
-  sourceUrl,
-}: ImportRoiDialogProps) {
+export default function ImportRoiDialog({ open, onClose, onImport, sourceUrl }: ImportRoiDialogProps) {
   const [tables, setTables] = useState<RoiTableInfo[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -42,13 +37,7 @@ export default function ImportRoiDialog({
       .then((discovered) => {
         setTables(discovered);
         // Select only roi_table by default (not masking_roi_table)
-        setSelected(
-          new Set(
-            discovered
-              .filter((t) => t.type === "roi_table")
-              .map((t) => t.name),
-          ),
-        );
+        setSelected(new Set(discovered.filter((t) => t.type === "roi_table").map((t) => t.name)));
       })
       .catch((err) => {
         console.error("[ROI Import] Failed to discover ROI tables:", err);
@@ -88,9 +77,7 @@ export default function ImportRoiDialog({
         )}
 
         {!loading && !error && tables.length === 0 && (
-          <Typography sx={{ py: 1, color: "text.secondary" }}>
-            No ROI tables found in the zarr store.
-          </Typography>
+          <Typography sx={{ py: 1, color: "text.secondary" }}>No ROI tables found in the zarr store.</Typography>
         )}
 
         {!loading &&
@@ -99,12 +86,7 @@ export default function ImportRoiDialog({
             <FormControlLabel
               key={table.name}
               sx={{ display: "block" }}
-              control={
-                <Checkbox
-                  checked={selected.has(table.name)}
-                  onChange={() => handleToggle(table.name)}
-                />
-              }
+              control={<Checkbox checked={selected.has(table.name)} onChange={() => handleToggle(table.name)} />}
               label={
                 <Typography variant="body2">
                   <strong>{table.name}</strong> — {table.roiCount} ROI
@@ -117,11 +99,7 @@ export default function ImportRoiDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button
-          onClick={handleImport}
-          disabled={selected.size === 0 || loading}
-          variant="contained"
-        >
+        <Button onClick={handleImport} disabled={selected.size === 0 || loading} variant="contained">
           Import
         </Button>
       </DialogActions>

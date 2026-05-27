@@ -43,42 +43,16 @@ function resolveAttrs(attrs: zarr.Attributes): zarr.Attributes {
 
 const ORIGIN_X_PATTERNS = ["x_micrometer", "x_origin", "origin_x", "x"];
 const ORIGIN_Y_PATTERNS = ["y_micrometer", "y_origin", "origin_y", "y"];
-const LENGTH_X_PATTERNS = [
-  "len_x_micrometer",
-  "length_x",
-  "x_length",
-  "width",
-  "len_x",
-];
-const LENGTH_Y_PATTERNS = [
-  "len_y_micrometer",
-  "length_y",
-  "y_length",
-  "height",
-  "len_y",
-];
+const LENGTH_X_PATTERNS = ["len_x_micrometer", "length_x", "x_length", "width", "len_x"];
+const LENGTH_Y_PATTERNS = ["len_y_micrometer", "length_y", "y_length", "height", "len_y"];
 const ORIGIN_Z_PATTERNS = ["z_micrometer", "z_origin", "origin_z", "z"];
-const LENGTH_Z_PATTERNS = [
-  "len_z_micrometer",
-  "length_z",
-  "z_length",
-  "depth",
-  "len_z",
-];
+const LENGTH_Z_PATTERNS = ["len_z_micrometer", "length_z", "z_length", "depth", "len_z"];
 const ORIGIN_T_PATTERNS = ["t_micrometer", "t_origin", "origin_t", "t"];
-const LENGTH_T_PATTERNS = [
-  "len_t_micrometer",
-  "length_t",
-  "t_length",
-  "duration",
-  "len_t",
-];
+const LENGTH_T_PATTERNS = ["len_t_micrometer", "length_t", "t_length", "duration", "len_t"];
 
 function findColumnIndex(columnNames: string[], patterns: string[]): number {
   for (const pattern of patterns) {
-    const idx = columnNames.findIndex(
-      (c) => c.toLowerCase() === pattern.toLowerCase(),
-    );
+    const idx = columnNames.findIndex((c) => c.toLowerCase() === pattern.toLowerCase());
     if (idx >= 0) return idx;
   }
   return -1;
@@ -89,9 +63,7 @@ function findColumnIndex(columnNames: string[], patterns: string[]): number {
 /**
  * Discover ROI tables available under `/tables` in the zarr store.
  */
-export async function discoverRoiTables(
-  sourceUrl: string,
-): Promise<RoiTableInfo[]> {
+export async function discoverRoiTables(sourceUrl: string): Promise<RoiTableInfo[]> {
   const location = openZarrLocation(sourceUrl);
 
   try {
@@ -99,8 +71,7 @@ export async function discoverRoiTables(
     const tablesGroup = await zarr.open(tablesLocation, { kind: "group" });
     const tablesAttrs = resolveAttrs(tablesGroup.attrs);
 
-    const tableNames: string[] =
-      (tablesAttrs.tables as string[] | undefined) ?? [];
+    const tableNames: string[] = (tablesAttrs.tables as string[] | undefined) ?? [];
 
     if (tableNames.length === 0) {
       console.warn("[ROI Import] No tables listed in /tables group attributes");
@@ -119,22 +90,14 @@ export async function discoverRoiTables(
 
         let roiCount = 0;
         try {
-          const obsIndex = await zarr.open(
-            tablesLocation.resolve(`${name}/obs/_index`),
-            { kind: "array" },
-          );
+          const obsIndex = await zarr.open(tablesLocation.resolve(`${name}/obs/_index`), { kind: "array" });
           roiCount = obsIndex.shape[0];
         } catch {
           try {
-            const xArr = await zarr.open(
-              tablesLocation.resolve(`${name}/X`),
-              { kind: "array" },
-            );
+            const xArr = await zarr.open(tablesLocation.resolve(`${name}/X`), { kind: "array" });
             roiCount = xArr.shape[0];
           } catch {
-            console.warn(
-              `[ROI Import] Could not determine ROI count for table "${name}"`,
-            );
+            console.warn(`[ROI Import] Could not determine ROI count for table "${name}"`);
           }
         }
 
@@ -145,9 +108,7 @@ export async function discoverRoiTables(
       }
     }
 
-    return tables.filter(
-      (t) => t.type === "roi_table" || t.type === "masking_roi_table",
-    );
+    return tables.filter((t) => t.type === "roi_table" || t.type === "masking_roi_table");
   } catch (err) {
     console.warn("[ROI Import] Failed to open /tables group:", err);
     return [];
@@ -156,54 +117,35 @@ export async function discoverRoiTables(
 
 // ---- Table reading (AnnData zarr format) ----
 
-async function readRoiTable(
-  tablesLocation: zarr.Location<zarr.Readable>,
-  tableName: string,
-): Promise<PhysicalRoi[]> {
+async function readRoiTable(tablesLocation: zarr.Location<zarr.Readable>, tableName: string): Promise<PhysicalRoi[]> {
   // Read ROI names from obs index column.
   let roiNames: string[] = [];
   try {
-    const obsGroup = await zarr.open(
-      tablesLocation.resolve(`${tableName}/obs`),
-      { kind: "group" },
-    );
+    const obsGroup = await zarr.open(tablesLocation.resolve(`${tableName}/obs`), { kind: "group" });
     const indexColumnName = obsGroup.attrs._index as string | undefined;
     if (!indexColumnName) {
       throw new Error("obs group has no _index attribute");
     }
-    const obsIndex = await zarr.open(
-      tablesLocation.resolve(`${tableName}/obs/${indexColumnName}`),
-      { kind: "array" },
-    );
+    const obsIndex = await zarr.open(tablesLocation.resolve(`${tableName}/obs/${indexColumnName}`), { kind: "array" });
     const indexData = await zarr.get(obsIndex);
     roiNames = Array.from(indexData.data as Iterable<string>);
   } catch {
-    console.warn(
-      `[ROI Import] Could not read obs index for table "${tableName}", will generate names`,
-    );
+    console.warn(`[ROI Import] Could not read obs index for table "${tableName}", will generate names`);
   }
 
   // Read column names from var index column (same AnnData convention as obs).
   let columnNames: string[];
   try {
-    const varGroup = await zarr.open(
-      tablesLocation.resolve(`${tableName}/var`),
-      { kind: "group" },
-    );
+    const varGroup = await zarr.open(tablesLocation.resolve(`${tableName}/var`), { kind: "group" });
     const indexColumnName = varGroup.attrs._index as string | undefined;
     if (!indexColumnName) {
       throw new Error("var group has no _index attribute");
     }
-    const varIndex = await zarr.open(
-      tablesLocation.resolve(`${tableName}/var/${indexColumnName}`),
-      { kind: "array" },
-    );
+    const varIndex = await zarr.open(tablesLocation.resolve(`${tableName}/var/${indexColumnName}`), { kind: "array" });
     const varData = await zarr.get(varIndex);
     columnNames = Array.from(varData.data as Iterable<string>);
   } catch {
-    console.warn(
-      `[ROI Import] Could not read var index for table "${tableName}"`,
-    );
+    console.warn(`[ROI Import] Could not read var index for table "${tableName}"`);
     return [];
   }
 
@@ -211,17 +153,12 @@ async function readRoiTable(
   let xShape: readonly number[];
   let xFlat: ArrayLike<number>;
   try {
-    const xArray = await zarr.open(
-      tablesLocation.resolve(`${tableName}/X`),
-      { kind: "array" },
-    );
+    const xArray = await zarr.open(tablesLocation.resolve(`${tableName}/X`), { kind: "array" });
     const xData = await zarr.get(xArray);
     xShape = xData.shape;
     xFlat = xData.data as ArrayLike<number>;
   } catch {
-    console.warn(
-      `[ROI Import] Could not read X matrix for table "${tableName}"`,
-    );
+    console.warn(`[ROI Import] Could not read X matrix for table "${tableName}"`);
     return [];
   }
 
@@ -233,9 +170,7 @@ async function readRoiTable(
 
   if (oxIdx < 0 || oyIdx < 0 || lxIdx < 0 || lyIdx < 0) {
     console.warn(
-      `[ROI Import] Table "${tableName}" missing required columns. ` +
-        `Found: [${columnNames.join(", ")}]. ` +
-        `Need origin (x, y) and length (x, y) columns.`,
+      `[ROI Import] Table "${tableName}" missing required columns. Found: [${columnNames.join(", ")}]. Need origin (x, y) and length (x, y) columns.`,
     );
     return [];
   }
@@ -312,12 +247,7 @@ export async function importRoisFromZarr(
         const y2 = pRoi.originY + pRoi.lengthY;
 
         // Warn about out-of-bounds
-        if (
-          x1 < imageBounds.xMin ||
-          y1 < imageBounds.yMin ||
-          x2 > imageBounds.xMax ||
-          y2 > imageBounds.yMax
-        ) {
+        if (x1 < imageBounds.xMin || y1 < imageBounds.yMin || x2 > imageBounds.xMax || y2 > imageBounds.yMax) {
           console.warn(
             `[ROI Import] "${tableName}/${pRoi.name}" extends outside image bounds ` +
               `(${x1},${y1})→(${x2},${y2}), ` +
@@ -325,8 +255,7 @@ export async function importRoisFromZarr(
           );
         }
 
-        const clamp = (v: number, lo: number, hi: number) =>
-          Math.max(lo, Math.min(hi, v));
+        const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
         const corner1: RoiCorner = {
           x: clamp(x1, imageBounds.xMin, imageBounds.xMax),
@@ -338,10 +267,7 @@ export async function importRoisFromZarr(
         };
 
         // Z axis (still index-based, no physical conversion)
-        if (
-          pRoi.originZ !== undefined &&
-          pRoi.lengthZ !== undefined
-        ) {
+        if (pRoi.originZ !== undefined && pRoi.lengthZ !== undefined) {
           const z1 = Math.round(pRoi.originZ);
           const z2 = Math.round(pRoi.originZ + pRoi.lengthZ);
           corner1.z = clamp(z1, 0, zMax ?? z1);
@@ -354,10 +280,7 @@ export async function importRoisFromZarr(
         }
 
         // T axis (still index-based, no physical conversion)
-        if (
-          pRoi.originT !== undefined &&
-          pRoi.lengthT !== undefined
-        ) {
+        if (pRoi.originT !== undefined && pRoi.lengthT !== undefined) {
           const t1 = Math.round(pRoi.originT);
           const t2 = Math.round(pRoi.originT + pRoi.lengthT);
           corner1.t = clamp(t1, 0, tMax ?? t1);
@@ -371,9 +294,7 @@ export async function importRoisFromZarr(
 
         // Skip degenerate ROIs
         if (corner1.x === corner2.x && corner1.y === corner2.y) {
-          console.warn(
-            `[ROI Import] "${tableName}/${pRoi.name}" has zero area, skipping.`,
-          );
+          console.warn(`[ROI Import] "${tableName}/${pRoi.name}" has zero area, skipping.`);
           continue;
         }
 
