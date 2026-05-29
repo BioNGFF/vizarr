@@ -1,6 +1,6 @@
 import { ScaleBarLayer } from "@hms-dbmi/viv";
 import DeckGL from "deck.gl";
-import { OrthographicView } from "deck.gl";
+import { type Layer, OrthographicView } from "deck.gl";
 import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
@@ -12,13 +12,21 @@ import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
 import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
 
-export default function Viewer() {
+interface ViewerProps {
+  additionalLayers?: Layer[];
+  pluginCursor?: string;
+  onPluginClick?: (coordinate: [number, number]) => boolean;
+  onPluginHover?: (coordinate: [number, number] | null) => void;
+}
+
+export default function Viewer({ additionalLayers = [], pluginCursor, onPluginClick, onPluginHover }: ViewerProps) {
   const deckRef = React.useRef<DeckGLRef>(null);
   const [viewport, setViewport] = useAtom(viewportAtom);
   const [viewState, setViewState] = useViewState();
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
-  const axisNavigationSnackbar = useAxisNavigation(deckRef, viewport);
+
+  const axisNavigationSnackbar = useAxisNavigation(deckRef);
 
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
@@ -41,7 +49,8 @@ export default function Viewer() {
 
   React.useEffect(() => {
     if (!viewport && deckRef.current?.deck) {
-      setViewport(deckRef.current.deck);
+      const d = deckRef.current.deck;
+      setViewport({ width: d.width, height: d.height });
     }
     if (viewport && firstLayer) {
       if (!viewState) {
@@ -135,11 +144,35 @@ export default function Viewer() {
     };
   }, [layers]);
 
+  // ---- Click handler (delegates to plugins, then falls through) ----
+  const handleClick = React.useCallback(
+    (info: PickingInfo) => {
+      if (!info.coordinate) return;
+      const coord: [number, number] = [info.coordinate[0], info.coordinate[1]];
+      onPluginClick?.(coord);
+    },
+    [onPluginClick],
+  );
+
+  // ---- Hover handler (delegates to plugins) ----
+  const handleHover = React.useCallback(
+    (info: PickingInfo) => {
+      const coord = info.coordinate ? ([info.coordinate[0], info.coordinate[1]] as [number, number]) : null;
+      onPluginHover?.(coord);
+    },
+    [onPluginHover],
+  );
+
+  // ---- Cursor ----
+  const getCursor = React.useCallback(() => {
+    return pluginCursor ?? "grab";
+  }, [pluginCursor]);
+
   return (
     <>
       <DeckGL
         ref={deckRef}
-        layers={deckLayers}
+        layers={[...deckLayers, ...additionalLayers]}
         viewState={viewState && { ortho: viewState }}
         controller={{ keyboard: true }}
         onViewStateChange={(e: { viewState: OrthographicViewState }) =>
@@ -149,7 +182,14 @@ export default function Viewer() {
         views={[new OrthographicView({ id: "ortho", controller: true, near, far })]}
         glOptions={glOptions}
         getTooltip={getTooltip}
-        onDeviceInitialized={() => setViewport(deckRef.current?.deck || null)}
+        onClick={handleClick}
+        onHover={handleHover}
+        getCursor={getCursor}
+        onDeviceInitialized={() => {
+          const d = deckRef.current?.deck;
+          setViewport(d ? { width: d.width, height: d.height } : null);
+        }}
+        onResize={({ width, height }: { width: number; height: number }) => setViewport({ width, height })}
       />
       {axisNavigationSnackbar}
     </>
