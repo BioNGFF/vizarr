@@ -3,8 +3,7 @@ import path from "node:path";
 import { expect, test } from "vitest";
 import yaml from "yaml";
 import { createSourceData } from "../src/io";
-import { Scene } from "../src/parsers/0.6/coordinates";
-import { open } from "../src/utils";
+
 
 test("Resolution-level transformations should be applied", async () => {
   const sourcePath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "resolution_transformationsv0.5.yaml"));
