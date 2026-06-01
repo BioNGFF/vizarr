@@ -598,7 +598,7 @@ index ca2a1cad28515636de467ea554b223a0e16bdd13..0c1556a6632140d5428be584107a6a94
 +  .describe("JSON from OME-NGFF .zattrs");
 diff --git a/dist/0.6.d.ts b/dist/0.6.d.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..ae5976225409ecc1903e8f90fc2d9945683acdad
+index 0000000000000000000000000000000000000000..3d957414d62dc356bbafc8852c314335543d4612
 --- /dev/null
 +++ b/dist/0.6.d.ts
 @@ -0,0 +1,398 @@
@@ -999,7 +999,7 @@ index 0000000000000000000000000000000000000000..ae5976225409ecc1903e8f90fc2d9945
 +  };
 +}>]>;
 +
-+export declare const SceneSchema: z.infer<typeof SceneSchema>
++export declare const SceneSchema: z.ZObject<>
 diff --git a/dist/0.6.js b/dist/0.6.js
 new file mode 100644
 index 0000000000000000000000000000000000000000..1eba090c229b08d2df8b709c389e27b411db17fd

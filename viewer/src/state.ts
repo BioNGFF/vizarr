@@ -2,7 +2,7 @@ import { type Atom, atom } from "jotai";
 import { atomFamily, splitAtom, waitForAll } from "jotai/utils";
 import { RedirectError, rethrowUnless } from "./utils";
 
-import type { CoordinateSystem, Deck, Layer } from "deck.gl";
+import type { Deck, Layer } from "deck.gl";
 import type { PrimitiveAtom } from "jotai";
 import type { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import type { Matrix4 } from "math.gl";
@@ -34,6 +34,7 @@ interface BaseConfig {
   opacity?: number;
   acquisition?: string;
   model_matrix?: string | number[];
+  coordinateSystem?: string;
   onClick?: (e: unknown) => void;
 }
 
@@ -51,12 +52,7 @@ export interface SingleChannelConfig extends BaseConfig {
   visibility?: boolean;
 }
 
-export interface MultiscaleParentSceneConfig extends BaseConfig {
-  coordinateSystem: string
-}
-
-export type ImageLayerConfig = MultichannelConfig | SingleChannelConfig | MultiscaleParentSceneConfig;
-
+export type ImageLayerConfig = MultichannelConfig | SingleChannelConfig;
 export type OnClickData = Record<string, unknown> & {
   gridCoord?: { row: number; column: number };
 };
@@ -136,10 +132,10 @@ export const addImageAtom = atom(null, async (get, set, config: ImageLayerConfig
   try {
     const sourceData = await createSourceData(config);
     const prevSourceInfo = get(sourceInfoAtom);
-    if (!sourceData.name) {
-      sourceData.name = `image_${Object.keys(prevSourceInfo).length}`;
+    if (!sourceData[0].name) {
+      sourceData[0].name = `image_${Object.keys(prevSourceInfo).length}`;
     }
-    set(sourceInfoAtom, [...prevSourceInfo, { id, ...sourceData }]);
+    set(sourceInfoAtom, [...prevSourceInfo, { id, ...sourceData[0] }]);
   } catch (err) {
     rethrowUnless(err, Error);
     if (err instanceof RedirectError) {
@@ -190,10 +186,10 @@ const imageLabelsIstanceFamily = atomFamily((a: Atom<LayerState>) =>
     return labels.map((label) =>
       label.on
         ? new LabelLayer({
-          ...label.layerProps,
-          selection: label.transformSourceSelection(layerProps.selections[0]),
-          pickable: true,
-        })
+            ...label.layerProps,
+            selection: label.transformSourceSelection(layerProps.selections[0]),
+            pickable: true,
+          })
         : null,
     );
   }),

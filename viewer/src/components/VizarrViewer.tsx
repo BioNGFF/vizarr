@@ -1,4 +1,3 @@
-import { Info } from "@mui/icons-material";
 import { ThemeProvider } from "@mui/material";
 import { Box, Link, Typography } from "@mui/material";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
@@ -69,12 +68,11 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
           const sourceData = await createSourceData(config);
           return sourceData.flatMap((source) => {
             const id = Math.random().toString(36).slice(2);
-            if (!sourceData.name) {
-              sourceData.name = `image_${index}`;
+            if (!source.name) {
+              source.name = `image_${index}`;
             }
             return { id, ...source };
-          })
-
+          });
         }),
       );
       let sourceDatas = [];
@@ -90,7 +88,7 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
         }
       }
       sourceDatas = sourceDatas.filter((s) => s !== null);
-      sourceDatas = sourceDatas.flatMap((sourceData) => { return sourceData })
+      sourceDatas = sourceDatas.flat();
       setSourceInfo(sourceDatas);
     }
 

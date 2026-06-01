@@ -9,8 +9,6 @@ export async function writeImageYaml(url, imageName, savePath) {
   const metadata = {
     source: url,
     name: imageName,
-    type: attrs.multiscales[0].type,
-    version: attrs.version,
     features: {
       multiscale: utils.isMultiscales(attrs),
     },
