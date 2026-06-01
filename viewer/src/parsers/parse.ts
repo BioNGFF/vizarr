@@ -16,7 +16,7 @@ const schemas: Schema[] = imageTypes.flatMap((type: (typeof imageTypes)[number])
     return {
       type: type,
       version: version,
-      schema: omeNgffSchemas[version][type]
+      schema: omeNgffSchemas[version][type],
     };
   });
 });

@@ -4,6 +4,7 @@ import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
 import { parse } from "./parsers/parse";
 import * as utils from "./utils";
 
+import type { SceneSchema } from "zod-ome-ngff/0.6";
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
@@ -80,7 +81,9 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     const parsedData = parse(node.attrs);
     if (parsedData.version === "v06") {
       if (parsedData.type === "SceneSchema") {
-        const scene = parsedData.data.ome.scene as Ome.Scene;
+        //Temporary assertion until parsing layer implemented
+        const data = parsedData.data as typeof SceneSchema;
+        const scene = data.ome.scene as Ome.Scene;
         return loadScene(config, node, scene);
       }
     }

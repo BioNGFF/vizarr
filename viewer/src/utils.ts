@@ -407,7 +407,6 @@ export function typedEmitter<T>() {
  */
 
 export function resolveAttrs(attrs: zarr.Attributes): zarr.Attributes {
-
   if ("omero" in attrs && "ome" in attrs) {
     return {
       version: typeof attrs.ome === "object" && attrs.ome !== null && "version" in attrs.ome ? attrs.ome.version : "",

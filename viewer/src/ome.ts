@@ -9,7 +9,7 @@ import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinat
 
 import { createSourceData } from "./io";
 
-import { z } from 'zod';
+import { z } from "zod";
 
 export async function loadScene(
   config: ImageLayerConfig,
@@ -347,8 +347,9 @@ function getDefaultCoordinateSystem(multiscales: unknown[]): Ome.CoordinateSyste
         axes: multiscales[0].axes.map((axis) => {
           if (typeof axis === "object" && "name" in axis) {
             return axis;
-          } else if (typeof axis === "string") {
-            return { name: axis, type: "space" }
+          }
+          if (typeof axis === "string") {
+            return { name: axis, type: "space" };
           }
           return { name: "default", ...axis };
         }),
@@ -387,8 +388,8 @@ export async function loadOmeMultiscales(
     : getDefaultCoordinateSystem(attrs.multiscales);
   const selectedCoordinateSystem = config.coordinateSystem
     ? coordinateSystems.filter((coordinateSystem) => {
-      return coordinateSystem.name === config.coordinateSystem;
-    })[0]
+        return coordinateSystem.name === config.coordinateSystem;
+      })[0]
     : coordinateSystems[0];
   let meta: Meta;
   if (utils.isOmeMultiscales(attrs)) {
@@ -467,31 +468,29 @@ async function loadOmeImageLabel(
 }
 
 const LabelSchema = z.object({
-  'labels': z.array(z.string())
-})
-const OmeLabelSchema = z.object(
-  {
-    'ome': z.object({
-      'labels': z.array(z.string())
-    })
-  }
-)
+  labels: z.array(z.string()),
+});
+const OmeLabelSchema = z.object({
+  ome: z.object({
+    labels: z.array(z.string()),
+  }),
+});
 
 function resolveLabelAttrs(attrs: unknown): string[] {
   if (LabelSchema.safeParse(attrs).success) {
-    return LabelSchema.parse(attrs).labels
-  } else if (OmeLabelSchema.safeParse(attrs).success) {
-    return OmeLabelSchema.parse(attrs).ome.labels
-  } else {
-    return []
+    return LabelSchema.parse(attrs).labels;
   }
+  if (OmeLabelSchema.safeParse(attrs).success) {
+    return OmeLabelSchema.parse(attrs).ome.labels;
+  }
+  return [];
 }
 
 async function resolveOmeLabelsFromMultiscales(grp: zarr.Group<zarr.Readable>): Promise<Array<string>> {
   return zarr
     .open(grp.resolve("labels"), { kind: "group" })
     .then(({ attrs }) => {
-      return (resolveLabelAttrs(attrs) ?? []) as Array<string>
+      return (resolveLabelAttrs(attrs) ?? []) as Array<string>;
     })
     .catch((e) => {
       utils.rethrowUnless(e, zarr.NodeNotFoundError);
