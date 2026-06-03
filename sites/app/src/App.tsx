@@ -47,13 +47,14 @@ export default function App() {
     }
   }, []);
 
-  const { sources, viewState, enableRoi } = React.useMemo(() => {
+  const { sources, viewState, enableRoi, tableURLs } = React.useMemo(() => {
     const url = new URL(urlString);
     const { searchParams } = url;
     return {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
+      tableURLs: searchParams.getAll("anndata").map((v) => (v ? { url: v } : null))
     };
   }, [urlString]);
 
@@ -84,32 +85,18 @@ export default function App() {
     });
   }, []);
 
-  //const anndataControllers = React.useMemo(() => {
-  //  return sources.map((_s, i) => {
-  //    if (!anndatas?.[i]?.url) return null;
-  //    return (
-  //      <AnndataController
-  //        key={anndatas[i]?.url}
-  //        adata={anndatas[i]}
-  //        callback={(colorData: labelColor[]) => selectCallback(colorData, i)}
-  //      />
-  //    );
-  //  });
-  //}, [anndatas, sources, selectCallback]);
-
-  //  <ThemeProvider theme={darkTheme}>
-  //    <CssBaseline />
-  //    <AnndataProvider>
-  //      <div className="container-right">{anndataControllers}</div>
-  //      <Vizarr
-  //        sources={sources}
-  //        viewState={viewState}
-  //        onViewStateChange={handleViewStateChange}
-  //        labelColours={colors}
-  //      />
-  //    </AnndataProvider>
-  //  </ThemeProvider>
-  // ---- Viewer state (received from Vizarr via callback) ----
+  const anndataControllers = React.useMemo(() => {
+    return sources.map((_s, i) => {
+      if (!tableURLs?.[i]?.url) return null;
+      return (
+        <AnndataController
+          key={tableURLs[i]?.url}
+          adata={tableURLs[i]}
+          callback={(colorData: labelColor[]) => selectCallback(colorData, i)}
+        />
+      );
+    });
+  }, [tableURLs, sources, selectCallback]);
 
   const [viewerInfo, setViewerInfo] = React.useState<ViewerInfo | null>(null);
 
@@ -131,28 +118,36 @@ export default function App() {
   });
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "black" }}>
-      <Vizarr
-        sources={sources}
-        viewState={viewState}
-        onViewerStateChange={setViewerInfo}
-        onViewStateChange={handleViewStateChange}
-        additionalLayers={enableRoi ? layers : undefined}
-        pluginCursor={enableRoi ? cursor : undefined}
-        onPluginClick={enableRoi ? onClick : undefined}
-        onPluginHover={enableRoi ? onHover : undefined}
-      >
-        {enableRoi && viewerInfo && (
-          <RoiSelector
-            roiDrawState={roiDrawState}
-            setRoiDrawState={setRoiDrawState}
-            savedRois={savedRois}
-            setSavedRois={setSavedRois}
-            pendingRoi={pendingRoi}
-            setPendingRoi={setPendingRoi}
-            viewerInfo={viewerInfo}
-          />
-        )}
-      </Vizarr>
-    </div>
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <AnndataProvider>
+          <div className="container-right">{anndataControllers}</div>
+          <Vizarr
+            sources={sources}
+            viewState={viewState}
+            onViewerStateChange={setViewerInfo}
+            onViewStateChange={handleViewStateChange}
+            additionalLayers={enableRoi ? layers : undefined}
+            pluginCursor={enableRoi ? cursor : undefined}
+            onPluginClick={enableRoi ? onClick : undefined}
+            onPluginHover={enableRoi ? onHover : undefined}
+            labelColours={colors}
+          >
+
+            {enableRoi && viewerInfo && (
+              <RoiSelector
+                roiDrawState={roiDrawState}
+                setRoiDrawState={setRoiDrawState}
+                savedRois={savedRois}
+                setSavedRois={setSavedRois}
+                pendingRoi={pendingRoi}
+                setPendingRoi={setPendingRoi}
+                viewerInfo={viewerInfo}
+              />
+            )}
+          </Vizarr>
+        </AnndataProvider>
+      </ThemeProvider>
+    </div >
   );
 }

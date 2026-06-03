@@ -5,7 +5,9 @@
   "main": "dist/biongff-vizarr.cjs.js",
   "module": "dist/biongff-vizarr.es.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,6 +28,7 @@
     "@deck.gl/layers": "~9.0.0",
     "@hms-dbmi/viv": "~0.17.2",
     "@vivjs/types": "~0.17.0",
+    "@vivjs/loaders": "0.17.2",
     "@zarrita/storage": "0.1.4",
     "deck.gl": "~9.0.0",
     "jotai": "^1.0.0",
