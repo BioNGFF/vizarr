@@ -1,11 +1,11 @@
 import path from "node:path";
-
+import dts from "vite-plugin-dts";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), dts({ rollupTypes: true, tsconfigPath: "./tsconfig.json" })],
   build: {
     // outDir: path.resolve(__dirname, '../dist'),
     lib: {
