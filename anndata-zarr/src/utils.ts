@@ -1,93 +1,170 @@
 import _ from "lodash";
-import { FetchStore, get, open } from "zarrita";
+import { FetchStore, get, open, Group, type Readable, type DataType, Array as ZarrArray, type Float64 } from "zarrita";
 
 import { COLORSCALES } from "./constants/colorscales";
+import type { ColourProps, MatrixProps } from "./hooks";
+import type { URL } from "url";
+import { z } from 'zod';
 
-export const fetchDataFromZarr = async (url, path, s) => {
+const AnndataZarrBaseAttributesSchema = z.object({
+  'encoding-type': z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]),
+  'encoding-version': z.string()
+})
+
+const AnndataZarrObsAttributesSchema = AnndataZarrBaseAttributesSchema.extend({
+  'column-order': z.array(z.string()),
+  '_index': z.string().optional()
+})
+
+const AnndataCategoriesSchema = z.array(z.string())
+
+
+
+function resolveAnndataZarrObsAttributes(attrs: unknown): z.infer<typeof AnndataZarrObsAttributesSchema> {
+  return AnndataZarrObsAttributesSchema.parse(attrs)
+}
+
+function resolveAnndataZarrBaseAttributes(attrs: unknown): z.infer<typeof AnndataZarrBaseAttributesSchema> {
+  return AnndataZarrBaseAttributesSchema.parse(attrs)
+}
+
+
+async function fetchZarrGroup(url: URL): Promise<Group<Readable>> {
+  const store = new FetchStore(url)
+  return await open(store, { kind: "group" })
+}
+
+async function fetchZarrArray(url: URL, path: string): Promise<ZarrArray<DataType>> {
+  const store = new FetchStore(url)
+  return await open(store, { kind: "array" })
+}
+
+
+const RawColourData = z.object({
+  data: z.any(),
+  shape: z.array(z.number()),
+  stride: z.array(z.number())
+})
+
+const RawCategoricalColourData = z.object({
+  data: z.array(z.number()),
+  categories: z.array(z.string())
+})
+
+const parseRawColourData = function (data: unknown): z.infer<typeof RawColourData> {
+  return RawColourData.parse(data)
+}
+
+const parseRawCategoricalColourData = function (data: unknown): z.infer<typeof RawCategoricalColourData> {
+  return RawCategoricalColourData.parse(data)
+}
+
+export const fetchDataFromZarr = async (url: URL, path: string, s: []): Promise<{ data: number[], categories?: string[] }> => {
   try {
-    const store = new FetchStore(url);
-    const node = await open(store, { kind: "group" });
+    const node = await fetchZarrGroup(url)
+    const dataNode = await open(node.resolve(path))
+    const attrs = resolveAnndataZarrBaseAttributes(dataNode.attrs)
 
-    const dataNode = await open(node.resolve(path));
-    let result;
-    if (dataNode.attrs?.["encoding-type"] === "array" && dataNode.dtype === "bool") {
-      const boolData = await get(dataNode, s);
-      result = {
-        data: Array.from(boolData.data),
-        categories: ["false", "true"],
-      };
-    } else if (dataNode.attrs?.["encoding-type"] === "array" || dataNode.attrs?.["encoding-type"] === "string-array") {
-      result = await get(dataNode, s);
-    } else if (dataNode.attrs?.["encoding-type"] === "categorical") {
-      const categoriesArr = await open(dataNode.resolve("categories"), {
-        kind: "array",
-      });
-      const codesArr = await open(dataNode.resolve("codes"), { kind: "array" });
-      const { data: categories } = await get(categoriesArr);
-      const { data } = await get(codesArr, s);
-      result = { data, categories };
-    } else {
-      throw new Error("Unsupported encoding-type");
+    if (dataNode instanceof Group) {
+      if (attrs["encoding-type"] === "categorical") {
+        const categoriesArr = await open(dataNode.resolve("categories"), {
+          kind: "array",
+        });
+        const codesArr = await open(dataNode.resolve("codes"), { kind: "array" });
+        const categories = await get(categoriesArr);
+        const parsedCategories = parseRawColourData(categories)
+        const data = await get(codesArr, s);
+        const parsedData = parseRawColourData(data)
+        return { data: parsedData.data, categories: parsedCategories.data }
+      }
+    } else if (dataNode instanceof ZarrArray) {
+      if (attrs["encoding-type"] === "array" && dataNode.dtype === "bool") {
+        const boolData = await get(dataNode, s);
+        const parsedBoolData = parseRawColourData(boolData)
+        return {
+          data: Array.from(parsedBoolData.data),
+          categories: ["false", "true"],
+        };
+      } else if (attrs["encoding-type"] === "array" || attrs["encoding-type"] === "string-array") {
+        return parseRawColourData(await get(dataNode, s));
+      }
     }
 
-    return result;
+    return ({ data: [] })
+
   } catch (error) {
     // biome-ignore lint/complexity/noUselessCatch: @TODO: better error handling
     throw error;
   }
 };
 
-export const getVarNames = async (url, namesCol = "_index") => {
+export const getVarNames = async (url: URL) => {
   try {
     const store = new FetchStore(url);
     const node = await open(store, { kind: "group" });
-
-    const arr = await open(node.resolve(`var/${namesCol}`, { kind: "array" }));
-    const varNames = (await get(arr)).data;
+    const varNode = await open(node.resolve('var'))
+    const parsedAttrs = AnndataZarrObsAttributesSchema.parse(varNode.attrs)
+    //To-do try default "_index"
+    const array = await open(node.resolve(`var/${parsedAttrs._index}`), { kind: "array" });
+    const varNames = (await get(array)).data;
     return varNames;
+
   } catch (error) {
     console.error(error);
     return [];
   }
 };
 
-export const getObs = async (url) => {
+type Observation = { name: string, categories?: string[] }
+
+export const getObs = async (url: URL): Promise<Array<Observation>> => {
   try {
     const store = new FetchStore(url);
     const node = await open(store, { kind: "group" });
 
-    const cols = (await open(node.resolve("obs", { kind: "group" }))).attrs?.["column-order"];
-    const obs = { categorical: [], numerical: [] };
-    for (const col of cols) {
-      const dataNode = await open(node.resolve(`obs/${col}`));
-      const { "encoding-type": encodingType } = dataNode.attrs || {};
-      if (encodingType === "categorical") {
-        const categoriesArr = await open(dataNode.resolve("categories"), {
-          kind: "array",
-        });
-        const { data: categories } = await get(categoriesArr);
-        obs.categorical.push({ name: col, categories });
-      } else if (encodingType === "array") {
-        if (dataNode.dtype === "bool") {
-          obs.categorical.push({ name: col, categories: ["false", "true"] });
-        } else {
-          obs.numerical.push({ name: col });
+    const obsNode = (await open(node.resolve("obs"), { kind: "group" }))
+    const attrs = resolveAnndataZarrObsAttributes(obsNode.attrs)
+    const cols = attrs["column-order"]
+
+    const obs = await Promise.all(
+      cols.map(async (col) => {
+        const dataNode = await open(node.resolve(`obs/${col}`));
+        const encodingType = dataNode.attrs['encoding-type'] || {};
+
+        if (dataNode instanceof ZarrArray) {
+          if (dataNode.dtype === 'bool') {
+            return ({ name: col, categories: ["false", "true"] })
+          }
+          if (encodingType == 'array' || encodingType === 'string-array') {
+            return { name: col };
+          }
+
+        } else if (dataNode instanceof Group) {
+          const categoriesArr = await open(dataNode.resolve("categories"), {
+            kind: "array",
+          });
+          const categories = await get(categoriesArr);
+          const parsedCategories = AnndataCategoriesSchema.parse(categories.data)
+          return { name: col, categories: parsedCategories }
         }
-      }
-    }
-    return obs;
+
+      })
+    )
+
+    return obs.filter((observation) => observation != undefined)
+
   } catch (error) {
     console.error(error);
     return [];
   }
 };
 
-export const getVarIndex = async (url, varId, namesCol = "_index") => {
+export const getVarIndex = async (url: URL, varId: string, namesCol = "_index") => {
   try {
     const store = new FetchStore(url);
     const node = await open(store, { kind: "group" });
 
-    const arr = await open(node.resolve(`var/${namesCol}`, { kind: "array" }));
+    const arr = await open(node.resolve(`var/${namesCol}`), { kind: "array" });
     const varNames = (await get(arr)).data;
     const varIndex = varNames.findIndex((name) => name === varId);
     return varIndex;
@@ -96,7 +173,7 @@ export const getVarIndex = async (url, varId, namesCol = "_index") => {
   }
 };
 
-export const getZarrPath = async (url, matrixProps) => {
+export const getZarrPath = async (url: URL, matrixProps: MatrixProps) => {
   const { feature, obs } = matrixProps;
   if (feature) {
     if (feature.index !== undefined && feature.index !== null) {
@@ -122,7 +199,7 @@ export const getZarrPath = async (url, matrixProps) => {
   throw new Error("No feature or obs in matrixProps");
 };
 
-const parseHexColor = (color) => {
+const parseHexColor = (color: string) => {
   const r = Number.parseInt(color?.substring(1, 3), 16);
   const g = Number.parseInt(color?.substring(3, 5), 16);
   const b = Number.parseInt(color?.substring(5, 7), 16);
@@ -130,7 +207,7 @@ const parseHexColor = (color) => {
   return [r, g, b];
 };
 
-const interpolateColor = (color1, color2, factor) => {
+const interpolateColor = (color1: string, color2: string, factor: number) => {
   const [r1, g1, b1] = parseHexColor(color1);
   const [r2, g2, b2] = parseHexColor(color2);
 
@@ -141,7 +218,7 @@ const interpolateColor = (color1, color2, factor) => {
   return [r, g, b];
 };
 
-const computeColor = (colormap, value) => {
+const computeColor = (colormap: string[], value: number) => {
   if (!colormap || Number.isNaN(value)) {
     return [0, 0, 0, 255];
   }
@@ -157,12 +234,12 @@ const computeColor = (colormap, value) => {
   return interpolateColor(colormap[index1], colormap[index2], factor);
 };
 
-export const getColor = ({ value, colorscale = COLORSCALES.Viridis }) => {
+export const getColor = ({ value, colorscale = COLORSCALES.Viridis }: { value: number, colorscale: string[] }) => {
   return [...computeColor(colorscale, value), 255];
 };
 
-export const getColors = ({ data, max, min, colorProps, categories }) => {
-  return _.map(data, (v, i) => ({
+export const getColors = ({ data, max, min, colorProps, categories }: { data: number[], max: number, min: number, colorProps: ColourProps, categories?: string[] }) => {
+  return _.map(data, (v: number, i: number) => ({
     labelValue: i + 1,
     rgba: getColor({ value: (v - min) / (max - min), ...colorProps }),
     value: categories ? (categories[v] ?? v) : v,

@@ -70,7 +70,7 @@ const NumericalCol = ({ col }) => {
   return <FormControlLabel control={<Radio size="small" />} label={col.name} key={col.name} value={col.name} />;
 };
 
-export const ObsSelect = ({ adata, obsCol, onSelect, callback = () => {} }) => {
+export const ObsSelect = ({ adata, obsCol, onSelect, callback = () => { } }) => {
   const { data, isLoading, serverError } = useAnndataObs(adata);
   const colorData = useAnndataColors(
     {
@@ -126,11 +126,11 @@ export const ObsSelect = ({ adata, obsCol, onSelect, callback = () => {} }) => {
           <FormControl sx={{ width: "100%" }}>
             <RadioGroup value={obsCol} onChange={(e) => onSelect(e.target.value)}>
               <Divider>Categorical</Divider>
-              {data.categorical.map((col) => (
+              {data.filter((obs) => 'categories' in obs).map((col) => (
                 <CategoricalCol key={col.name} col={col} showColor={obsCol === col.name} />
               ))}
               <Divider>Numerical</Divider>
-              {data.numerical.map((col) => (
+              {data.filter((obs) => !('categories' in obs)).map((col) => (
                 <NumericalCol key={col.name} col={col} />
               ))}
             </RadioGroup>

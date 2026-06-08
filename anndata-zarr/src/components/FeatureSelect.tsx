@@ -25,7 +25,7 @@ const RowComponent = ({ index, items, style, onSelect, selectedIndex }) => {
   );
 };
 
-export const FeatureSelect = ({ adata, feature, onSelect, callback = () => {} }) => {
+export const FeatureSelect = ({ adata, feature, onSelect, callback = () => { } }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data, isLoading, serverError } = useAnndataFeatures(adata);

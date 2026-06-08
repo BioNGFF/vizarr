@@ -6,10 +6,10 @@ import Stack from "@mui/material/Stack";
 import { FeatureSelect } from "./FeatureSelect";
 import { ObsSelect } from "./ObsSelect";
 
-export const AnndataController = ({ adata, callback = () => {} }) => {
+export const AnndataController = ({ adata, callback = () => { } }) => {
   const [feature, setFeature] = useState(null);
   const [obsCol, setObsCol] = useState(null);
-
+  console.log("RENDERING FeatureSelect with ", adata)
   const handleFeatureSelect = (f) => {
     setFeature(f);
     setObsCol(null);
@@ -19,14 +19,13 @@ export const AnndataController = ({ adata, callback = () => {} }) => {
     setObsCol(o);
     setFeature(null);
   };
-
   return (
     <Stack sx={{ height: "100%" }}>
       <Box sx={{ height: "50%" }}>
-        <FeatureSelect adata={adata} callback={callback} feature={feature} onSelect={handleFeatureSelect} />
+        <FeatureSelect adata={{ url: adata }} callback={callback} feature={feature} onSelect={handleFeatureSelect} />
       </Box>
       <Box sx={{ height: "50%" }}>
-        <ObsSelect adata={adata} callback={callback} obsCol={obsCol} onSelect={handleObsSelect} />
+        <ObsSelect adata={{ url: adata }} callback={callback} obsCol={obsCol} onSelect={handleObsSelect} />
       </Box>
     </Stack>
   );
