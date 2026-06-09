@@ -8,10 +8,10 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { List } from "react-window";
 
-import { useAnndataColors, useAnndataFeatures } from "../hooks";
+import { type ColourProps, type Feature } from "../hooks";
 import { Legend } from "./Legend";
 
-const RowComponent = ({ index, items, style, onSelect, selectedIndex }) => {
+const RowComponent = ({ index, items, style, onSelect, selectedIndex }: { index: number, items: { matrixIndex: number, name: string }[], style: React.DetailedHTMLProps<React.StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>, onSelect: Function, selectedIndex?: number }) => {
   return (
     <ListItem style={style} key={index} component="div" disablePadding>
       <ListItemButton
@@ -25,54 +25,31 @@ const RowComponent = ({ index, items, style, onSelect, selectedIndex }) => {
   );
 };
 
-export const FeatureSelect = ({ adata, feature, onSelect, callback = () => { } }) => {
+// List of features
+// Currently selected feature to display
+// onSelect to set feature
+
+export const FeatureSelect = ({ featureNames, selectedFeature, onFeatureSelect, legendData }: { featureNames: string[], selectedFeature?: Feature, onFeatureSelect: Function, legendData?: ColourProps }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data, isLoading, serverError } = useAnndataFeatures(adata);
-  const colorData = useAnndataColors(
-    {
-      ...adata,
-      matrixProps: {
-        feature: feature,
-      },
-    },
-    { enabled: !!feature },
-  );
 
-  useEffect(() => {
-    if (colorData?.serverError) {
-      callback(null);
-      return;
+  const allItems = featureNames.map((name: string, index: number) => {
+    return {
+      name: name,
+      matrixIndex: index
     }
-    if (!colorData?.isLoading && colorData?.data) {
-      callback(colorData.data.colors);
-    }
-  }, [colorData, callback]);
-
-  const items = useMemo(() => {
-    if (!data) return [];
-    const allItems = data.map((name, index) => ({
-      name,
-      matrixIndex: index,
-    }));
-    if (!searchTerm) return allItems;
-    return allItems.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [data, searchTerm]);
+  })
 
   const legend = useMemo(() => {
-    if (colorData?.serverError || colorData?.isLoading || !colorData?.data) {
-      return null;
+    if (legendData) {
+      return <Legend min={legendData.min} max={legendData.max} colorscale={legendData.colorscale} />;
+    } else {
+      return <></>
     }
-    const { min, max, colorscale } = colorData.data;
-    return <Legend min={min} max={max} colorscale={colorscale} />;
-  }, [colorData.data, colorData?.isLoading, colorData?.serverError]);
+  }, [legendData]);
 
-  if (isLoading) {
-    return <></>;
-  }
-  if (serverError) {
-    return <div>Error loading features</div>;
-  }
+
+
   return (
     <Box
       sx={{
@@ -93,15 +70,15 @@ export const FeatureSelect = ({ adata, feature, onSelect, callback = () => { } }
         />
         <List
           rowComponent={RowComponent}
-          rowCount={items.length}
+          rowCount={allItems.length}
           rowHeight={25}
           rowProps={{
-            items,
-            onSelect,
-            selectedIndex: feature?.index,
+            items: allItems,
+            onSelect: onFeatureSelect,
+            selectedIndex: selectedFeature?.index,
           }}
         />
-        {!!feature && legend}
+        {legend}
       </Stack>
     </Box>
   );

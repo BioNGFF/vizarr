@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -17,12 +17,12 @@ import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 
 import { COLORSCALES } from "../constants/colorscales";
-import { useAnndataColors, useAnndataObs } from "../hooks";
-import { getColor } from "../utils";
+import { type ColourProps } from "../hooks";
+import { getColor, type CategoricalObservation, type Observation } from "../utils";
 import { Legend } from "./Legend";
 
 // @TODO: fix styling (width)
-const CategoricalCol = ({ col, showColor = false }) => {
+const CategoricalCol = ({ col, showColor = false }: { col: CategoricalObservation, showColor: boolean }) => {
   const [open, setOpen] = useState(false);
   const { categories } = col;
 
@@ -66,51 +66,28 @@ const CategoricalCol = ({ col, showColor = false }) => {
   );
 };
 
-const NumericalCol = ({ col }) => {
+const NumericalCol = ({ col }: { col: { name: string } }) => {
   return <FormControlLabel control={<Radio size="small" />} label={col.name} key={col.name} value={col.name} />;
 };
+interface ObservationControlsProps {
+  observations: Observation[],
+  selectedObservation?: string,
+  onObservationSelect: Function,
+  legendData?: ColourProps
+}
 
-export const ObsSelect = ({ adata, obsCol, onSelect, callback = () => { } }) => {
-  const { data, isLoading, serverError } = useAnndataObs(adata);
-  const colorData = useAnndataColors(
-    {
-      ...adata,
-      matrixProps: {
-        obs: { col: obsCol },
-      },
-    },
-    {
-      enabled: !!obsCol,
-    },
-  );
+export const ObsSelect = ({ observations, selectedObservation, onObservationSelect, legendData }: ObservationControlsProps) => {
 
-  useEffect(() => {
-    if (colorData?.serverError) {
-      callback(null);
-      return;
-    }
-    if (!colorData?.isLoading && colorData?.data) {
-      callback(colorData.data.colors);
-    }
-  }, [colorData, callback]);
 
   const legend = useMemo(() => {
-    if (colorData?.serverError || colorData?.isLoading || !colorData?.data) {
-      return null;
+    if (legendData) {
+      return <Legend min={legendData.min} max={legendData.max} colorscale={legendData?.colorscale} />;
+    } else {
+      <></>
     }
-    const { min, max, colorscale, categories } = colorData.data;
-    if (categories) {
-      return null;
-    }
-    return <Legend min={min} max={max} colorscale={colorscale} />;
-  }, [colorData.data, colorData?.isLoading, colorData?.serverError]);
+  }, [legendData]);
 
-  if (isLoading) {
-    return <></>;
-  }
-  if (serverError) {
-    return <div>Error loading obs</div>;
-  }
+
   return (
     <Box
       sx={{
@@ -124,19 +101,19 @@ export const ObsSelect = ({ adata, obsCol, onSelect, callback = () => { } }) => 
         Observations
         <Box sx={{ overflowY: "auto", overflowX: "hidden" }}>
           <FormControl sx={{ width: "100%" }}>
-            <RadioGroup value={obsCol} onChange={(e) => onSelect(e.target.value)}>
+            <RadioGroup value={selectedObservation} onChange={(e) => onObservationSelect(e.target.value)}>
               <Divider>Categorical</Divider>
-              {data.filter((obs) => 'categories' in obs).map((col) => (
-                <CategoricalCol key={col.name} col={col} showColor={obsCol === col.name} />
+              {observations && observations.filter((obs) => 'categories' in obs).map((col) => (
+                <CategoricalCol key={col.name} col={col as CategoricalObservation} showColor={selectedObservation === col.name} />
               ))}
               <Divider>Numerical</Divider>
-              {data.filter((obs) => !('categories' in obs)).map((col) => (
+              {observations && observations.filter((obs) => !('categories' in obs)).map((col) => (
                 <NumericalCol key={col.name} col={col} />
               ))}
             </RadioGroup>
           </FormControl>
         </Box>
-        {!!obsCol && legend}
+        {!!selectedObservation && legend}
       </Stack>
     </Box>
   );

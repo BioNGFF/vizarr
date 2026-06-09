@@ -1,12 +1,10 @@
 import { useCallback } from "react";
-
 import { useQueries, useQuery, type UseQueryResult } from "@tanstack/react-query";
 import _ from "lodash";
-import { z } from 'zod';
-
 
 import { COLORSCALES } from "./constants/colorscales";
-import { fetchDataFromZarr, getColors, getObs, getVarNames, getZarrPath } from "./utils";
+import { getColors } from "./utils";
+import { fetchDataFromZarr, getObservationNames, getFeatureNames, getFeatureDataPath, getObservationDataPath, type Observation } from "./anndata";
 
 export interface Feature {
   index?: number,
@@ -21,8 +19,20 @@ export interface MatrixProps {
     namesCol?: string
   },
   obs?: {
-    col: number
+    col?: string
   }
+}
+
+interface LabelColourMap {
+  labelValue: number,
+  rgba: number[]
+  value: string | number
+}
+
+interface ColourData {
+  colors: LabelColourMap[],
+  min: number,
+  max: number
 }
 
 export interface ColourProps {
@@ -31,57 +41,74 @@ export interface ColourProps {
   colorscale: string[]
 }
 
-interface AnndataQueryParams {
-  url: URL,
-  matrixProps?: MatrixProps,
-  colorProps?: ColourProps
-}
 
 export interface AnndataURL {
   url: URL,
-  namesCol: string
-
 }
 
+export interface FeatureParams {
+  type: 'feature',
+  params: Feature
+}
+export interface ObservationParams {
+  type: 'observation',
+  params: Observation
+}
 
+export const getAnndataColors = async (url: URL, params: FeatureParams | ObservationParams | undefined, colorProps?: ColourProps): Promise<ColourData> => {
 
-export const getAnndataColors = async (url: URL, matrixProps: MatrixProps, colorProps?: ColourProps) => {
-  let zarrData;
-  try {
-    const zarrPath = await getZarrPath(url, matrixProps);
-    zarrData = await fetchDataFromZarr(zarrPath.url, zarrPath.path, zarrPath.s);
-  } catch (error) {
-    console.error(error);
-    return null;
+  if (typeof params === 'undefined') {
+    return (Promise.reject(new Error('Invalid params')))
   }
-  if (!zarrData) return null;
-  const { categories } = zarrData
-  const max = categories ? categories.length - 1 : colorProps?.max || _.max(zarrData.data);
-  const min = categories ? 0 : colorProps?.min || _.min(zarrData.data);
-  const colorscale = categories ? COLORSCALES.Accent : colorProps?.colorscale;
-  const colors = getColors({
-    data: zarrData.data,
+  let path;
+
+  if (params.type === 'feature') {
+    path = await getFeatureDataPath(url, params.params.index)
+  } else if (params.type === 'observation') {
+    path = await getObservationDataPath(params.params.name)
+  } else {
+    throw new Error('Unknown anndata parameter type')
+  }
+  const data = await fetchDataFromZarr(url, path.path, path.slice);
+  let min, max, colorscale, categories;
+  if ('categories' in data && data.categories) {
+    const categories = data.categories
+    max = categories.length - 1
+    min = 0
+    colorscale = COLORSCALES.Accent
+
+
+  } else {
+    max = colorProps?.max || _.max(data.data) || 0
+    min = colorProps?.min || _.min(data.data) || 0
+    colorscale = colorProps?.colorscale || COLORSCALES.Accent
+
+  }
+
+  const colours = getColors({
+    data: data.data,
     max,
     min,
-    colorProps: { ...colorProps, colorscale },
-    categories,
+    colorscale: colorscale,
+    categories
   })
-  return {
-    colors: colors,
+  return ({
+    colors: colours,
     max,
-    min,
-    ...(categories ? { categories } : {}),
-    colorscale,
-  };
+    min
+  })
+
 };
 
-export const useAnndataColors = (anndataQueryParams: AnndataQueryParams, opts = {}) => {
+
+
+export const useAnndataColors = (url: URL, param: FeatureParams | ObservationParams | undefined, opts = {}): UseQueryResult<ColourData> => {
+
   const result = useQuery({
-    queryKey: ["anndataColor", anndataQueryParams.url, anndataQueryParams.matrixProps, anndataQueryParams.colorProps],
-    queryFn: () => getAnndataColors(anndataQueryParams.url, anndataQueryParams.matrixProps, anndataQueryParams.colorProps),
+    queryKey: ["anndataColor", url, param],
+    queryFn: () => getAnndataColors(url, param),
     ...opts,
   });
-
   return result;
 };
 
@@ -110,19 +137,18 @@ export const useAnndatasColors = (adatas = [], opts = {}) => {
   return { data, isLoading, serverError };
 };
 
-export const useAnndataFeatures = (adata: AnndataURL) => {
+export const useAnndataFeatures = (adata: AnndataURL): UseQueryResult<string[]> => {
   const result = useQuery({
-    queryKey: ["anndataFeatures", adata.url, adata.namesCol],
-    queryFn: () => getVarNames(adata.url),
+    queryKey: ["anndataFeatures", adata.url],
+    queryFn: () => getFeatureNames(adata.url),
   });
-
   return result;
 };
 
 export const useAnndataObs = (adata: AnndataURL) => {
   const result = useQuery({
     queryKey: ["anndataObs", adata.url],
-    queryFn: () => getObs(adata.url),
+    queryFn: () => getObservationNames(adata.url),
   });
   return result;
 };
