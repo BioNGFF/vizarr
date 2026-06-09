@@ -54,7 +54,7 @@ export default function App() {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
-      tableURLs: searchParams.getAll("anndata").map((v) => (v ? { url: v } : null))
+      tableURLs: searchParams.getAll("anndata")
     };
   }, [urlString]);
 
@@ -87,10 +87,10 @@ export default function App() {
 
   const anndataControllers = React.useMemo(() => {
     return sources.map((_s, i) => {
-      if (!tableURLs?.[i]?.url) return null;
+      if (!tableURLs?.[i]) return null;
       return (
         <AnndataController
-          key={tableURLs[i]?.url}
+          key={tableURLs[i]}
           adata={tableURLs[i]}
           callback={(colorData: labelColor[]) => selectCallback(colorData, i)}
         />

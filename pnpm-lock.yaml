@@ -82,6 +82,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.85.3
         version: 5.101.0(react@18.3.1)
+      '@types/lodash':
+        specifier: ^4.17.24
+        version: 4.17.24
       hyparquet:
         specifier: ^1.25.6
         version: 1.26.0
@@ -97,9 +100,15 @@ importers:
       react-window:
         specifier: ^2.0.2
         version: 2.2.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      yaml:
+        specifier: ^2.8.2
+        version: 2.9.0
       zarrita:
         specifier: 0.5.0
         version: 0.5.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@vitejs/plugin-react':
         specifier: ^4.3.3
@@ -1620,6 +1629,9 @@ packages:
 
   '@types/hammerjs@2.0.46':
     resolution: {integrity: sha512-ynRvcq6wvqexJ9brDMS4BnBLzmr0e14d6ZJTEShTBWKymQiHwlAyGu0ZPEFI2Fh1U53F7tN9ufClWM5KvqkKOw==}
+
+  '@types/lodash@4.17.24':
+    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
 
   '@types/node@24.12.4':
     resolution: {integrity: sha512-GUUEShf+PBCGW2KaXwcIt3Yk+e3pkKwWKb9GSyM9WQVE+ep2jzmHdGsHzu4wgcZy5fN9FBdVzjpBQsYlpfpgLA==}
@@ -4368,6 +4380,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
   zstd-codec@0.1.5:
     resolution: {integrity: sha512-v3fyjpK8S/dpY/X5WxqTK3IoCnp/ZOLxn144GZVlNUjtwAchzrVo03h+oMATFhCIiJ5KTr4V3vDQQYz4RU684g==}
 
@@ -6022,6 +6037,8 @@ snapshots:
   '@types/google.maps@3.65.0': {}
 
   '@types/hammerjs@2.0.46': {}
+
+  '@types/lodash@4.17.24': {}
 
   '@types/node@24.12.4':
     dependencies:
@@ -8766,6 +8783,8 @@ snapshots:
       numcodecs: 0.3.2
 
   zod@3.25.76: {}
+
+  zod@4.4.3: {}
 
   zstd-codec@0.1.5:
     optional: true
