@@ -39,11 +39,11 @@ const computeColor = (colormap: string[], value: number) => {
   return interpolateColor(colormap[index1], colormap[index2], factor);
 };
 
-export const getColor = ({ value, colorscale = COLORSCALES.Viridis }: { value: number, colorscale: string[] }) => {
+export const getColor = ({ value, colorscale = COLORSCALES.Viridis }: { value: number, colorscale?: string[] }) => {
   return [...computeColor(colorscale, value), 255];
 };
 
-export const getColors = ({ data, max, min, colorscale, categories }: { data: number[], max: number, min: number, colorscale: string[], categories?: string[] }) => {
+export const getColors = ({ data, max, min, colorscale, categories }: { data: number[], max: number, min: number, colorscale?: string[], categories?: string[] }) => {
   return _.map(data, (v: number, i: number) => ({
     labelValue: i + 1,
     rgba: getColor({ value: (v - min) / (max - min), colorscale }),

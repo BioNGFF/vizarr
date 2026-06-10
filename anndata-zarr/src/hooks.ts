@@ -4,10 +4,11 @@ import _ from "lodash";
 
 import { COLORSCALES } from "./constants/colorscales";
 import { getColors } from "./utils";
-import { fetchDataFromZarr, getObservationNames, getFeatureNames, getFeatureDataPath, getObservationDataPath, type Observation } from "./anndata";
+import { fetchDataFromZarr, getObservationNames, getFeatureNames, getFeatureDataPath, getObservationDataPath, getLabels } from "./anndata";
+import type { LabelType } from "./components/AnndataController";
 
 export interface Feature {
-  index?: number,
+  index: string,
   name?: string,
   namesCol?: string
 }
@@ -34,13 +35,13 @@ interface ColourData {
   min: number,
   max: number,
   categories?: string[],
-  colorscale: string[]
+  colorscale?: string[]
 }
 
 export interface ColourProps {
   min: number,
   max: number,
-  colorscale: string[]
+  colorscale?: string[]
 }
 
 
@@ -50,24 +51,24 @@ export interface AnndataURL {
 
 export interface FeatureParams {
   type: 'feature',
-  params: Feature
+  index: number
 }
 export interface ObservationParams {
   type: 'observation',
-  params: Observation
+  index: string
 }
 
-export const getAnndataColors = async (url: URL, params: FeatureParams | ObservationParams | undefined, colorProps?: ColourProps): Promise<ColourData> => {
+export const getAnndataColors = async (url: URL, labelQueryParameters: LabelQueryParameters | undefined, colorProps?: ColourProps): Promise<ColourData> => {
 
-  if (typeof params === 'undefined') {
+  if (typeof labelQueryParameters === 'undefined') {
     return (Promise.reject(new Error('Invalid params')))
   }
   let path;
 
-  if (params.type === 'feature') {
-    path = await getFeatureDataPath(url, params.params.index)
-  } else if (params.type === 'observation') {
-    path = await getObservationDataPath(params.params.name)
+  if (labelQueryParameters.type === 'feature') {
+    path = await getFeatureDataPath(url, labelQueryParameters.labelIndex)
+  } else if (labelQueryParameters.type === 'observation') {
+    path = await getObservationDataPath(labelQueryParameters.labelIndex)
   } else {
     throw new Error('Unknown anndata parameter type')
   }
@@ -81,10 +82,9 @@ export const getAnndataColors = async (url: URL, params: FeatureParams | Observa
   } else {
     max = colorProps?.max || _.max(data.data) || 0
     min = colorProps?.min || _.min(data.data) || 0
-    colorscale = colorProps?.colorscale || COLORSCALES.Accent
+    colorscale = colorProps?.colorscale
 
   }
-
   const colours = getColors({
     data: data.data,
     max,
@@ -102,12 +102,41 @@ export const getAnndataColors = async (url: URL, params: FeatureParams | Observa
 
 };
 
+type LabelQueryParameters = {
+  type: LabelType,
+  labelIndex: string
+}
 
-export const useAnndataColors = (url: URL, param: FeatureParams | ObservationParams | undefined, opts = {}): UseQueryResult<ColourData> => {
+
+
+export type FeatureMetadata = {
+  type: 'feature',
+  labelIndex: string,
+  categories?: string[]
+}
+
+export type ObservationMetadata = {
+  type: 'observation',
+  labelIndex: string,
+  categories?: string[]
+}
+
+
+export function useTableLabels(url: URL): UseQueryResult<(FeatureMetadata | ObservationMetadata)[]> {
+  const labels = useQuery({
+    queryKey: ["labels", url],
+    queryFn: () => getLabels(url),
+  });
+
+  return labels
+
+}
+
+export const useAnndataColors = (url: URL, labelQueryParameters: LabelQueryParameters | undefined, opts = {}): UseQueryResult<ColourData> => {
 
   const result = useQuery({
-    queryKey: ["anndataColor", url, param],
-    queryFn: () => getAnndataColors(url, param),
+    queryKey: ["anndataColor", url, labelQueryParameters],
+    queryFn: () => getAnndataColors(url, labelQueryParameters),
     ...opts,
   });
   return result;
@@ -138,7 +167,7 @@ export const useAnndatasColors = (adatas = [], opts = {}) => {
   return { data, isLoading, serverError };
 };
 
-export const useAnndataFeatures = (adata: AnndataURL): UseQueryResult<string[]> => {
+export const useAnndataFeatures = (adata: AnndataURL): UseQueryResult<FeatureMetadata[]> => {
   const result = useQuery({
     queryKey: ["anndataFeatures", adata.url],
     queryFn: () => getFeatureNames(adata.url),
@@ -146,7 +175,7 @@ export const useAnndataFeatures = (adata: AnndataURL): UseQueryResult<string[]> 
   return result;
 };
 
-export const useAnndataObs = (adata: AnndataURL) => {
+export const useAnndataObs = (adata: AnndataURL): UseQueryResult<ObservationMetadata[]> => {
   const result = useQuery({
     queryKey: ["anndataObs", adata.url],
     queryFn: () => getObservationNames(adata.url),

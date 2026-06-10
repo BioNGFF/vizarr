@@ -11,7 +11,7 @@ const fixtures_path = path.resolve(path.join(__dirname, "..", "..", "fixtures"))
 test("Can get anndata colours", async () => {
   const table = yaml.parse(fs.readFileSync(path.join(fixtures_path, "anndata_table.yaml"), 'utf-8'))
 
-  const colours = await getAnndataColors(table.source, { type: 'feature', params: { index: 3 } })
+  const colours = await getAnndataColors(table.source, { type: 'feature', labelIndex: '3' })
 
   expect(colours).toEqual(expectedColours)
 })

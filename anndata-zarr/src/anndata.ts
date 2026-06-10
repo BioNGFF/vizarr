@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { URL } from "url";
 import { FetchStore, open } from "zarrita";
 import { fetchZarrGroup, getData } from './zarr';
+import type { FeatureMetadata, ObservationMetadata, ObservationParams } from './hooks';
 
 const OBSERVATION_NAMES_PATH = 'obs'
 const FEATURE_NAMES_PATH = 'var'
@@ -94,17 +95,18 @@ export const fetchDataFromZarr = async (url: URL, path: string, slice: (number |
     return ({
       data: parsedData
     })
-  } else if (attrs['encoding-type'] === 'string-array') {
-    const parsedData = parseStringArray(data)
-    return ({
-      data: parsedData
-    })
   }
   return ({ data: [] })
 
 };
 
-export const getFeatureNames = async (url: URL): Promise<string[]> => {
+export async function getLabels(url: URL): Promise<(FeatureMetadata | ObservationMetadata)[]> {
+  const featureNames = await getFeatureNames(url)
+  const observationNames = await getObservationNames(url)
+  return [...featureNames, ...observationNames]
+}
+
+export const getFeatureNames = async (url: URL): Promise<FeatureMetadata[]> => {
   try {
     const root = await fetchZarrGroup(url);
 
@@ -112,7 +114,16 @@ export const getFeatureNames = async (url: URL): Promise<string[]> => {
     const parsedAttrs = ZarrObservationAttrsSchema.parse(node.attrs)
     const path = `${FEATURE_NAMES_PATH}/${parsedAttrs._index}`
     const { data, dtype } = await getData(root, path)
-    return parseStringArray(data);
+
+    const parsedData = parseStringArray(data)
+
+    return parsedData.map((name) => {
+      return {
+        type: 'feature',
+        labelIndex: name
+      }
+    })
+
   } catch (error) {
     console.error(error);
     return [];
@@ -126,7 +137,7 @@ function getObservationNamesPath(encodingType: string): string {
   return ''
 }
 
-export const getObservationNames = async (url: URL): Promise<Array<Observation>> => {
+export const getObservationNames = async (url: URL): Promise<Array<ObservationMetadata>> => {
   try {
     const root = await fetchZarrGroup(url)
 
@@ -140,16 +151,24 @@ export const getObservationNames = async (url: URL): Promise<Array<Observation>>
         const parsedAttrs = ZarrAttrsSchema.parse(dataNodeOrGroup.attrs)
         const dataPath = `${OBSERVATION_NAMES_PATH}/${col}/${getObservationNamesPath(parsedAttrs['encoding-type'])}`
         const dataNode = await open(root.resolve(dataPath), { kind: 'array' })
-        if (dataNode.dtype === 'bool') {
-          return ({ name: col, categories: ["false", "true"] })
-        }
-        if (parsedAttrs['encoding-type'] == 'array' || parsedAttrs['encoding-type'] === 'string-array') {
-          return { name: col };
-        }
-        const { data, dtype } = await getData(root, dataPath)
-        const parsedCategories = AnndataCategoriesSchema.parse(data)
-        return { name: col, categories: parsedCategories }
 
+        const metadata: ObservationMetadata = { type: 'observation', labelIndex: col }
+        if (dataNode.dtype === 'bool') {
+          metadata['categories'] = ['false', 'true']
+          return metadata
+        }
+
+        if (parsedAttrs['encoding-type'] == 'array') {
+          return metadata
+        }
+
+        if (parsedAttrs['encoding-type'] == 'categorical') {
+          const { data, dtype } = await getData(root, dataPath)
+          const parsedCategories = AnndataCategoriesSchema.parse(data)
+          metadata['categories'] = parsedCategories
+          return metadata
+        }
+        return undefined
       })
     )
     return obs.filter((observation) => observation != undefined)
@@ -174,11 +193,11 @@ export const getVarIndex = async (url: URL, varId: string, namesCol = VAR_NAMES_
   return varIndex;
 };
 
-export async function getFeatureDataPath(url: URL, index?: number, name?: string): Promise<{ path: string, slice: (number | null)[] }> {
+export async function getFeatureDataPath(url: URL, index: string, name?: string): Promise<{ path: string, slice: (number | null)[] }> {
   if (index) {
     return ({
       path: ARRAY_PATH,
-      slice: [null, index]
+      slice: [null, Number(index)]
     })
   } else if (name) {
     return {

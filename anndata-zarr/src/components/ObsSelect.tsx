@@ -17,24 +17,23 @@ import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 
 import { COLORSCALES } from "../constants/colorscales";
-import { type ColourProps } from "../hooks";
+import { type ColourProps, type ObservationMetadata } from "../hooks";
 import { type CategoricalObservation, type Observation } from "../anndata";
 import { getColor } from "../utils";
 import { Legend } from "./Legend";
 
 // @TODO: fix styling (width)
-const CategoricalCol = ({ col, showColor = false }: { col: CategoricalObservation, showColor: boolean }) => {
+const CategoricalCol = ({ name, categories, showColor = false }: { name: string, categories: string[], showColor: boolean }) => {
   const [open, setOpen] = useState(false);
-  const { categories } = col;
 
   return (
     <Box>
       <Box onClick={() => setOpen(!open)} sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
         <FormControlLabel
           control={<Radio size="small" onClick={(e) => e.stopPropagation()} />}
-          label={col.name}
-          key={col.name}
-          value={col.name}
+          label={name}
+          key={name}
+          value={name}
         />
         {open ? <ExpandLess /> : <ExpandMore />}
       </Box>
@@ -67,11 +66,11 @@ const CategoricalCol = ({ col, showColor = false }: { col: CategoricalObservatio
   );
 };
 
-const NumericalCol = ({ col }: { col: { name: string } }) => {
-  return <FormControlLabel control={<Radio size="small" />} label={col.name} key={col.name} value={col.name} />;
+const NumericalCol = ({ name }: { name: string }) => {
+  return <FormControlLabel control={<Radio size="small" />} label={name} key={name} value={name} />;
 };
 interface ObservationControlsProps {
-  observations: Observation[],
+  observations: ObservationMetadata[],
   selectedObservation?: string,
   onObservationSelect: Function,
   legendData?: ColourProps
@@ -81,7 +80,7 @@ export const ObsSelect = ({ observations, selectedObservation, onObservationSele
 
 
   const legend = useMemo(() => {
-    if (legendData) {
+    if (legendData && legendData.colorscale) {
       return <Legend min={legendData.min} max={legendData.max} colorscale={legendData?.colorscale} />;
     } else {
       <></>
@@ -102,14 +101,14 @@ export const ObsSelect = ({ observations, selectedObservation, onObservationSele
         Observations
         <Box sx={{ overflowY: "auto", overflowX: "hidden" }}>
           <FormControl sx={{ width: "100%" }}>
-            <RadioGroup value={selectedObservation} onChange={(e) => onObservationSelect(e.target.value)}>
+            <RadioGroup value={selectedObservation} onChange={(e) => onObservationSelect(e.target.value, 'observation')}>
               <Divider>Categorical</Divider>
-              {observations && observations.filter((obs) => 'categories' in obs).map((col) => (
-                <CategoricalCol key={col.name} col={col as CategoricalObservation} showColor={selectedObservation === col.name} />
+              {observations && observations.filter((obs) => 'categories' in obs).map((observation) => (
+                <CategoricalCol key={observation.labelIndex} name={observation.labelIndex} categories={observation.categories ? observation.categories : []} showColor={selectedObservation === observation.labelIndex} />
               ))}
               <Divider>Numerical</Divider>
-              {observations && observations.filter((obs) => !('categories' in obs)).map((col) => (
-                <NumericalCol key={col.name} col={col} />
+              {observations && observations.filter((obs) => !('categories' in obs)).map((observation) => (
+                <NumericalCol key={observation.labelIndex} name={observation.labelIndex} />
               ))}
             </RadioGroup>
           </FormControl>

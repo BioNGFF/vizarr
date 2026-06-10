@@ -16,7 +16,7 @@ const RowComponent = ({ index, items, style, onSelect, selectedIndex }: { index:
     <ListItem style={style} key={index} component="div" disablePadding>
       <ListItemButton
         style={{ height: "100%" }}
-        onClick={() => onSelect({ index: items[index].matrixIndex })}
+        onClick={() => onSelect(items[index].name, 'feature')}
         selected={items[index].matrixIndex === selectedIndex}
       >
         <ListItemText primary={items[index].name} />
@@ -24,31 +24,31 @@ const RowComponent = ({ index, items, style, onSelect, selectedIndex }: { index:
     </ListItem>
   );
 };
-
-// List of features
-// Currently selected feature to display
-// onSelect to set feature
-
-export const FeatureSelect = ({ featureNames, selectedFeature, onFeatureSelect, legendData }: { featureNames: string[], selectedFeature?: Feature, onFeatureSelect: Function, legendData?: ColourProps }) => {
+export const FeatureSelect = ({ featureNames, selectedFeatureIndex, onFeatureSelect, legendData }: { featureNames: string[], selectedFeatureIndex?: string, onFeatureSelect: Function, legendData?: ColourProps }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
 
-  const allItems = featureNames.map((name: string, index: number) => {
-    return {
-      name: name,
-      matrixIndex: index
+  const items = useMemo(() => {
+    const allItems = featureNames.map((name: string, index: number) => {
+      return {
+        name: name,
+        matrixIndex: index
+      }
+    })
+    if (!searchTerm) {
+      return allItems
     }
-  })
+    return allItems.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  }, [featureNames, searchTerm])
 
   const legend = useMemo(() => {
-    if (legendData) {
+    if (legendData && legendData.colorscale) {
       return <Legend min={legendData.min} max={legendData.max} colorscale={legendData.colorscale} />;
     } else {
       return <></>
     }
   }, [legendData]);
-
-
 
   return (
     <Box
@@ -70,12 +70,13 @@ export const FeatureSelect = ({ featureNames, selectedFeature, onFeatureSelect, 
         />
         <List
           rowComponent={RowComponent}
-          rowCount={allItems.length}
+          rowCount={items.length}
           rowHeight={25}
+          //@ts-expect-error
           rowProps={{
-            items: allItems,
+            items: items,
             onSelect: onFeatureSelect,
-            selectedIndex: selectedFeature?.index,
+            selectedIndex: Number(selectedFeatureIndex),
           }}
         />
         {legend}
