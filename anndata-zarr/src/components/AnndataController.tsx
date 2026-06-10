@@ -51,9 +51,6 @@ export const AnndataController = ({ adata, callback = () => { } }: { adata: stri
 
   const colorData = useAnndataColors(url.url, param, { enabled: !!param })
 
-
-  const legendData = colorData.data && 'colorscale' in colorData.data ? colorData.data : undefined
-
   useEffect(() => {
     if (colorData?.isError) {
       callback(null);
@@ -68,10 +65,10 @@ export const AnndataController = ({ adata, callback = () => { } }: { adata: stri
   return (
     <Stack sx={{ height: "100%" }}>
       <Box sx={{ height: "50%" }}>
-        {features.data && <FeatureSelect featureNames={features.data} selectedFeature={feature} onFeatureSelect={handleFeatureSelect} legendData={legendData} />}
+        {features.data && <FeatureSelect featureNames={features.data} selectedFeature={feature} onFeatureSelect={handleFeatureSelect} legendData={feature ? colorData.data : undefined} />}
       </Box>
       <Box sx={{ height: "50%" }}>
-        {observations.data && <ObsSelect observations={observations.data} selectedObservation={observation} onObservationSelect={handleObservationSelect} legendData={legendData} />}
+        {observations.data && <ObsSelect observations={observations.data} selectedObservation={observation} onObservationSelect={handleObservationSelect} legendData={observation ? colorData.data : undefined} />}
       </Box>
 
     </Stack>

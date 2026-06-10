@@ -32,7 +32,9 @@ interface LabelColourMap {
 interface ColourData {
   colors: LabelColourMap[],
   min: number,
-  max: number
+  max: number,
+  categories?: string[],
+  colorscale: string[]
 }
 
 export interface ColourProps {
@@ -76,8 +78,6 @@ export const getAnndataColors = async (url: URL, params: FeatureParams | Observa
     max = categories.length - 1
     min = 0
     colorscale = COLORSCALES.Accent
-
-
   } else {
     max = colorProps?.max || _.max(data.data) || 0
     min = colorProps?.min || _.min(data.data) || 0
@@ -95,11 +95,12 @@ export const getAnndataColors = async (url: URL, params: FeatureParams | Observa
   return ({
     colors: colours,
     max,
-    min
+    min,
+    categories,
+    colorscale
   })
 
 };
-
 
 
 export const useAnndataColors = (url: URL, param: FeatureParams | ObservationParams | undefined, opts = {}): UseQueryResult<ColourData> => {

@@ -197,26 +197,3 @@ export async function getObservationDataPath(name: string): Promise<{ path: stri
   }
 }
 
-//export const getZarrDataPath = async (url: URL, name: string, type: string) => {
-//  if (type === 'feature') {
-//    if (feature.index !== undefined && feature.index !== null) {
-//      return { url, path: "X", s: [null, feature.index] };
-//    }
-//    if (feature.name) {
-//      return {
-//        url,
-//        path: "X",
-//        s: [null, await getVarIndex(url, feature.name)],
-//      };
-//    }
-//  }
-//  if (obs) {
-//    return {
-//      url,
-//      path: `obs/${obs.col}`,
-//      s: null,
-//    };
-//  }
-//
-//  throw new Error("No feature or obs in matrixProps");
-//};

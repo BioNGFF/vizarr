@@ -18,7 +18,8 @@ import Stack from "@mui/material/Stack";
 
 import { COLORSCALES } from "../constants/colorscales";
 import { type ColourProps } from "../hooks";
-import { getColor, type CategoricalObservation, type Observation } from "../utils";
+import { type CategoricalObservation, type Observation } from "../anndata";
+import { getColor } from "../utils";
 import { Legend } from "./Legend";
 
 // @TODO: fix styling (width)
