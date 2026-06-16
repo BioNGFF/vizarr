@@ -16,14 +16,18 @@ import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 
+import type { CategoricalObservation, Observation } from "../anndata";
 import { COLORSCALES } from "../constants/colorscales";
-import { type ColourProps, type ObservationMetadata } from "../hooks";
-import { type CategoricalObservation, type Observation } from "../anndata";
+import type { ColourProps, ObservationMetadata } from "../hooks";
 import { getColor } from "../utils";
 import { Legend } from "./Legend";
 
 // @TODO: fix styling (width)
-const CategoricalCol = ({ name, categories, showColor = false }: { name: string, categories: string[], showColor: boolean }) => {
+const CategoricalCol = ({
+  name,
+  categories,
+  showColor = false,
+}: { name: string; categories: string[]; showColor: boolean }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -52,7 +56,10 @@ const CategoricalCol = ({ name, categories, showColor = false }: { name: string,
                     sx={{
                       width: 10,
                       height: 10,
-                      bgcolor: `rgba(${getColor({ value: i / (categories.length - 1), colorscale: COLORSCALES.Accent })})`,
+                      bgcolor: `rgba(${getColor({
+                        value: i / (categories.length - 1),
+                        colorscale: COLORSCALES.Accent,
+                      })})`,
                     }}
                   />
                 </ListItemIcon>
@@ -70,23 +77,23 @@ const NumericalCol = ({ name }: { name: string }) => {
   return <FormControlLabel control={<Radio size="small" />} label={name} key={name} value={name} />;
 };
 interface ObservationControlsProps {
-  observations: ObservationMetadata[],
-  selectedObservation?: string,
-  onObservationSelect: Function,
-  legendData?: ColourProps
+  observations: ObservationMetadata[];
+  selectedObservation?: string;
+  onObservationSelect: (labelIndex: string, labelType: "observation" | "feature") => void;
+  legendData?: ColourProps;
 }
 
-export const ObsSelect = ({ observations, selectedObservation, onObservationSelect, legendData }: ObservationControlsProps) => {
-
-
+export const ObsSelect = ({
+  observations,
+  selectedObservation,
+  onObservationSelect,
+  legendData,
+}: ObservationControlsProps) => {
   const legend = useMemo(() => {
-    if (legendData && legendData.colorscale) {
+    if (legendData?.colorscale) {
       return <Legend min={legendData.min} max={legendData.max} colorscale={legendData?.colorscale} />;
-    } else {
-      <></>
     }
   }, [legendData]);
-
 
   return (
     <Box
@@ -101,15 +108,27 @@ export const ObsSelect = ({ observations, selectedObservation, onObservationSele
         Observations
         <Box sx={{ overflowY: "auto", overflowX: "hidden" }}>
           <FormControl sx={{ width: "100%" }}>
-            <RadioGroup value={selectedObservation} onChange={(e) => onObservationSelect(e.target.value, 'observation')}>
+            <RadioGroup
+              value={selectedObservation}
+              onChange={(e) => onObservationSelect(e.target.value, "observation")}
+            >
               <Divider>Categorical</Divider>
-              {observations && observations.filter((obs) => 'categories' in obs).map((observation) => (
-                <CategoricalCol key={observation.labelIndex} name={observation.labelIndex} categories={observation.categories ? observation.categories : []} showColor={selectedObservation === observation.labelIndex} />
-              ))}
+              {observations
+                ?.filter((obs) => "categories" in obs)
+                .map((observation) => (
+                  <CategoricalCol
+                    key={observation.labelIndex}
+                    name={observation.labelIndex}
+                    categories={observation.categories ? observation.categories : []}
+                    showColor={selectedObservation === observation.labelIndex}
+                  />
+                ))}
               <Divider>Numerical</Divider>
-              {observations && observations.filter((obs) => !('categories' in obs)).map((observation) => (
-                <NumericalCol key={observation.labelIndex} name={observation.labelIndex} />
-              ))}
+              {observations
+                ?.filter((obs) => !("categories" in obs))
+                .map((observation) => (
+                  <NumericalCol key={observation.labelIndex} name={observation.labelIndex} />
+                ))}
             </RadioGroup>
           </FormControl>
         </Box>

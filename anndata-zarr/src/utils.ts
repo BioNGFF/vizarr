@@ -1,10 +1,9 @@
 import _ from "lodash";
 
+import type { labelColor } from "./components/AnndataController";
 import { COLORSCALES } from "./constants/colorscales";
-import { type ColourProps } from "./hooks";
 
-
-const parseHexColor = (color: string) => {
+const parseHexColor = (color: string): [r: number, g: number, b: number] => {
   const r = Number.parseInt(color?.substring(1, 3), 16);
   const g = Number.parseInt(color?.substring(3, 5), 16);
   const b = Number.parseInt(color?.substring(5, 7), 16);
@@ -12,7 +11,7 @@ const parseHexColor = (color: string) => {
   return [r, g, b];
 };
 
-const interpolateColor = (color1: string, color2: string, factor: number) => {
+const interpolateColor = (color1: string, color2: string, factor: number): [r: number, g: number, b: number] => {
   const [r1, g1, b1] = parseHexColor(color1);
   const [r2, g2, b2] = parseHexColor(color2);
 
@@ -23,9 +22,9 @@ const interpolateColor = (color1: string, color2: string, factor: number) => {
   return [r, g, b];
 };
 
-const computeColor = (colormap: string[], value: number) => {
+const computeColor = (colormap: string[], value: number): [r: number, g: number, b: number] => {
   if (!colormap || Number.isNaN(value)) {
-    return [0, 0, 0, 255];
+    return [0, 0, 0];
   }
   if (value <= 0) {
     return parseHexColor(colormap[0]);
@@ -39,11 +38,20 @@ const computeColor = (colormap: string[], value: number) => {
   return interpolateColor(colormap[index1], colormap[index2], factor);
 };
 
-export const getColor = ({ value, colorscale = COLORSCALES.Viridis }: { value: number, colorscale?: string[] }) => {
+export const getColor = ({
+  value,
+  colorscale = COLORSCALES.Viridis,
+}: { value: number; colorscale?: string[] }): [r: number, g: number, b: number, a: number] => {
   return [...computeColor(colorscale, value), 255];
 };
 
-export const getColors = ({ data, max, min, colorscale, categories }: { data: number[], max: number, min: number, colorscale?: string[], categories?: string[] }) => {
+export const getColors = ({
+  data,
+  max,
+  min,
+  colorscale,
+  categories,
+}: { data: number[]; max: number; min: number; colorscale?: string[]; categories?: string[] }): labelColor[] => {
   return _.map(data, (v: number, i: number) => ({
     labelValue: i + 1,
     rgba: getColor({ value: (v - min) / (max - min), colorscale }),

@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import type React from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import ListItem from "@mui/material/ListItem";
@@ -8,15 +9,27 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { List } from "react-window";
 
-import { type ColourProps, type Feature } from "../hooks";
+import type { ColourProps, Feature } from "../hooks";
 import { Legend } from "./Legend";
 
-const RowComponent = ({ index, items, style, onSelect, selectedIndex }: { index: number, items: { matrixIndex: number, name: string }[], style: React.DetailedHTMLProps<React.StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>, onSelect: Function, selectedIndex?: number }) => {
+const RowComponent = ({
+  index,
+  items,
+  style,
+  onSelect,
+  selectedIndex,
+}: {
+  index: number;
+  items: { matrixIndex: number; name: string }[];
+  style: React.DetailedHTMLProps<React.StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>;
+  onSelect: (labelIndex: string, labelType: "observation" | "feature") => void;
+  selectedIndex?: number;
+}) => {
   return (
     <ListItem style={style} key={index} component="div" disablePadding>
       <ListItemButton
         style={{ height: "100%" }}
-        onClick={() => onSelect(items[index].name, 'feature')}
+        onClick={() => onSelect(items[index].name, "feature")}
         selected={items[index].matrixIndex === selectedIndex}
       >
         <ListItemText primary={items[index].name} />
@@ -24,29 +37,35 @@ const RowComponent = ({ index, items, style, onSelect, selectedIndex }: { index:
     </ListItem>
   );
 };
-export const FeatureSelect = ({ featureNames, selectedFeatureIndex, onFeatureSelect, legendData }: { featureNames: string[], selectedFeatureIndex?: string, onFeatureSelect: Function, legendData?: ColourProps }) => {
+export const FeatureSelect = ({
+  featureNames,
+  selectedFeatureIndex,
+  onFeatureSelect,
+  legendData,
+}: {
+  featureNames: string[];
+  selectedFeatureIndex?: string;
+  onFeatureSelect: (labelIndex: string, labelType: "observation" | "feature") => void;
+  legendData?: ColourProps;
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
-
 
   const items = useMemo(() => {
     const allItems = featureNames.map((name: string, index: number) => {
       return {
         name: name,
-        matrixIndex: index
-      }
-    })
+        matrixIndex: index,
+      };
+    });
     if (!searchTerm) {
-      return allItems
+      return allItems;
     }
     return allItems.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  }, [featureNames, searchTerm])
+  }, [featureNames, searchTerm]);
 
   const legend = useMemo(() => {
-    if (legendData && legendData.colorscale) {
+    if (legendData?.colorscale) {
       return <Legend min={legendData.min} max={legendData.max} colorscale={legendData.colorscale} />;
-    } else {
-      return <></>
     }
   }, [legendData]);
 

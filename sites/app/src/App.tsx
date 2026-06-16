@@ -3,10 +3,10 @@ import { type ViewState, Vizarr, type labelColor } from "@biongff/vizarr";
 //@ts-ignore
 //No types provided by anndata-zarr plugin
 import { AnndataController, AnndataProvider } from "@biongff/anndata-zarr";
-import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { RoiSelector, useRoiDeckExtension } from "@biongff/roi-selector";
 import type { PendingRoi, RoiDrawState, SavedRoi, ViewerInfo } from "@biongff/roi-selector";
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import debounce from "just-debounce-it";
 import * as React from "react";
 
@@ -54,11 +54,9 @@ export default function App() {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
-      tableURLs: searchParams.getAll("anndata")
+      tableURLs: searchParams.getAll("anndata"),
     };
   }, [urlString]);
-
-
 
   const [colors, setColors] = React.useState((): labelColor[][] => Array(sources.length).fill([]));
 
@@ -133,7 +131,6 @@ export default function App() {
             onPluginHover={enableRoi ? onHover : undefined}
             labelColours={colors}
           >
-
             {enableRoi && viewerInfo && (
               <RoiSelector
                 roiDrawState={roiDrawState}
@@ -148,6 +145,6 @@ export default function App() {
           </Vizarr>
         </AnndataProvider>
       </ThemeProvider>
-    </div >
+    </div>
   );
 }

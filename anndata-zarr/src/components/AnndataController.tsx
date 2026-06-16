@@ -6,32 +6,43 @@ import Stack from "@mui/material/Stack";
 import { FeatureSelect } from "./FeatureSelect";
 import { ObsSelect } from "./ObsSelect";
 
-
 import { useAnndataColors, useTableLabels } from "../hooks";
-export type LabelType = 'observation' | 'feature'
+export type LabelType = "observation" | "feature";
 
-export const AnndataController = ({ adata, callback = () => { } }: { adata: string, callback: Function }) => {
-  const [selectedLabel, setSelectedLabel] = useState<{ labelIndex: string, type: LabelType } | undefined>(undefined)
+export type labelColor = {
+  labelValue: number;
+  rgba: [r: number, g: number, b: number, a: number];
+  value?: string | number | null;
+};
 
-  const url = { url: new URL(adata) }
+export const AnndataController = ({
+  adata,
+  callback = () => {},
+}: { adata: string; callback: (colorData: labelColor[] | null) => void }) => {
+  const [selectedLabel, setSelectedLabel] = useState<{ labelIndex: string; type: LabelType } | undefined>(undefined);
 
-  function handleLabelSelect(labelIndex: string, labelType: 'feature' | 'observation') {
-    setSelectedLabel(
-      {
-        labelIndex: labelIndex,
-        type: labelType
-      }
-    )
+  const url = { url: new URL(adata) };
+
+  function handleLabelSelect(labelIndex: string, labelType: "feature" | "observation") {
+    setSelectedLabel({
+      labelIndex: labelIndex,
+      type: labelType,
+    });
   }
 
-  const labels = useTableLabels(url.url)
+  const labels = useTableLabels(url.url);
 
   //A necessary evil for now, I think in principle the UI should be more or less agnostic of whether it is an observation or a feature.
-  const selectedLabelDisplayData = labels.data && selectedLabel ? labels.data.filter((label) => label.labelIndex === selectedLabel.labelIndex)[0] : undefined
-  const selectedFeature = selectedLabelDisplayData?.type === 'feature' ? selectedLabelDisplayData.labelIndex : undefined
-  const selectedObservation = selectedLabelDisplayData?.type === 'observation' ? selectedLabelDisplayData.labelIndex : undefined
+  const selectedLabelDisplayData =
+    labels.data && selectedLabel
+      ? labels.data.filter((label) => label.labelIndex === selectedLabel.labelIndex)[0]
+      : undefined;
+  const selectedFeature =
+    selectedLabelDisplayData?.type === "feature" ? selectedLabelDisplayData.labelIndex : undefined;
+  const selectedObservation =
+    selectedLabelDisplayData?.type === "observation" ? selectedLabelDisplayData.labelIndex : undefined;
 
-  const colorData = useAnndataColors(url.url, selectedLabel, { enabled: !!selectedLabel })
+  const colorData = useAnndataColors(url.url, selectedLabel, { enabled: !!selectedLabel });
 
   useEffect(() => {
     if (colorData?.isError) {
@@ -39,7 +50,6 @@ export const AnndataController = ({ adata, callback = () => { } }: { adata: stri
       return;
     }
     if (!colorData?.isLoading && colorData?.data) {
-
       callback(colorData.data.colors);
     }
   }, [colorData, callback]);
@@ -47,12 +57,27 @@ export const AnndataController = ({ adata, callback = () => { } }: { adata: stri
   return (
     <Stack sx={{ height: "100%" }}>
       <Box sx={{ height: "50%" }}>
-        {labels.data && <FeatureSelect featureNames={labels.data.filter((label) => label.type === 'feature').map((metadata) => metadata.labelIndex)} selectedFeatureIndex={selectedFeature} onFeatureSelect={handleLabelSelect} legendData={selectedFeature ? colorData.data : undefined} />}
+        {labels.data && (
+          <FeatureSelect
+            featureNames={labels.data
+              .filter((label) => label.type === "feature")
+              .map((metadata) => metadata.labelIndex)}
+            selectedFeatureIndex={selectedFeature}
+            onFeatureSelect={handleLabelSelect}
+            legendData={selectedFeature ? colorData.data : undefined}
+          />
+        )}
       </Box>
       <Box sx={{ height: "50%" }}>
-        {labels.data && <ObsSelect observations={labels.data.filter((label) => label.type === 'observation')} selectedObservation={selectedObservation} onObservationSelect={handleLabelSelect} legendData={selectedObservation ? colorData.data : undefined} />}
+        {labels.data && (
+          <ObsSelect
+            observations={labels.data.filter((label) => label.type === "observation")}
+            selectedObservation={selectedObservation}
+            onObservationSelect={handleLabelSelect}
+            legendData={selectedObservation ? colorData.data : undefined}
+          />
+        )}
       </Box>
-
     </Stack>
   );
 };

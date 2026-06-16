@@ -5,10 +5,10 @@ import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useId } from "react";
 import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
-import { loadSources } from "../io";
-import type { OmeColor } from "../layers/label-layer";
 import { ViewStateContext, useViewState } from "../hooks";
+import { loadSources } from "../io";
 import { createSourceData } from "../io";
+import type { OmeColor } from "../layers/label-layer";
 import {
   type ImageLayerConfig,
   type ViewState,
@@ -106,8 +106,7 @@ function ViewerBridge({
       setViewState: stableSetViewState,
       setZSlice,
       setTSlice,
-    }
-
+    };
 
     onViewerStateChange?.({
       sourceUrl: sourceUrls[0] ?? "",
@@ -128,7 +127,7 @@ function ViewerBridge({
     // stableSetViewState,
     setZSlice,
     setTSlice,
-    onViewerStateChange
+    onViewerStateChange,
   ]);
 
   return (
