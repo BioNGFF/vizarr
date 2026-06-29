@@ -1,5 +1,4 @@
-import { ThemeProvider } from "@mui/material";
-import { Box, Link, Typography } from "@mui/material";
+import { Box, Link, ThemeProvider, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useId } from "react";
