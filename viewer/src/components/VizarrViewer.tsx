@@ -26,15 +26,6 @@ import Menu from "./Menu";
 import { InfoSnackbar } from "./Snackbar";
 import Viewer from "./Viewer";
 
-export interface ViewState {
-  /**Level of zoom */
-  zoom: number;
-  /** Coordinates to center the view state on */
-  target: [number, number];
-  width?: number;
-  height?: number;
-}
-
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
 export interface ViewerInfo {
   sourceUrl: string;
