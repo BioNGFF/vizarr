@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/BioNGFF/vizarr/compare/v1.2.0...v1.2.1) (2026-04-01)
+
+
+### Bug Fixes
+
+* correct semantic release to trigger release ([ad88e56](https://github.com/BioNGFF/vizarr/commit/ad88e5614837c406cdc91f9a93bd78962c26ecdb))
+
 # [1.2.0](https://github.com/BioNGFF/vizarr/compare/v1.1.1...v1.2.0) (2026-03-03)
 
 

@@ -5,8 +5,6 @@ import { useAtomCallback } from "jotai/utils";
 import * as React from "react";
 import { layerFamilyAtom, sourceInfoAtom } from "../state";
 
-type DeckInstance = DeckGLRef["deck"] | null;
-
 type Axis = "z" | "t";
 type AdjustArgs = {
   axis: Axis;
@@ -33,7 +31,7 @@ function AxisNavigationSnackbar({ open, axis }: { open: boolean; axis: string })
   );
 }
 
-export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport: DeckInstance) {
+export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>) {
   const [axisScrollKey, setAxisScrollKey] = React.useState<Axis | null>(null);
   const axisScrollKeyRef = React.useRef<Axis | null>(null);
   const axisScrollAccumulatorRef = React.useRef(0);
@@ -52,7 +50,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
           return;
         }
 
-        const deckInstance = viewport ?? deckRef.current?.deck ?? null;
+        const deckInstance = deckRef.current?.deck ?? null;
         const canvas = (deckInstance as { canvas?: HTMLCanvasElement } | null)?.canvas;
         if (!deckInstance || !canvas) {
           return; // no deck instance or canvas
@@ -190,7 +188,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
           }),
         );
       },
-      [viewport, deckRef],
+      [deckRef],
     ),
   );
 
@@ -264,7 +262,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
         return; // ignore if no axis key is set, fall back to default zoom behavior
       }
 
-      const deckInstance = viewport ?? deckRef.current?.deck ?? null;
+      const deckInstance = deckRef.current?.deck ?? null;
       const canvas = (deckInstance as { canvas?: HTMLCanvasElement } | null)?.canvas;
       if (!deckInstance || !canvas) {
         return; // no deck instance or canvas
@@ -291,12 +289,12 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
       const pointer = { x, y };
       adjustAxis({ axis: axisScrollKey, delta: -steps, pointer });
     },
-    [axisScrollKey, viewport, deckRef, adjustAxis],
+    [axisScrollKey, deckRef, adjustAxis],
   );
 
   React.useEffect(() => {
     // attach wheel listener to deck canvas
-    const deckInstance = (viewport ?? deckRef.current?.deck ?? null) as { canvas?: HTMLCanvasElement } | null;
+    const deckInstance = (deckRef.current?.deck ?? null) as { canvas?: HTMLCanvasElement } | null;
     const element = deckInstance?.canvas;
     if (!element) {
       return;
@@ -310,7 +308,7 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>, viewport:
     return () => {
       element.removeEventListener("wheel", listener);
     };
-  }, [viewport, handleWheel, deckRef]);
+  }, [handleWheel, deckRef]);
 
   // @TODO: check axis is present
   return axisScrollKey !== null && <AxisNavigationSnackbar open={true} axis={axisScrollKey} />;
