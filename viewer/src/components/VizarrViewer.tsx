@@ -1,18 +1,25 @@
-import { Info } from "@mui/icons-material";
-import { ThemeProvider } from "@mui/material";
-import { Box, Link, Typography } from "@mui/material";
+import { Box, Link, ThemeProvider, Typography } from "@mui/material";
+import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useId } from "react";
 import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
-import { ViewStateContext } from "../hooks";
+import { ViewStateContext, useViewState } from "../hooks";
 import { createSourceData } from "../io";
 import {
   type ImageLayerConfig,
+  type ViewState,
+  type ViewportSize,
+  currentImageBoundsAtom,
+  currentTInfoAtom,
+  currentZInfoAtom,
   redirectObjAtom,
+  setTSliceAtom,
+  setZSliceAtom,
   sourceErrorAtom,
   sourceInfoAtom,
   sourceWarningAtom,
   viewStateAtom,
+  viewportAtom,
 } from "../state";
 import theme from "../theme";
 import Menu from "./Menu";
@@ -28,6 +35,18 @@ export interface ViewState {
   height?: number;
 }
 
+/** Viewer state snapshot exposed to the host application via onViewerStateChange. */
+export interface ViewerInfo {
+  sourceUrl: string;
+  imageBounds: { xMin: number; yMin: number; xMax: number; yMax: number; spatialUnit: string } | null;
+  zInfo: { zValue: number; zMax: number } | null;
+  tInfo: { tValue: number; tMax: number } | null;
+  viewport: ViewportSize | null;
+  setViewState: (vs: ViewState) => void;
+  setZSlice: (z: number) => void;
+  setTSlice: (t: number) => void;
+}
+
 export interface VizarrViewerProps {
   /**  Source image urls*/
   sources?: string[];
@@ -35,9 +54,93 @@ export interface VizarrViewerProps {
   viewState?: ViewState;
   /** Callback to execute side effects when view state changes */
   onViewStateChange?: (viewState: ViewState) => void;
+  onViewerStateChange?: (info: ViewerInfo) => void;
+  additionalLayers?: Layer[];
+  pluginCursor?: string;
+  onPluginClick?: (coordinate: [number, number]) => boolean;
+  onPluginHover?: (coordinate: [number, number] | null) => void;
+  children?: React.ReactNode;
 }
 
-function VizarrViewerComponent({ sources = [], viewState: initialViewState, onViewStateChange }: VizarrViewerProps) {
+/**
+ * Internal component that lives inside the jotai Provider + ViewStateContext.
+ * It reads viewer atoms, notifies the host of viewer state changes,
+ * and renders <Menu/> + <Viewer/> + children.
+ */
+function ViewerBridge({
+  sourceUrls,
+  onViewStateChange,
+  onViewerStateChange,
+  additionalLayers = [],
+  pluginCursor,
+  onPluginClick,
+  onPluginHover,
+  children,
+}: {
+  sourceUrls: string[];
+  onViewStateChange?: (viewState: ViewState) => void;
+  onViewerStateChange?: (info: ViewerInfo) => void;
+  additionalLayers?: Layer[];
+  pluginCursor?: string;
+  onPluginClick?: (coordinate: [number, number]) => boolean;
+  onPluginHover?: (coordinate: [number, number] | null) => void;
+  children?: React.ReactNode;
+}) {
+  const imageBounds = useAtomValue(currentImageBoundsAtom);
+  const zInfo = useAtomValue(currentZInfoAtom);
+  const tInfo = useAtomValue(currentTInfoAtom);
+  const viewport = useAtomValue(viewportAtom);
+  const [, setViewState] = useViewState();
+
+  const setZSlice = useSetAtom(setZSliceAtom);
+  const setTSlice = useSetAtom(setTSliceAtom);
+
+  const stableSetViewState = React.useCallback(
+    (vs: ViewState) => {
+      setViewState(vs);
+    },
+    [setViewState],
+  );
+
+  // Notify host application when viewer state changes
+  React.useEffect(() => {
+    onViewerStateChange?.({
+      sourceUrl: sourceUrls[0] ?? "",
+      imageBounds,
+      zInfo,
+      tInfo,
+      viewport,
+      setViewState: stableSetViewState,
+      setZSlice,
+      setTSlice,
+    });
+  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, stableSetViewState, setZSlice, setTSlice, onViewerStateChange]);
+
+  return (
+    <>
+      <Menu />
+      <Viewer
+        additionalLayers={additionalLayers}
+        pluginCursor={pluginCursor}
+        onPluginClick={onPluginClick}
+        onPluginHover={onPluginHover}
+      />
+      {children}
+    </>
+  );
+}
+
+function VizarrViewerComponent({
+  sources = [],
+  viewState: initialViewState,
+  onViewStateChange,
+  onViewerStateChange,
+  additionalLayers,
+  pluginCursor,
+  onPluginClick,
+  onPluginHover,
+  children,
+}: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
@@ -108,8 +211,17 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
     <>
       {redirectObj === null && (
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
-          <Menu />
-          <Viewer />
+          <ViewerBridge
+            sourceUrls={sources}
+            onViewStateChange={onViewStateChange}
+            onViewerStateChange={onViewerStateChange}
+            additionalLayers={additionalLayers}
+            pluginCursor={pluginCursor}
+            onPluginClick={onPluginClick}
+            onPluginHover={onPluginHover}
+          >
+            {children}
+          </ViewerBridge>
         </ViewStateContext.Provider>
       )}
       {sourceError !== null && (
@@ -169,11 +281,11 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
 /**
  *Component to render source images
  */
-export default function VizarrViewer(props: VizarrViewerProps) {
+export default function VizarrViewer({ children, ...props }: VizarrViewerProps) {
   return (
     <ThemeProvider theme={theme}>
       <Provider>
-        <VizarrViewerComponent {...props} />
+        <VizarrViewerComponent {...props}>{children}</VizarrViewerComponent>
       </Provider>
     </ThemeProvider>
   );

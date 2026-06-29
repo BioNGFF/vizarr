@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,7 @@
     "check": "tsc"
   },
   "dependencies": {
+    "@biongff/roi-selector": "workspace:*",
     "@biongff/vizarr": "workspace:*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
