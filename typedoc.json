@@ -1,8 +1,13 @@
 {
   "entryPointStrategy": "packages",
-  "entryPoints": ["./viewer"],
+  "entryPoints": [
+    "./viewer",
+    "./roi-selector"
+  ],
   "packageOptions": {
-    "entryPoints": ["src/index.tsx"]
+    "entryPoints": [
+      "src/index.tsx"
+    ]
   },
   "out": "./docs/build"
 }
