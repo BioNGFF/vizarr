@@ -57,13 +57,6 @@ export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr
       );
     }
 
-    if (status === 404) {
-      throw new HttpError(
-        `404: Resource at ${source} could not be found. Please check the specified URL is correct and that the resource still exists.`,
-        statusText,
-        status,
-      );
-    }
     if (status === 403) {
       throw new HttpError(
         `403: Unauthorized to access resource at ${source}. Please check the specified URL is correct and that permission to access it is not restricted.`,

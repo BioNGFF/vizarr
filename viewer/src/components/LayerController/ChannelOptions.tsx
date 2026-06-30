@@ -1,7 +1,7 @@
 import { MoreHoriz, Remove } from "@mui/icons-material";
 import { Divider, IconButton, Input, NativeSelect, Paper, Popover, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
@@ -23,7 +23,7 @@ function ChannelOptions({ channelIndex }: Props) {
   const [layer, setLayer] = useLayerState();
   const [anchorEl, setAnchorEl] = useState<null | Element>(null);
   const { channel_axis, names } = sourceData;
-  const setSourceWarning = useSetAtom(sourceWarningAtom);
+  const [, setSourceWarning] = useAtom(sourceWarningAtom);
   const defaultNames = getDefaultChannelLabels(names.length);
 
   React.useEffect(() => {

@@ -245,7 +245,7 @@ function VizarrViewerComponent({
       )}
       {sourceWarning.length &&
         sourceWarning.map((warning, index) => {
-          return <InfoSnackbar message={warning} key={useId()} />;
+          return <InfoSnackbar message={warning} key={warning} />;
         })}
       {redirectObj !== null && (
         <Box
