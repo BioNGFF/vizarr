@@ -7,6 +7,10 @@ export default createTheme({
     primary: { main: grey[500] },
     secondary: { main: grey[500] },
   },
+  typography: {
+    fontFamily:
+      'Inter, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", sans-serif',
+  },
   components: {
     MuiButton: {
       defaultProps: { size: "small" },
