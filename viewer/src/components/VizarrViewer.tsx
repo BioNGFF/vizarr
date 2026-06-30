@@ -4,6 +4,7 @@ import { Box, Link, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useId } from "react";
+import type { Logger } from "../api";
 import { getSourceDataError, handleError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
 import { createSourceData } from "../io";
@@ -27,7 +28,6 @@ import theme from "../theme";
 import Menu from "./Menu";
 import { InfoSnackbar } from "./Snackbar";
 import Viewer from "./Viewer";
-import type { Logger } from "../api";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
 export interface ViewerInfo {

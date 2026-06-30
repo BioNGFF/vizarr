@@ -1,12 +1,13 @@
+// @ts-nocheck
+import * as fs from "node:fs";
 import * as http from "node:http";
 import * as path from "node:path";
-import * as fs from "node:fs";
-import { expect, test, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
 
-import { createSourceData } from "../src/io";
-import { HttpError, MetadataNotFoundError, openZarrRoot } from "../src/services/http";
 import type { Server } from "node:http";
 import { Group } from "zarrita";
+import { createSourceData } from "../src/io";
+import { HttpError, MetadataNotFoundError, openZarrRoot } from "../src/services/http";
 
 let server: Server<typeof http.IncomingMessage, typeof http.ServerResponse>;
 let port: number;
@@ -59,7 +60,7 @@ beforeEach(() => {
       return;
     });
   });
-  server.listen(() => { });
+  server.listen(() => {});
   port = server.address().port;
   server_url = `http://localhost:${port}`;
 });

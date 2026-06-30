@@ -39,9 +39,7 @@ export class MetadataNotFoundError extends MetadataError {
   }
 }
 
-export async function openZarrRoot(
-  source: string | zarr.Readable,
-): Promise<zarr.Group<zarr.Readable<unknown>> | undefined> {
+export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr.Group<zarr.Readable<unknown>>> {
   let url: string;
 
   if (typeof source === "string") {

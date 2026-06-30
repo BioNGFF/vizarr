@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { stringify } from "yaml";
-import * as utils from "../src/utils";
 import { openZarrRoot } from "../src/services/http";
+import * as utils from "../src/utils";
 
 export async function writeImageYaml(url, imageName, savePath) {
   const node = await openZarrRoot(url);
