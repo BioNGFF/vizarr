@@ -23,7 +23,7 @@ export function getSourceDataError(sourceData: Array<PromiseSettledResult<Source
 export function getSourceDataWarnings(sourceData: SourceData): string[] {
   const warnings = [];
   if (arraysIdentical(sourceData.names, getDefaultChannelLabels(sourceData.names.length))) {
-    warnings.push("Channel metadata either does not exist or was not loaded correctly.");
+    warnings.push("Using default channel names because no valid channel names were found in the metadata.");
   }
   return warnings;
 }
