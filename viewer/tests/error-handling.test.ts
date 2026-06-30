@@ -73,8 +73,7 @@ test("Server responds with status code 404", async () => {
   const results = await Promise.allSettled([createSourceData({ source: `${server_url}/404` })]);
   results.forEach((result, index) => {
     expect(result.status).toBe("rejected");
-    expect(result.reason.code).toBe(404);
-    expect(result.reason).instanceOf(HttpError);
+    expect(result.reason).instanceOf(MetadataNotFoundError);
   });
 });
 

@@ -1,6 +1,7 @@
 import type { Logger } from "./api";
 import type { SourceData } from "./state";
 
+import { arraysIdentical, getDefaultChannelLabels } from "./utils";
 export function writeUserErrorMessage(error: Error) {
   return error.message;
 }
@@ -17,6 +18,14 @@ export function getSourceDataError(sourceData: Array<PromiseSettledResult<Source
     return sourceData[0].reason;
   }
   return Error("An unknown error occurred.");
+}
+
+export function getSourceDataWarnings(sourceData: SourceData): string[] {
+  const warnings = [];
+  if (arraysIdentical(sourceData.names, getDefaultChannelLabels(sourceData.names.length))) {
+    warnings.push("Channel metadata either does not exist or was not loaded correctly.");
+  }
+  return warnings;
 }
 
 export function handleError(error: Error, logger: Logger) {

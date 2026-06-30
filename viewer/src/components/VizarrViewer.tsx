@@ -1,11 +1,17 @@
-import { Info } from "@mui/icons-material";
 import { ThemeProvider } from "@mui/material";
 import { Box, Link, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
-import React, { useId } from "react";
+import { type SnackbarKey, SnackbarProvider, closeSnackbar, enqueueSnackbar } from "notistack";
+import React from "react";
 import type { Logger } from "../api";
-import { getSourceDataError, handleError, sourceDataValid, writeUserErrorMessage } from "../error";
+import {
+  getSourceDataError,
+  getSourceDataWarnings,
+  handleError,
+  sourceDataValid,
+  writeUserErrorMessage,
+} from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
 import { createSourceData } from "../io";
 import {
@@ -20,13 +26,11 @@ import {
   setZSliceAtom,
   sourceErrorAtom,
   sourceInfoAtom,
-  sourceWarningAtom,
   viewStateAtom,
   viewportAtom,
 } from "../state";
 import theme from "../theme";
 import Menu from "./Menu";
-import { InfoSnackbar } from "./Snackbar";
 import Viewer from "./Viewer";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
@@ -139,7 +143,8 @@ function VizarrViewerComponent({
   const sourceError = useAtomValue(sourceErrorAtom);
   const redirectObj = useAtomValue(redirectObjAtom);
   const setSourceError = useSetAtom(sourceErrorAtom);
-  const sourceWarning = useAtomValue(sourceWarningAtom);
+  const [snackbarId, setSnackbarId] = React.useState<number | string | undefined>();
+
   React.useEffect(() => {
     if (initialViewState) {
       setViewStateAtom(initialViewState);
@@ -191,6 +196,10 @@ function VizarrViewerComponent({
 
       for (const res of results) {
         if (res.status === "fulfilled") {
+          const warnings = getSourceDataWarnings(res.value);
+          warnings.map((warning: string) => {
+            handleWarning(warning);
+          });
           sourceDatas.push(res.value);
         } else {
           console.error(res.reason);
@@ -202,8 +211,35 @@ function VizarrViewerComponent({
 
     loadSources();
   }, [configs, setSourceInfo, setSourceError, logger]);
+
+  const hideSnackbar = (snackbarId: SnackbarKey) => (
+    <>
+      <button
+        type={"button"}
+        onClick={() => {
+          closeSnackbar(snackbarId);
+        }}
+      >
+        Dismiss
+      </button>
+    </>
+  );
+
+  function handleWarning(warning: string): void {
+    logger.warn(warning);
+    setSnackbarId(enqueueSnackbar(warning, { variant: "warning", action: hideSnackbar }));
+  }
+
   return (
     <>
+      <div>
+        <SnackbarProvider
+          anchorOrigin={{ horizontal: "right", vertical: "top" }}
+          autoHideDuration={null}
+          variant={"warning"}
+          preventDuplicate={true}
+        />
+      </div>
       {redirectObj === null && (
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
           <ViewerBridge
@@ -243,10 +279,6 @@ function VizarrViewerComponent({
           </p>
         </Box>
       )}
-      {sourceWarning.length &&
-        sourceWarning.map((warning, index) => {
-          return <InfoSnackbar message={warning} key={warning} />;
-        })}
       {redirectObj !== null && (
         <Box
           sx={{

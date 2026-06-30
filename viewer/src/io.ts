@@ -79,7 +79,6 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
     let attrs = utils.resolveAttrs(node.attrs);
-    console.log(attrs);
     if (utils.isOmePlate(attrs)) {
       return loadPlate(config, node, attrs.plate);
     }
