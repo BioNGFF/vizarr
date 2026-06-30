@@ -53,7 +53,8 @@ export async function normalizeStore(source: string | zarr.Readable): Promise<za
     }
 
     // Wrap remote stores in a cache
-    return new zarr.Location(lru(store), path);
+    const location = new zarr.Location(lru(store), path);
+    return location;
   }
 
   return zarr.root(source);
@@ -63,11 +64,6 @@ function ensureAbsolutePath(path: string): `/${string}` {
   if (path === "/") return path;
   // @ts-expect-error - path always starts with '/'
   return path.startsWith("/") ? path : `/${path}`;
-}
-
-export async function open(source: string | zarr.Readable) {
-  const location = await normalizeStore(source);
-  return zarr.open(location);
 }
 
 export async function getAttrsOnly<T = unknown>(

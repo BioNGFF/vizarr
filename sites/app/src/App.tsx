@@ -19,6 +19,13 @@ function parseViewStateFromUrl(): ViewState | undefined {
   return undefined;
 }
 
+const logger = {
+  debug: (message: string) => console.debug(message),
+  info: (message: string) => console.info(message),
+  warn: (message: string) => console.warn(message),
+  error: (message: string) => console.error(message),
+};
+
 export default function App() {
   const urlString = window.location.href;
 
@@ -88,6 +95,7 @@ export default function App() {
         pluginCursor={enableRoi ? cursor : undefined}
         onPluginClick={enableRoi ? onClick : undefined}
         onPluginHover={enableRoi ? onHover : undefined}
+        logger={logger}
       >
         {enableRoi && viewerInfo && (
           <RoiSelector

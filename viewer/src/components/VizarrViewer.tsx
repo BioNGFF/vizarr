@@ -4,7 +4,7 @@ import { Box, Link, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useId } from "react";
-import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
+import { getSourceDataError, handleError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
 import { createSourceData } from "../io";
 import {
@@ -27,6 +27,7 @@ import theme from "../theme";
 import Menu from "./Menu";
 import { InfoSnackbar } from "./Snackbar";
 import Viewer from "./Viewer";
+import type { Logger } from "../api";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
 export interface ViewerInfo {
@@ -50,6 +51,7 @@ export interface VizarrViewerProps {
   onPluginClick?: (coordinate: [number, number]) => boolean;
   onPluginHover?: (coordinate: [number, number] | null) => void;
   children?: React.ReactNode;
+  logger: Logger;
 }
 
 /**
@@ -130,6 +132,7 @@ function VizarrViewerComponent({
   onPluginClick,
   onPluginHover,
   children,
+  logger,
 }: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
@@ -165,9 +168,9 @@ function VizarrViewerComponent({
       return config;
     }),
   );
-
   React.useEffect(() => {
     async function loadSources() {
+      logger.debug("Loading sources");
       const results = await Promise.allSettled(
         configs.map(async (config, index) => {
           const sourceData = await createSourceData(config);
@@ -181,7 +184,9 @@ function VizarrViewerComponent({
       let sourceDatas = [];
 
       if (!sourceDataValid(results)) {
-        setSourceError(writeUserErrorMessage(getSourceDataError(results)));
+        const error = getSourceDataError(results);
+        setSourceError(writeUserErrorMessage(error));
+        handleError(error, logger);
       }
 
       for (const res of results) {
@@ -196,7 +201,7 @@ function VizarrViewerComponent({
     }
 
     loadSources();
-  }, [configs, setSourceInfo, setSourceError]);
+  }, [configs, setSourceInfo, setSourceError, logger]);
   return (
     <>
       {redirectObj === null && (
