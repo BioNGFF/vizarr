@@ -1,5 +1,6 @@
 packages:
   - 'viewer'
+  - 'anndata-zarr'
   - 'roi-selector'
   - 'sites/*'
 

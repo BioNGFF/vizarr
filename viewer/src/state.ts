@@ -68,6 +68,7 @@ export type ImageLabels = Array<{
   loader: ZarrPixelSource[];
   modelMatrix: Matrix4;
   colors?: ReadonlyArray<OmeColor>;
+  on?: boolean;
 }>;
 
 export type SourceData = {

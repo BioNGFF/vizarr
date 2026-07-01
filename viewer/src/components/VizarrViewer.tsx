@@ -6,7 +6,9 @@ import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jo
 import React, { useId } from "react";
 import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
+import { loadSources } from "../io";
 import { createSourceData } from "../io";
+import type { OmeColor } from "../layers/label-layer";
 import {
   type ImageLayerConfig,
   type ViewState,
@@ -35,7 +37,6 @@ export interface ViewerInfo {
   zInfo: { zValue: number; zMax: number } | null;
   tInfo: { tValue: number; tMax: number } | null;
   viewport: ViewportSize | null;
-  setViewState: (vs: ViewState) => void;
   setZSlice: (z: number) => void;
   setTSlice: (t: number) => void;
 }
@@ -45,6 +46,7 @@ export interface VizarrViewerProps {
   viewState?: ViewState;
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
+  labelColours?: OmeColor[][];
   additionalLayers?: Layer[];
   pluginCursor?: string;
   onPluginClick?: (coordinate: [number, number]) => boolean;
@@ -80,17 +82,8 @@ function ViewerBridge({
   const zInfo = useAtomValue(currentZInfoAtom);
   const tInfo = useAtomValue(currentTInfoAtom);
   const viewport = useAtomValue(viewportAtom);
-  const [, setViewState] = useViewState();
-
   const setZSlice = useSetAtom(setZSliceAtom);
   const setTSlice = useSetAtom(setTSliceAtom);
-
-  const stableSetViewState = React.useCallback(
-    (vs: ViewState) => {
-      setViewState(vs);
-    },
-    [setViewState],
-  );
 
   // Notify host application when viewer state changes
   React.useEffect(() => {
@@ -100,11 +93,10 @@ function ViewerBridge({
       zInfo,
       tInfo,
       viewport,
-      setViewState: stableSetViewState,
       setZSlice,
       setTSlice,
     });
-  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, stableSetViewState, setZSlice, setTSlice, onViewerStateChange]);
+  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, setZSlice, setTSlice, onViewerStateChange]);
 
   return (
     <>
@@ -125,6 +117,7 @@ function VizarrViewerComponent({
   viewState: initialViewState,
   onViewStateChange,
   onViewerStateChange,
+  labelColours,
   additionalLayers,
   pluginCursor,
   onPluginClick,
@@ -137,11 +130,10 @@ function VizarrViewerComponent({
   const redirectObj = useAtomValue(redirectObjAtom);
   const setSourceError = useSetAtom(sourceErrorAtom);
   const sourceWarning = useAtomValue(sourceWarningAtom);
-  React.useEffect(() => {
-    if (initialViewState) {
-      setViewStateAtom(initialViewState);
-    }
-  }, [initialViewState, setViewStateAtom]);
+
+  if (initialViewState) {
+    setViewStateAtom(initialViewState);
+  }
 
   const viewStateAtomWithEffect: PrimitiveAtom<ViewState | null> = atom(
     (get) => get(viewStateAtom),
@@ -157,33 +149,12 @@ function VizarrViewerComponent({
     },
   );
 
-  const [configs] = React.useState(
-    sources.map((source, index) => {
-      const config: ImageLayerConfig = {
-        source: source,
-      };
-      return config;
-    }),
-  );
-
   React.useEffect(() => {
-    async function loadSources() {
-      const results = await Promise.allSettled(
-        configs.map(async (config, index) => {
-          const sourceData = await createSourceData(config);
-          const id = Math.random().toString(36).slice(2);
-          if (!sourceData.name) {
-            sourceData.name = `image_${index}`;
-          }
-          return { id, ...sourceData };
-        }),
-      );
-      let sourceDatas = [];
-
+    loadSources(sources, labelColours).then((results) => {
       if (!sourceDataValid(results)) {
         setSourceError(writeUserErrorMessage(getSourceDataError(results)));
       }
-
+      let sourceDatas = [];
       for (const res of results) {
         if (res.status === "fulfilled") {
           sourceDatas.push(res.value);
@@ -191,12 +162,11 @@ function VizarrViewerComponent({
           console.error(res.reason);
         }
       }
-      sourceDatas = sourceDatas.filter((s) => s !== null);
-      setSourceInfo(sourceDatas);
-    }
+      const sourceData = sourceDatas.filter((s) => s !== null);
+      setSourceInfo(sourceData);
+    });
+  }, [sources, labelColours, setSourceInfo, setSourceError]);
 
-    loadSources();
-  }, [configs, setSourceInfo, setSourceError]);
   return (
     <>
       {redirectObj === null && (
@@ -238,7 +208,7 @@ function VizarrViewerComponent({
           </p>
         </Box>
       )}
-      {sourceWarning.length &&
+      {!!sourceWarning.length &&
         sourceWarning.map((warning, index) => {
           return <InfoSnackbar message={warning} key={useId()} />;
         })}

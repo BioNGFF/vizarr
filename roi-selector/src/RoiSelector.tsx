@@ -101,12 +101,16 @@ function RoiSelector({
     const availW = Math.max(viewport.width - 2 * padding, 1);
     const availH = Math.max(viewport.height - 2 * padding, 1);
     const zoom = Math.log2(Math.min(availW / roiWidth, availH / roiHeight));
-    setViewState({
-      zoom,
-      target: [(bounds.min.x + bounds.max.x) / 2, (bounds.min.y + bounds.max.y) / 2],
-      width: viewport.width,
-      height: viewport.height,
-    });
+
+    if (setViewState) {
+      setViewState({
+        zoom,
+        target: [(bounds.min.x + bounds.max.x) / 2, (bounds.min.y + bounds.max.y) / 2],
+        width: viewport.width,
+        height: viewport.height,
+      });
+    }
+
     if (hasZAxis && zInfo && bounds.min.z !== undefined && bounds.max.z !== undefined) {
       // Only jump Z if the current slice is outside the ROI's Z range.
       if (zInfo.zValue < bounds.min.z || zInfo.zValue > bounds.max.z) {

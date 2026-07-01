@@ -25,7 +25,6 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
   const [viewState, setViewState] = useViewState();
   const layers = useAtomValue(layerAtoms);
   const firstLayer = layers[0] as VizarrLayer;
-
   const axisNavigationSnackbar = useAxisNavigation(deckRef);
 
   const resetViewState = React.useCallback(

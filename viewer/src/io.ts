@@ -3,7 +3,7 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadWell } from "./ome";
 import * as utils from "./utils";
 
-import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
+import { DEFAULT_LABEL_OPACITY, type OmeColor } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 
@@ -222,7 +222,7 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
   let labels = undefined;
   if (source.labels && source.labels.length > 0) {
     labels = source.labels.map((label, i) => ({
-      on: false,
+      on: label.on ? label.on : false,
       transformSourceSelection: getSourceSelectionTransform(label.loader[0], source.loader[0]),
       layerProps: {
         id: `${source.id}_${i}`,
@@ -233,7 +233,6 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
       },
     }));
   }
-
   return {
     kind: "multiscale",
     layerProps: {
@@ -273,4 +272,27 @@ function getSourceSelectionTransform(
       excludeFromTransformedSelection.has(name) ? 0 : sourceSelection[source.labels.indexOf(name)],
     );
   };
+}
+
+export async function loadSources(sources: string[], labelColors?: OmeColor[][]) {
+  const results = await Promise.allSettled(
+    sources.map(async (source, index) => {
+      const sourceData = await createSourceData({ source: source });
+      const id = Math.random().toString(36).slice(2);
+      if (!sourceData.name) {
+        sourceData.name = `image_${index}`;
+      }
+      if (labelColors?.[index].length) {
+        if (!sourceData.labels || !sourceData.labels.length) {
+          throw new utils.AssertionError("Feature colours provided but source image has no label.");
+        }
+        //Really not the best way to do this but the layer state is heavily wrapped up in
+        //being derived directly from the sourceData and would require a fairly large refactor to find
+        sourceData.labels[0].colors = labelColors[index];
+        sourceData.labels[0].on = true;
+      }
+      return { id, ...sourceData };
+    }),
+  );
+  return results;
 }
