@@ -245,7 +245,7 @@ export interface ViewerInfo {
   zInfo: { zValue: number; zMax: number } | null;
   tInfo: { tValue: number; tMax: number } | null;
   viewport: { width: number; height: number } | null;
-  setViewState: (vs: { zoom: number; target: [number, number]; width: number; height: number }) => void;
+  setViewState?: (vs: { zoom: number; target: [number, number]; width: number; height: number }) => void;
   setZSlice: (z: number) => void;
   setTSlice: (t: number) => void;
 }

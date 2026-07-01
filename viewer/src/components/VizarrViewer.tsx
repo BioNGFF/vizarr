@@ -37,7 +37,6 @@ export interface ViewerInfo {
   zInfo: { zValue: number; zMax: number } | null;
   tInfo: { tValue: number; tMax: number } | null;
   viewport: ViewportSize | null;
-  setViewState: (vs: ViewState) => void;
   setZSlice: (z: number) => void;
   setTSlice: (t: number) => void;
 }
@@ -83,52 +82,21 @@ function ViewerBridge({
   const zInfo = useAtomValue(currentZInfoAtom);
   const tInfo = useAtomValue(currentTInfoAtom);
   const viewport = useAtomValue(viewportAtom);
-  const [, setViewState] = useViewState();
-
   const setZSlice = useSetAtom(setZSliceAtom);
   const setTSlice = useSetAtom(setTSliceAtom);
 
-  const stableSetViewState = React.useCallback(
-    (vs: ViewState) => {
-      setViewState(vs);
-    },
-    [setViewState],
-  );
-
   // Notify host application when viewer state changes
   React.useEffect(() => {
-    const change = {
-      sourceUrl: sourceUrls[0] ?? "",
-      imageBounds,
-      zInfo,
-      tInfo,
-      viewport,
-      setViewState: stableSetViewState,
-      setZSlice,
-      setTSlice,
-    };
-
     onViewerStateChange?.({
       sourceUrl: sourceUrls[0] ?? "",
       imageBounds,
       zInfo,
       tInfo,
       viewport,
-      setViewState: stableSetViewState,
       setZSlice,
       setTSlice,
     });
-  }, [
-    sourceUrls,
-    imageBounds,
-    zInfo,
-    tInfo,
-    viewport,
-    // stableSetViewState,
-    setZSlice,
-    setTSlice,
-    onViewerStateChange,
-  ]);
+  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, setZSlice, setTSlice, onViewerStateChange]);
 
   return (
     <>
