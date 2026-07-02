@@ -1,7 +1,5 @@
 import type * as viv from "@vivjs/types";
 import { Matrix4 } from "math.gl";
-import * as zarr from "zarrita";
-import { assert, getNgffAxes, isMultiscales } from "./utils";
 
 /**
  * Convert an array of coordinateTransformations objects to a 16-element
@@ -53,9 +51,9 @@ export function coordinateTransformationsToMatrix(
     }
     if (transform.type === "affine") {
       console.log("Affine transformation detected");
-      // const cartestianAffine = getCartesianMatrixTransformation(axes, transform.affine)
-      // const affineMat = new Matrix4(cartestianAffine)
-      // mat = mat.multiplyLeft(affineMat)
+      const cartestianAffine = getCartesianMatrixTransformation(axes, transform.affine);
+      const affineMat = new Matrix4(cartestianAffine);
+      mat = mat.multiplyLeft(affineMat);
     }
   }
 
@@ -95,7 +93,6 @@ type FlatMatrix4 = [
 ];
 
 type Tuple3 = [number, number, number];
-type Tuple4 = [number, number, number, number];
 
 const SPATIAL_COORD_NAMES: ["x", "y", "z"] = ["x", "y", "z"];
 
@@ -142,7 +139,6 @@ function applyCoordinateRotationToMatrix(matrix: Matrix4, rotation: FlatMatrix4)
 }
 
 function applyCoordinateTranslationToMatrix(matrix: Matrix4, translation: Array<number>): Matrix4 {
-  const defaultValue = 0;
   // Get the translation values for [x, y, z].
   const nextMat = new Matrix4().translate(translation);
   return matrix.multiplyLeft(nextMat);

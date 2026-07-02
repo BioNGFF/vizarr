@@ -53,6 +53,7 @@ declare namespace Ome {
     coordinateSystems?: CoordinateSystem[];
   }
 
+  // TODO
   //Once parsing and transforming is set up, it should be possible to significantly simplify these types
   type IdentityTransformation = { type: "identity" };
   type ScaleTransformation = { type: "scale"; scale: Array<number> };

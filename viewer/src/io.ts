@@ -81,6 +81,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     const parsedData = parse(node.attrs);
     if (parsedData.version === "v06") {
       if (parsedData.type === "SceneSchema") {
+        // TODO
         //Temporary assertion until parsing layer implemented
         const data = parsedData.data as typeof SceneSchema;
         const scene = data.ome.scene as Ome.Scene;

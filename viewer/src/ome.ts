@@ -33,12 +33,14 @@ export async function loadScene(
           },
         );
         console.log("Applying scene transformations to image: ", config.source);
-        const sceneModelMatrix = coordinateTransformationsToMatrix(transformations, [
-          { type: "channel", name: "c" },
-          { type: "space", name: "z" },
-          { type: "space", name: "y" },
-          { type: "space", name: "x" },
-        ]);
+
+        // @TODO For now we are assuming there is only a single coordinateSystem defined at the scene level
+        // Provision is made in the specification for multiple
+        // In this case we must provide a way for the user to change between coordinate systems
+        // For now we just select the first coordinate system in the list
+        const axes = scene.coordinateSystems ? scene.coordinateSystems[0].axes : getDefaultCoordinateSystem()[0].axes;
+
+        const sceneModelMatrix = coordinateTransformationsToMatrix(transformations, axes);
         const modelMatrix = sourceData.model_matrix.multiplyLeft(sceneModelMatrix);
         sourceData.model_matrix = modelMatrix;
       });
@@ -299,6 +301,7 @@ function isDownsampledZ(
   return !data.every((element) => element.shape[zIndex] === originalSizeZ);
 }
 
+//@ TODO
 //This behaviour needs investigating - only the highest resolution transformation is applied to the image
 //Not sure what impact this has on image rendering
 function getResolutionTransformations(metadata: Ome.Multiscale[]): Ome.CoordinateTransformation[] {
@@ -331,9 +334,10 @@ function getHighestResolutionTransformations(metadata: Ome.Multiscale[]): Ome.Co
 }
 
 //Updating pre-0.6 axes to use the 0.6 coordinate systems metadata
+// @ TODO
 //Should be moved to the parsing layer
-//Undefined object is suitable here because we really don't know anything about the structure of the data
-function getDefaultCoordinateSystem(multiscales: unknown[]): Ome.CoordinateSystem[] {
+//Unknown is suitable here because we really don't know anything about the structure of the data
+function getDefaultCoordinateSystem(multiscales: unknown[] = []): Ome.CoordinateSystem[] {
   //Try to extract axes metadata
   if (
     typeof multiscales[0] === "object" &&
@@ -413,10 +417,8 @@ export async function loadOmeMultiscales(
       }),
   );
   const labels = await resolveOmeLabelsFromMultiscales(grp);
-  const modelMatrix = coordinateTransformationsToMatrix(
-    getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem),
-    coordinateSystems[0].axes,
-  );
+  const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
+  const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);
   return {
     loader: loader,
     axis_labels,
