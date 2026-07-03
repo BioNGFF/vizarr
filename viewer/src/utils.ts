@@ -1,4 +1,3 @@
-import { Matrix4 } from "math.gl";
 import * as zarr from "zarrita";
 
 import type * as viv from "@vivjs/types";
@@ -9,6 +8,8 @@ import type { LabelLayerProps } from "./layers/label-layer";
 import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-layers";
 import { lru } from "./lru-store";
 import type { ViewState, VizarrLayer } from "./state";
+
+import { Matrix4 } from "math.gl";
 
 export const MAX_CHANNELS = 6;
 
@@ -147,25 +148,24 @@ export function getDefaultChannelLabels(nChannels: number): string[] {
   return range(nChannels).map((i) => `channel_${i}`);
 }
 
-export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
-  // Returns axes in the latest v0.4+ format.
-  // defaults for v0.1 & v0.2
-  const default_axes = [
-    { type: "time", name: "t" },
-    { type: "channel", name: "c" },
-    { type: "space", name: "z" },
-    { type: "space", name: "y" },
-    { type: "space", name: "x" },
-  ];
-  function getDefaultType(name: string): string {
-    if (name === "t") return "time";
-    if (name === "c") return "channel";
-    return "space";
-  }
-  let axes = default_axes;
+function getDefaultType(name: string): string {
+  if (name === "t") return "time";
+  if (name === "c") return "channel";
+  return "space";
+}
+
+//schema layer, any appropriate here as we have no information about the data
+// Returns axes in the latest v0.4+ format.
+// defaults for v0.1 & v0.2
+export function getNgffAxes(multiscales: unknown[]): Ome.Axis[] {
   // v0.3 & v0.4+
-  if (multiscales[0].axes) {
-    axes = multiscales[0].axes.map((axis) => {
+  if (
+    typeof multiscales[0] === "object" &&
+    multiscales[0] &&
+    "axes" in multiscales[0] &&
+    Array.isArray(multiscales[0].axes)
+  ) {
+    return multiscales[0].axes.map((axis) => {
       // axis may be string 'x' (v0.3) or object
       if (typeof axis === "string") {
         return { name: axis, type: getDefaultType(axis) };
@@ -174,7 +174,14 @@ export function getNgffAxes(multiscales: Ome.Multiscale[]): Ome.Axis[] {
       return { name, type: type ?? getDefaultType(name), unit };
     });
   }
-  return axes;
+
+  const default_axes = [
+    { type: "channel", name: "c" },
+    { type: "space", name: "z" },
+    { type: "space", name: "y" },
+    { type: "space", name: "x" },
+  ];
+  return default_axes;
 }
 
 export function getNgffAxisLabels(axes: Ome.Axis[]): [...string[], "y", "x"] {
@@ -549,58 +556,6 @@ export function resolveLoaderFromLayerProps(
 }
 
 /**
- * Convert an array of coordinateTransformations objects to a 16-element
- * plain JS array using Matrix4 linear algebra transformation functions.
- *
- * Adapted from Vitessce: https://github.com/vitessce/vitessce/blob/c267ebecab1824dae68d6f2640a6c5ce7250efbb/packages/utils/spatial-utils/src/spatial.js#L403-L524
- *
- * @param coordinateTransformations List of objects matching the OME-NGFF v0.4 coordinateTransformations spec.
- * @param axes - Axes in OME-NGFF v0.4 format
- *
- * @returns Array of 16 numbers representing the Matrix4.
- */
-export function coordinateTransformationsToMatrix(multiscales: Array<Ome.Multiscale>) {
-  let mat = new Matrix4().identity();
-  const axes = getNgffAxes(multiscales);
-  const coordinateTransformations = multiscales[0].datasets[0]?.coordinateTransformations;
-  const xyzIndices = ["x", "y", "z"].map((name) =>
-    axes.findIndex((axisObj) => axisObj.type === "space" && axisObj.name === name),
-  );
-
-  // Apply each transformation sequentially and in order according to the OME-NGFF v0.4 spec.
-  // Reference: https://ngff.openmicroscopy.org/0.4/#trafo-md
-  for (const transform of coordinateTransformations ?? []) {
-    if (transform.type === "translation") {
-      const { translation: axisOrderedTranslation } = transform;
-      if (axisOrderedTranslation.length !== axes.length) {
-        throw new Error("Length of translation array was expected to match length of axes.");
-      }
-      const defaultValue = 0;
-      // Get the translation values for [x, y, z].
-      const xyzTranslation = xyzIndices.map((axisIndex) =>
-        axisIndex >= 0 ? axisOrderedTranslation[axisIndex] : defaultValue,
-      );
-      const nextMat = new Matrix4().translate(xyzTranslation);
-      mat = mat.multiplyLeft(nextMat);
-    }
-    if (transform.type === "scale") {
-      const { scale: axisOrderedScale } = transform;
-      // Add in z dimension needed for Matrix4 scale API.
-      if (axisOrderedScale.length !== axes.length) {
-        throw new Error("Length of scale array was expected to match length of axes.");
-      }
-      const defaultValue = 1;
-      // Get the scale values for [x, y, z].
-      const xyzScale = xyzIndices.map((axisIndex) => (axisIndex >= 0 ? axisOrderedScale[axisIndex] : defaultValue));
-      const nextMat = new Matrix4().scale(xyzScale);
-      mat = mat.multiplyLeft(nextMat);
-    }
-  }
-
-  return mat;
-}
-
-/**
  * Builds N-tuples of elements from the given N arrays with matching indices,
  * stopping when the smallest array's end is reached.
  */
@@ -627,26 +582,6 @@ export function getLayerSize({ props }: VizarrLayer) {
     width = (width + spacer) * props.columns;
   }
   return { height, width, maxZoom };
-}
-
-export function getPhysicalSizes(attrs: zarr.Attributes) {
-  if (isMultiscales(attrs)) {
-    const axes = getNgffAxes(attrs.multiscales);
-    const ct = coordinateTransformationsToMatrix(attrs.multiscales);
-    const matrixIndices = {
-      x: 0,
-      y: 5,
-      z: 10,
-    };
-    const physicalSizes = axes
-      .filter((a) => a.type === "space")
-      .reduce((acc: { [key: string]: viv.PhysicalSize }, { name, unit }: Ome.Axis) => {
-        acc[name] = { size: ct[matrixIndices[name as keyof typeof matrixIndices]], unit: unit ?? "" };
-        return acc;
-      }, {});
-    // @TODO: get t size from multiscales.coordinateTransformations if axis is present
-    return physicalSizes;
-  }
 }
 
 // @TODO: remove after updating deck.gl

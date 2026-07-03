@@ -6,14 +6,14 @@ export function writeUserErrorMessage(error: Error) {
   return error.message;
 }
 
-export function sourceDataValid(sourceData: Array<PromiseSettledResult<SourceData>>): boolean {
+export function sourceDataValid(sourceData: Array<PromiseSettledResult<SourceData[]>>): boolean {
   if (sourceData.every((value) => value.status === "rejected")) {
     return false;
   }
   return true;
 }
 
-export function getSourceDataError(sourceData: Array<PromiseSettledResult<SourceData>>): Error {
+export function getSourceDataError(sourceData: Array<PromiseSettledResult<SourceData[]>>): Error {
   if ("reason" in sourceData[0]) {
     return sourceData[0].reason;
   }

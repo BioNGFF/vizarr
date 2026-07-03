@@ -1,5 +1,4 @@
-import { ThemeProvider } from "@mui/material";
-import { Box, Link, Typography } from "@mui/material";
+import { Box, Link, ThemeProvider, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import { type SnackbarKey, SnackbarProvider, closeSnackbar, enqueueSnackbar } from "notistack";
@@ -46,8 +45,11 @@ export interface ViewerInfo {
 }
 
 export interface VizarrViewerProps {
+  /**  Source image urls*/
   sources?: string[];
+  /** View state of the viewer*/
   viewState?: ViewState;
+  /** Callback to execute side effects when view state changes */
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
   additionalLayers?: Layer[];
@@ -55,7 +57,7 @@ export interface VizarrViewerProps {
   onPluginClick?: (coordinate: [number, number]) => boolean;
   onPluginHover?: (coordinate: [number, number] | null) => void;
   children?: React.ReactNode;
-  logger: Logger;
+  logger?: Logger;
 }
 
 /**
@@ -136,7 +138,7 @@ function VizarrViewerComponent({
   onPluginClick,
   onPluginHover,
   children,
-  logger,
+  logger = console,
 }: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
@@ -179,15 +181,16 @@ function VizarrViewerComponent({
       const results = await Promise.allSettled(
         configs.map(async (config, index) => {
           const sourceData = await createSourceData(config);
-          const id = Math.random().toString(36).slice(2);
-          if (!sourceData.name) {
-            sourceData.name = `image_${index}`;
-          }
-          return { id, ...sourceData };
+          return sourceData.flatMap((source) => {
+            const id = Math.random().toString(36).slice(2);
+            if (!source.name) {
+              source.name = `image_${index}`;
+            }
+            return { id, ...source };
+          });
         }),
       );
       let sourceDatas = [];
-
       if (!sourceDataValid(results)) {
         const error = getSourceDataError(results);
         setSourceError(writeUserErrorMessage(error));
@@ -196,16 +199,21 @@ function VizarrViewerComponent({
 
       for (const res of results) {
         if (res.status === "fulfilled") {
-          const warnings = getSourceDataWarnings(res.value);
-          warnings.map((warning: string) => {
-            handleWarning(warning);
-          });
           sourceDatas.push(res.value);
         } else {
           console.error(res.reason);
         }
       }
       sourceDatas = sourceDatas.filter((s) => s !== null);
+      sourceDatas = sourceDatas.flat();
+
+      for (const sourceData of sourceDatas) {
+        const warnings = getSourceDataWarnings(sourceData);
+        warnings.map((warning: string) => {
+          handleWarning(warning);
+        });
+      }
+
       setSourceInfo(sourceDatas);
     }
 
@@ -305,6 +313,9 @@ function VizarrViewerComponent({
   );
 }
 
+/**
+ *Component to render source images
+ */
 export default function VizarrViewer({ children, ...props }: VizarrViewerProps) {
   return (
     <ThemeProvider theme={theme}>

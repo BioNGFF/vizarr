@@ -1,8 +1,10 @@
 import * as zarr from "zarrita";
 import { ZarrPixelSource } from "./ZarrPixelSource";
-import { loadOmeMultiscales, loadPlate, loadWell } from "./ome";
+import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
+import { parse } from "./parsers/parse";
 import * as utils from "./utils";
 
+import type { SceneSchema } from "zod-ome-ngff/0.6";
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
@@ -73,22 +75,34 @@ async function loadMultiChannel(
   };
 }
 
-export async function createSourceData(config: ImageLayerConfig): Promise<SourceData> {
+export async function createSourceData(config: ImageLayerConfig): Promise<SourceData[]> {
   const node = await openZarrRoot(config.source);
+
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
+    const parsedData = parse(node.attrs);
+    if (parsedData.version === "v06") {
+      if (parsedData.type === "SceneSchema") {
+        // TODO
+        //Temporary assertion until parsing layer implemented
+        const data = parsedData.data as typeof SceneSchema;
+        const scene = data.ome.scene as Ome.Scene;
+        return loadScene(config, node, scene);
+      }
+    }
+
     let attrs = utils.resolveAttrs(node.attrs);
     if (utils.isOmePlate(attrs)) {
-      return loadPlate(config, node, attrs.plate);
+      return [await loadPlate(config, node, attrs.plate)];
     }
 
     if (utils.isOmeWell(attrs)) {
-      return loadWell(config, node, attrs.well);
+      return [await loadWell(config, node, attrs.well)];
     }
 
     if (utils.isMultiscales(attrs)) {
-      return loadOmeMultiscales(config, node, attrs);
+      return [await loadOmeMultiscales(config, node, attrs)];
     }
 
     if (Object.keys(attrs).length === 0 && node.path) {
@@ -96,7 +110,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
       const parent = await zarr.open(node.resolve(".."), { kind: "group" });
       const parentAttrs = utils.resolveAttrs(parent.attrs);
       if (utils.isOmePlate(parentAttrs)) {
-        return loadPlate(config, parent, parentAttrs.plate);
+        return [await loadPlate(config, parent, parentAttrs.plate)];
       }
     }
 
@@ -106,9 +120,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     }
     utils.assert(utils.isMultiscales(attrs), "Group is missing multiscales specification.");
     data = await utils.loadMultiscales(node, attrs.multiscales);
-    if (attrs.multiscales[0].axes) {
-      axes = utils.getNgffAxes(attrs.multiscales);
-    }
+    axes = utils.getNgffAxes(attrs.multiscales);
   } else {
     data = [node];
   }
@@ -124,12 +136,12 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
 
   if ("channel_axis" in config || channel_axis > -1) {
     config = config as MultichannelConfig;
-    return loadMultiChannel(config, loader, Number(config.channel_axis ?? channel_axis));
+    return [await loadMultiChannel(config, loader, Number(config.channel_axis ?? channel_axis))];
   }
 
   const nDims = base.shape.length;
   if (nDims === 2 || !("channel_axis" in config)) {
-    return loadSingleChannel(config as SingleChannelConfig, loader);
+    return [await loadSingleChannel(config as SingleChannelConfig, loader)];
   }
 
   throw Error("Failed to load image.");
@@ -161,7 +173,6 @@ function getAxisLabelsAndChannelAxis(
 
 export function initLayerStateFromSource(source: SourceData & { id: string }): LayerState {
   const { selection, opacity, colormap } = source.defaults;
-
   const selections: number[][] = [];
   const colors: [number, number, number][] = [];
   const contrastLimits: [start: number, end: number][] = [];
