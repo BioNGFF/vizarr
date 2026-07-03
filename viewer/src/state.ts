@@ -26,7 +26,9 @@ import {
 } from "./layers/viv-layers";
 
 export interface ViewState {
+  /**Level of zoom */
   zoom: number;
+  /** Coordinates to center the view state on */
   target: [number, number];
   width?: number;
   height?: number;

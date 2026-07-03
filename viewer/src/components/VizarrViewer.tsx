@@ -39,8 +39,11 @@ export interface ViewerInfo {
 }
 
 export interface VizarrViewerProps {
+  /**  Source image urls*/
   sources?: string[];
+  /** View state of the viewer*/
   viewState?: ViewState;
+  /** Callback to execute side effects when view state changes */
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
   additionalLayers?: Layer[];
@@ -268,6 +271,9 @@ function VizarrViewerComponent({
   );
 }
 
+/**
+ *Component to render source images
+ */
 export default function VizarrViewer({ children, ...props }: VizarrViewerProps) {
   return (
     <ThemeProvider theme={theme}>
