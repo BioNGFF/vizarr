@@ -1,6 +1,4 @@
-import { Info } from "@mui/icons-material";
-import { ThemeProvider } from "@mui/material";
-import { Box, Link, Typography } from "@mui/material";
+import { Box, Link, ThemeProvider, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useId } from "react";
@@ -41,8 +39,11 @@ export interface ViewerInfo {
 }
 
 export interface VizarrViewerProps {
+  /**  Source image urls*/
   sources?: string[];
+  /** View state of the viewer*/
   viewState?: ViewState;
+  /** Callback to execute side effects when view state changes */
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
   additionalLayers?: Layer[];
@@ -268,6 +269,9 @@ function VizarrViewerComponent({
   );
 }
 
+/**
+ *Component to render source images
+ */
 export default function VizarrViewer({ children, ...props }: VizarrViewerProps) {
   return (
     <ThemeProvider theme={theme}>
