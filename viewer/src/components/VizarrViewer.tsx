@@ -1,6 +1,4 @@
-import { Info } from "@mui/icons-material";
-import { ThemeProvider } from "@mui/material";
-import { Box, Link, Typography } from "@mui/material";
+import { Box, Link, ThemeProvider, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useId } from "react";
@@ -171,15 +169,16 @@ function VizarrViewerComponent({
       const results = await Promise.allSettled(
         configs.map(async (config, index) => {
           const sourceData = await createSourceData(config);
-          const id = Math.random().toString(36).slice(2);
-          if (!sourceData.name) {
-            sourceData.name = `image_${index}`;
-          }
-          return { id, ...sourceData };
+          return sourceData.flatMap((source) => {
+            const id = Math.random().toString(36).slice(2);
+            if (!source.name) {
+              source.name = `image_${index}`;
+            }
+            return { id, ...source };
+          });
         }),
       );
       let sourceDatas = [];
-
       if (!sourceDataValid(results)) {
         setSourceError(writeUserErrorMessage(getSourceDataError(results)));
       }
@@ -192,6 +191,7 @@ function VizarrViewerComponent({
         }
       }
       sourceDatas = sourceDatas.filter((s) => s !== null);
+      sourceDatas = sourceDatas.flat();
       setSourceInfo(sourceDatas);
     }
 

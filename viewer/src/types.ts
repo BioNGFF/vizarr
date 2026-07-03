@@ -34,15 +34,48 @@ declare namespace Ome {
     unit?: string;
   }
 
-  type CoordinateTransformation =
-    | {
-      type: "scale";
-      scale: Array<number>;
-    }
-    | {
-      type: "translation";
-      translation: Array<number>;
-    };
+  interface CoordinateSystem {
+    name: string;
+    axes: Axis[];
+  }
+
+  type TransformationMetadata = {
+    input?: string;
+    output?: string;
+  };
+
+  type SceneTransformationMetadata = {
+    input: { path?: string; name: string };
+  };
+
+  interface Scene {
+    coordinateTransformations: SceneCoordinateTransformation[];
+    coordinateSystems?: CoordinateSystem[];
+  }
+
+  // TODO
+  //Once parsing and transforming is set up, it should be possible to significantly simplify these types
+  type IdentityTransformation = { type: "identity" };
+  type ScaleTransformation = { type: "scale"; scale: Array<number> };
+  type TranslationTranformation = { type: "translation"; translation: Array<number> };
+  type SequenceTransformation = {
+    type: "sequence";
+    transformations: Array<CoordinateTransformation>;
+  };
+  type RotationTransformation = { type: "rotation"; rotation: Array<Array<number>> };
+  type AffineTransformation = { type: "affine"; affine: Array<Array<number>> };
+
+  type CoordinateTransformationType =
+    | IdentityTransformation
+    | ScaleTransformation
+    | TranslationTranformation
+    | SequenceTransformation
+    | RotationTransformation
+    | AffineTransformation;
+
+  type CoordinateTransformation = TransformationMetadata & CoordinateTransformationType;
+
+  type SceneCoordinateTransformation = SceneTransformationMetadata & CoordinateTransformationType;
 
   interface Dataset {
     path: string;
@@ -52,8 +85,9 @@ declare namespace Ome {
   interface Multiscale {
     datasets: Array<Dataset>;
     version?: string;
-    axes?: string[] | Axis[];
-    coordinateTransformations?: CoordinateTransformation[]
+    coordinateSystems: CoordinateSystem[];
+    selectedCoordinateSystem: string;
+    coordinateTransformations?: CoordinateTransformation[];
   }
 
   interface Bioformats2rawlayout {

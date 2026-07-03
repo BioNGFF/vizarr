@@ -29,14 +29,15 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "4.0.15",
     "semantic-release": "^25.0.2",
-    "typescript": "^5.8.2",
+    "typescript": "^5.4.3",
     "vite": "^6.2.7",
     "vitest": "^4.0.15"
   },
   "packageManager": "pnpm@9.5.0",
   "pnpm": {
     "patchedDependencies": {
-      "@vivjs/loaders@0.17.2": "patches/@vivjs__loaders@0.17.2.patch"
+      "@vivjs/loaders@0.17.2": "patches/@vivjs__loaders@0.17.2.patch",
+      "zod-ome-ngff@0.3.0": "patches/zod-ome-ngff@0.3.0.patch"
     }
   }
 }
