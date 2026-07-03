@@ -42,6 +42,7 @@ interface BaseConfig {
   opacity?: number;
   acquisition?: string;
   model_matrix?: string | number[];
+  coordinateSystem?: string;
   onClick?: (e: unknown) => void;
 }
 
@@ -60,7 +61,6 @@ export interface SingleChannelConfig extends BaseConfig {
 }
 
 export type ImageLayerConfig = MultichannelConfig | SingleChannelConfig;
-
 export type OnClickData = Record<string, unknown> & {
   gridCoord?: { row: number; column: number };
 };
@@ -260,10 +260,10 @@ export const addImageAtom = atom(null, async (get, set, config: ImageLayerConfig
   try {
     const sourceData = await createSourceData(config);
     const prevSourceInfo = get(sourceInfoAtom);
-    if (!sourceData.name) {
-      sourceData.name = `image_${Object.keys(prevSourceInfo).length}`;
+    if (!sourceData[0].name) {
+      sourceData[0].name = `image_${Object.keys(prevSourceInfo).length}`;
     }
-    set(sourceInfoAtom, [...prevSourceInfo, { id, ...sourceData }]);
+    set(sourceInfoAtom, [...prevSourceInfo, { id, ...sourceData[0] }]);
   } catch (err) {
     rethrowUnless(err, Error);
     if (err instanceof RedirectError) {
