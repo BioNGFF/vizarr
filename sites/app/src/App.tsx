@@ -1,7 +1,5 @@
 import { type ViewState, Vizarr, type labelColor } from "@biongff/vizarr";
 
-//@ts-ignore
-//No types provided by anndata-zarr plugin
 import { AnndataController, AnndataProvider } from "@biongff/anndata-zarr";
 import { RoiSelector, useRoiDeckExtension } from "@biongff/roi-selector";
 import type { PendingRoi, RoiDrawState, SavedRoi, ViewerInfo } from "@biongff/roi-selector";
