@@ -17,8 +17,8 @@ export type labelColor = {
 
 export const AnndataController = ({
   adata,
-  callback = () => {},
-}: { adata: string; callback: (colorData: labelColor[] | null) => void }) => {
+  callback = () => { },
+}: { adata: string; callback: (colorData: labelColor[]) => void }) => {
   const [selectedLabel, setSelectedLabel] = useState<{ labelIndex: string; type: LabelType } | undefined>(undefined);
 
   const url = { url: new URL(adata) };
@@ -46,7 +46,7 @@ export const AnndataController = ({
 
   useEffect(() => {
     if (colorData?.isError) {
-      callback(null);
+      callback([]);
       return;
     }
     if (!colorData?.isLoading && colorData?.data) {
