@@ -87,7 +87,10 @@ export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr
     }
 
     if (error instanceof zarr.NodeNotFoundError) {
-      throw new MetadataNotFoundError(`No valid metadata file found at zarr group ${source}`, error.message);
+      throw new MetadataNotFoundError(
+        `404: No valid metadata file found at zarr group ${source}, please check the specified URL is correct.`,
+        error.message,
+      );
     }
 
     throw error;
