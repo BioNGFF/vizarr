@@ -17,7 +17,7 @@ export type labelColor = {
 
 export const AnndataController = ({
   adata,
-  callback = () => { },
+  callback = () => {},
 }: { adata: string; callback: (colorData: labelColor[]) => void }) => {
   const [selectedLabel, setSelectedLabel] = useState<{ labelIndex: string; type: LabelType } | undefined>(undefined);
 
