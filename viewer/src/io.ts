@@ -3,8 +3,9 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
 import { parse } from "./parsers/parse";
 import * as utils from "./utils";
+import type { z } from "zod";
 
-import type { SceneSchema } from "zod-ome-ngff/0.6";
+import { v06 } from "zod-ome-ngff";
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
@@ -83,7 +84,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
       if (parsedData.type === "SceneSchema") {
         // TODO
         //Temporary assertion until parsing layer implemented
-        const data = parsedData.data as typeof SceneSchema;
+        const data = parsedData.data as z.infer<typeof v06.SceneSchema>;
         const scene = data.ome.scene as Ome.Scene;
         return loadScene(config, node, scene);
       }

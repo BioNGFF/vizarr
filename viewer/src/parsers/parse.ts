@@ -25,14 +25,22 @@ schemas.push({ type: "SceneSchema", version: "v06", schema: omeNgffSchemas.v06.S
 
 export function parse(data: Attributes) {
   const validParsers = schemas.filter((schema) => {
-    return schema.schema.safeParse(data).success;
+    const parsedData = schema.schema.safeParse(data);
+    return parsedData.success;
   });
 
   const parser = validParsers[validParsers.length - 1];
 
+  if (parser) {
+    return {
+      data: parser.schema.parse(data),
+      version: parser.version,
+      type: parser.type,
+    };
+  }
   return {
-    data: parser.schema.parse(data),
-    version: parser.version,
-    type: parser.type,
+    data: data,
+    version: "unknown",
+    type: "unknown",
   };
 }

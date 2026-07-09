@@ -92,6 +92,7 @@ declare namespace Ome {
 
   interface Bioformats2rawlayout {
     "bioformats2raw.layout": 3;
+    plate?: Plate;
   }
 
   interface Acquisition {

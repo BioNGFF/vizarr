@@ -8,9 +8,6 @@ patchedDependencies:
   '@vivjs/loaders@0.17.2':
     hash: auxsjwuajoz3k5rha2oxpwrlfm
     path: patches/@vivjs__loaders@0.17.2.patch
-  zod-ome-ngff@0.3.0:
-    hash: dj6bfxiyhoojzmd52qrghhh4j4
-    path: patches/zod-ome-ngff@0.3.0.patch
 
 importers:
 
@@ -204,6 +201,9 @@ importers:
       '@zarrita/storage':
         specifier: 0.1.4
         version: 0.1.4
+      add:
+        specifier: ^2.0.6
+        version: 2.0.6
       deck.gl:
         specifier: ~9.0.0
         version: 9.0.41(@arcgis/core@4.32.8(@lit/context@1.1.6))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -219,6 +219,9 @@ importers:
       p-map:
         specifier: ^7.0.3
         version: 7.0.3
+      pnpm:
+        specifier: ^11.10.0
+        version: 11.10.0
       quick-lru:
         specifier: ^7.0.0
         version: 7.0.0
@@ -231,18 +234,24 @@ importers:
       react-is:
         specifier: 18.3.1
         version: 18.3.1
+      xml-js:
+        specifier: 1.6.11
+        version: 1.6.11
       yaml:
         specifier: ^2.8.2
         version: 2.8.2
       zarrita:
         specifier: 0.5.0
         version: 0.5.0
+      zod-ome-ngff:
+        specifier: github:biongff/zod-ome-ngff#dev
+        version: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/67caab0b882d3d1ae2ad8a3d95d07be5711d2a08(zod@3.21.0)
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
         version: 24.3.0
       '@types/react':
-        specifier: ^18.3.10
+        specifier: ^18.3.18
         version: 18.3.18
       '@types/react-dom':
         specifier: ^18.2.18
@@ -262,9 +271,6 @@ importers:
       zod:
         specifier: 3.21.0
         version: 3.21.0
-      zod-ome-ngff:
-        specifier: ^0.3.0
-        version: 0.3.0(patch_hash=dj6bfxiyhoojzmd52qrghhh4j4)(zod@3.21.0)
 
 packages:
 
@@ -1679,6 +1685,9 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  add@2.0.6:
+    resolution: {integrity: sha512-j5QzrmsokwWWp6kUcJQySpbG+xfOBqqKnup3OIk1pz+kB/80SLorZ9V8zHFLO92Lcd+hbvq8bT+zOGoPkmBV0Q==}
+
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
@@ -3067,6 +3076,11 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
+  pnpm@11.10.0:
+    resolution: {integrity: sha512-C3+LmAYAMZBMAX46QesYehbUDuuCm5XE+MsDaBdh/Eq1PdIZEVubRH9NzhoFohR2RGHn03AzkqnzL5URzoyGyA==}
+    engines: {node: '>=22.13'}
+    hasBin: true
+
   postcss@8.5.3:
     resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
     engines: {node: ^10 || ^12 || >=14}
@@ -3205,6 +3219,10 @@ packages:
 
   safe-buffer@5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
+
+  sax@1.6.0:
+    resolution: {integrity: sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA==}
+    engines: {node: '>=11.0.0'}
 
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
@@ -3683,6 +3701,10 @@ packages:
     resolution: {integrity: sha512-42AtmgqjV+X1VpdOfyTGOYRi0/zsoLqtXQckTmqTeybT+BDIbM/Guxo7x3pE2vtpr1ok6xRqM9OpBe+Jyoqyww==}
     engines: {node: '>=18'}
 
+  xml-js@1.6.11:
+    resolution: {integrity: sha512-7rVi2KMfwfWFl+GpPg6m80IVMWXLRjO+PxTq7V2CDhoGak0wzYzFgUY2m4XJ47OGdXd8eLE8EmwfAmdjw7lC1g==}
+    hasBin: true
+
   xml-utils@1.10.1:
     resolution: {integrity: sha512-Dn6vJ1Z9v1tepSjvnCpwk5QqwIPcEFKdgnjqfYOABv1ngSofuAhtlugcUC3ehS1OHdgDWSG6C5mvj+Qm15udTQ==}
 
@@ -3741,8 +3763,9 @@ packages:
   zarrita@0.5.0:
     resolution: {integrity: sha512-wyvnnzeXh9rBCZxsn6GEW4oXDv3LD2f4KSJ6LLFjYaMNtmAtaSt3qEO3fHuuq0VZWUGb8cjTYDEtwJTa09wp6g==}
 
-  zod-ome-ngff@0.3.0:
-    resolution: {integrity: sha512-dMTnodetLuZ6WRHgJzsZivODS5D7orc22NwyxEKhedXafr0Bu8briSW9TmcWa15kHysSLpP+6PaRfuJVBR3nMQ==}
+  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/67caab0b882d3d1ae2ad8a3d95d07be5711d2a08:
+    resolution: {tarball: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/67caab0b882d3d1ae2ad8a3d95d07be5711d2a08}
+    version: 0.3.0
     engines: {pnpm: ^9.0.0}
     peerDependencies:
       zod: ^3.0.0
@@ -5540,6 +5563,8 @@ snapshots:
 
   acorn@8.15.0: {}
 
+  add@2.0.6: {}
+
   agent-base@7.1.4: {}
 
   aggregate-error@3.1.0:
@@ -6756,6 +6781,8 @@ snapshots:
       exsolve: 1.0.8
       pathe: 2.0.3
 
+  pnpm@11.10.0: {}
+
   postcss@8.5.3:
     dependencies:
       nanoid: 3.3.11
@@ -6919,6 +6946,8 @@ snapshots:
       fsevents: 2.3.3
 
   safe-buffer@5.1.2: {}
+
+  sax@1.6.0: {}
 
   scheduler@0.23.2:
     dependencies:
@@ -7341,6 +7370,10 @@ snapshots:
       string-width: 7.2.0
       strip-ansi: 7.1.2
 
+  xml-js@1.6.11:
+    dependencies:
+      sax: 1.6.0
+
   xml-utils@1.10.1: {}
 
   xss@1.0.13:
@@ -7395,7 +7428,7 @@ snapshots:
       '@zarrita/storage': 0.1.4
       numcodecs: 0.3.2
 
-  zod-ome-ngff@0.3.0(patch_hash=dj6bfxiyhoojzmd52qrghhh4j4)(zod@3.21.0):
+  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/67caab0b882d3d1ae2ad8a3d95d07be5711d2a08(zod@3.21.0):
     dependencies:
       zod: 3.21.0
 
