@@ -9,6 +9,7 @@ import { v06 } from "zod-ome-ngff";
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
+import { loadBf2Raw } from "./providers/bioformats2raw";
 
 async function loadSingleChannel(config: SingleChannelConfig, data: Array<ZarrPixelSource>): Promise<SourceData> {
   const { color, contrast_limits, visibility, name, colormap = "", opacity = 1 } = config;
@@ -86,7 +87,8 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
         //Temporary assertion until parsing layer implemented
         const data = parsedData.data as z.infer<typeof v06.SceneSchema>;
         const scene = data.ome.scene as Ome.Scene;
-        return loadScene(config, node, scene);
+        const sceneSources = await loadScene(config, node, scene);
+        return sceneSources;
       }
     }
 
@@ -113,8 +115,10 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     }
 
     if (utils.isBioformats2rawlayout(attrs)) {
-      let toUrl = `${utils.OME_VALIDATOR_URL}?source=${config.source}`;
-      throw new utils.RedirectError("Please open in ome-ngff-validator", toUrl);
+      const sources = await loadBf2Raw(config, node, attrs);
+      return sources;
+      //let toUrl = `${utils.OME_VALIDATOR_URL}?source=${config.source}`;
+      //throw new utils.RedirectError("Please open in ome-ngff-validator", toUrl);
     }
     utils.assert(utils.isMultiscales(attrs), "Group is missing multiscales specification.");
     data = await utils.loadMultiscales(node, attrs.multiscales);

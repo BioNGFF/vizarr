@@ -1,7 +1,8 @@
 import { test } from "vitest";
-import { loadBf2Raw } from "../src/ome";
+import { loadBf2Raw } from "../src/providers/bioformats2raw";
 import { open } from "zarrita";
 import * as utils from "../src/utils";
+import { createSourceData } from "../src/io";
 
 const sources = [
   "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0079A/idr0079_images.zarr",
@@ -23,8 +24,9 @@ for (const source of sources) {
   test(`Can successfully parse XML data from bioformats2raw file ${source}`, async () => {
     const location = await utils.normalizeStore(source);
     const group = await open(location, { kind: "group" });
+
     const metadata: Ome.Bioformats2rawlayout = group.attrs;
 
-    const data = await loadBf2Raw({ source: source }, group, metadata);
+    const data = await createSourceData({ source: source });
   });
 }

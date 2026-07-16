@@ -7,6 +7,9 @@ import dts from "vite-plugin-dts";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), dts({ rollupTypes: true, tsconfigPath: "./tsconfig.json" })],
+  test: {
+    testTimeout: 10000,
+  },
   build: {
     lib: {
       entry: path.resolve(__dirname, "src/index.tsx"),

@@ -23,6 +23,11 @@ const schemas: Schema[] = imageTypes.flatMap((type: (typeof imageTypes)[number])
 
 schemas.push({ type: "SceneSchema", version: "v06", schema: omeNgffSchemas.v06.SceneSchema });
 
+//TO-DO Raise more user-friendly error messages - use zod-validation-error?
+// Raise warning instead of error - stil attempt to read and display the image even if it fails validation
+//
+// TO-DO Try to more intelligently infer the schema type and version.
+// Then only attempt parsing against this version and type.
 export function parse(data: Attributes) {
   const validParsers = schemas.filter((schema) => {
     const parsedData = schema.schema.safeParse(data);
