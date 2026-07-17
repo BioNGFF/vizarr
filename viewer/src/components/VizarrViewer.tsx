@@ -1,6 +1,6 @@
-import { Info } from "@mui/icons-material";
-import { ThemeProvider } from "@mui/material";
-import { Box, Link, Typography } from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Box, Button, Link, Paper, ThemeProvider, Typography } from "@mui/material";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useId } from "react";
 import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
@@ -105,24 +105,59 @@ function VizarrViewerComponent({ sources = [], viewState: initialViewState, onVi
         <Box
           sx={{
             position: "fixed",
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            color: "#fff",
+            inset: 0,
             display: "flex",
             alignItems: "center",
-            textAlign: "center",
             justifyContent: "center",
-            fontSize: "120%",
+            p: 3,
           }}
         >
-          <p>
-            {" "}
-            Sorry, we were unable to load this image due to the following error: <br /> <br /> {sourceError} <br />{" "}
-            <br /> If you believe this is an error with our application, please open an issue:{" "}
-            <a href="https://github.com/BioNGFF/vizarr/issues "> here </a>
-          </p>
+          <Paper
+            elevation={4}
+            sx={{
+              maxWidth: 480,
+              width: "100%",
+              p: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              textAlign: "center",
+              borderTop: "3px solid",
+              borderColor: "error.main",
+            }}
+          >
+            <ErrorOutlineIcon color="error" sx={{ fontSize: 40 }} />
+            <Typography variant="h6" fontWeight={600}>
+              Failed to load image
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                fontFamily: "monospace",
+                bgcolor: "rgba(255,255,255,0.05)",
+                borderRadius: 1,
+                px: 2,
+                py: 1.5,
+                width: "100%",
+                wordBreak: "break-word",
+                textAlign: "left",
+              }}
+            >
+              {sourceError}
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              endIcon={<OpenInNewIcon />}
+              href="https://github.com/BioNGFF/vizarr/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              component="a"
+            >
+              Open an issue
+            </Button>
+          </Paper>
         </Box>
       )}
       {sourceWarning.length &&
