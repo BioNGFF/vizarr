@@ -41,6 +41,7 @@ export interface ViewerInfo {
 export interface VizarrViewerProps {
   /**  Source image urls*/
   sources?: string[];
+  labelUrls?: string[];
   /** View state of the viewer*/
   viewState?: ViewState;
   /** Callback to execute side effects when view state changes */
@@ -60,6 +61,7 @@ export interface VizarrViewerProps {
  */
 function ViewerBridge({
   sourceUrls,
+  labelUrls,
   onViewStateChange,
   onViewerStateChange,
   additionalLayers = [],
@@ -69,6 +71,7 @@ function ViewerBridge({
   children,
 }: {
   sourceUrls: string[];
+  labelUrls: string[];
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
   additionalLayers?: Layer[];
@@ -123,6 +126,7 @@ function ViewerBridge({
 
 function VizarrViewerComponent({
   sources = [],
+  labelUrls = [],
   viewState: initialViewState,
   onViewStateChange,
   onViewerStateChange,
@@ -162,6 +166,7 @@ function VizarrViewerComponent({
     sources.map((source, index) => {
       const config: ImageLayerConfig = {
         source: source,
+        label: labelUrls[index],
       };
       return config;
     }),

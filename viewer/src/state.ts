@@ -36,6 +36,7 @@ export interface ViewState {
 
 interface BaseConfig {
   source: string | zarr.Readable;
+  label?: string | zarr.Readable;
   axis_labels?: string[];
   name?: string;
   colormap?: string;
@@ -314,10 +315,10 @@ const imageLabelsIstanceFamily = atomFamily((a: Atom<LayerState>) =>
     return labels.map((label) =>
       label.on
         ? new LabelLayer({
-            ...label.layerProps,
-            selection: label.transformSourceSelection(layerProps.selections[0]),
-            pickable: true,
-          })
+          ...label.layerProps,
+          selection: label.transformSourceSelection(layerProps.selections[0]),
+          pickable: true,
+        })
         : null,
     );
   }),

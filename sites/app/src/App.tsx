@@ -30,11 +30,12 @@ export default function App() {
     }
   }, []);
 
-  const { sources, viewState, enableRoi } = React.useMemo(() => {
+  const { sources, labels, viewState, enableRoi } = React.useMemo(() => {
     const url = new URL(urlString);
     const { searchParams } = url;
     return {
       sources: searchParams.getAll("source"),
+      labels: searchParams.getAll("label"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
     };
@@ -81,6 +82,7 @@ export default function App() {
     <div style={{ position: "fixed", inset: 0, backgroundColor: "black" }}>
       <Vizarr
         sources={sources}
+        labelUrls={labels}
         viewState={viewState}
         onViewStateChange={handleViewStateChange}
         onViewerStateChange={setViewerInfo}
