@@ -7,7 +7,7 @@
     <span>view multiscale zarr images online and in notebooks</span>
       <br>
       <br>
-      <a href="https://hms-dbmi.github.io/vizarr/?source=https://minio-dev.openmicroscopy.org/idr/v0.3/idr0062-blin-nuclearsegmentation/6001240.zarr">standalone app</a> .
+      <a href="https://biongff.github.io/vizarr/?source=https://minio-dev.openmicroscopy.org/idr/v0.3/idr0062-blin-nuclearsegmentation/6001240.zarr">standalone app</a> .
       <a href="./python/notebooks/getting_started.ipynb">python api</a> .
       <a href="https://colab.research.google.com/github/hms-dbmi/vizarr/blob/main/python/notebooks/mandelbrot.ipynb">open in colab</a>
   </p>
@@ -20,7 +20,7 @@
 
 - ⚡ **GPU accelerated rendering** with [Viv](https://github.com/hms-dbmi/viv)
 - 💻 Purely **client-side** zarr access with [zarrita.js](https://github.com/manzt/zarrita.js)
-- 🌎 A **standalone [web app](https://hms-dbmi/vizarr)** for viewing entirely in the browser.
+- 🌎 A **standalone [web app](https://biongff.github.io/vizarr/?source=https://minio-dev.openmicroscopy.org/idr/v0.3/idr0062-blin-nuclearsegmentation/6001240.zarr)** for viewing entirely in the browser.
 - 🐍 An [anywidget](https://github.com/manzt/anywidget) **Python API** for
   programmatic control in notebooks.
 - 📦 Supports any `zarr-python` [store](https://zarr.readthedocs.io/en/stable/api/storage.html)
@@ -36,12 +36,12 @@
 
 ### 1. Standalone Web App
 
-You can use the standalone web app by copying and pasting a URL to a Zarr store as the `?source` query parameter in the [web app](https://hms-dbmi.github.io/vizarr).
+You can use the standalone web app by copying and pasting a URL to a Zarr store as the `?source` query parameter in the [web app](https://biongff.github.io/vizarr).
 
 For example, to view [this dataset](https://minio-dev.openmicroscopy.org/idr/v0.3/idr0062-blin-nuclearsegmentation/6001240.zarr) from the IDR, navigate to the following URL:
 
 ```
-https://hms-dbmi.github.io/vizarr/?source=https://minio-dev.openmicroscopy.org/idr/v0.3/idr0062-blin-nuclearsegmentation/6001240.zarr
+https://biongff.github.io/vizarr/?source=https://minio-dev.openmicroscopy.org/idr/v0.3/idr0062-blin-nuclearsegmentation/6001240.zarr
 ```
 
 ### 2. Python API

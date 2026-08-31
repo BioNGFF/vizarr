@@ -7,11 +7,13 @@
     "dev": "pnpm --filter app dev",
     "lint": "biome ci",
     "fix": "biome check --write",
-    "check": "pnpm build:viewer && pnpm -r run check",
+    "check": "pnpm build:viewer && pnpm build:roi-selector && pnpm -r run check",
     "build:viewer": "pnpm --filter vizarr build",
+    "build:roi-selector": "pnpm --filter @biongff/roi-selector build",
     "build:app": "pnpm --filter app build",
-    "build": "pnpm build:viewer && pnpm build:app",
-    "test": "vitest"
+    "build:docs": "pnpm typedoc --plugin typedoc-github-theme",
+    "test": "vitest",
+    "build": "pnpm build:viewer && pnpm build:roi-selector && pnpm build:app"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -28,6 +30,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "4.0.15",
     "semantic-release": "^25.0.2",
+    "typedoc": "^0.28.18",
+    "typedoc-github-theme": "^0.4.0",
     "typescript": "^5.8.2",
     "vite": "^6.2.7",
     "vitest": "^4.0.15"
@@ -35,7 +39,8 @@
   "packageManager": "pnpm@9.5.0",
   "pnpm": {
     "patchedDependencies": {
-      "@vivjs/loaders@0.17.2": "patches/@vivjs__loaders@0.17.2.patch"
+      "@vivjs/loaders@0.17.2": "patches/@vivjs__loaders@0.17.2.patch",
+      "zod-ome-ngff@0.3.0": "patches/zod-ome-ngff@0.3.0.patch"
     }
   }
 }
