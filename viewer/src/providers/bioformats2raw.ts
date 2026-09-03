@@ -1,6 +1,6 @@
 import { createSourceData } from "../io";
 import * as bf2raw from "../parsers/bioformats2raw";
-import type { ImageLayerConfig } from "../state";
+import type { ImageLayerConfig, SourceData } from "../state";
 
 import * as xml2js from "xml-js";
 import * as zarr from "zarrita";
@@ -92,7 +92,7 @@ export async function loadBf2Raw(
   config: ImageLayerConfig,
   grp: zarr.Group<zarr.Readable>,
   metadata: Ome.Bioformats2rawlayout,
-) {
+): Promise<SourceData[]> {
   if ("plate" in metadata) {
     return;
   }
@@ -111,7 +111,6 @@ export async function loadBf2Raw(
   } finally {
     series = getDefaultSeries(parsedData?.OME.Image.length);
   }
-  console.log(series, config.source);
   const results = await Promise.all(
     series.flatMap((imagePath) => {
       return createSourceData({ source: `${config.source}/${imagePath}` });

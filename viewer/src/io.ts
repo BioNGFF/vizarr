@@ -81,6 +81,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
     const parsedData = parse(node.attrs);
+    debugger;
     if (parsedData.version === "v06") {
       if (parsedData.type === "SceneSchema") {
         // TODO
@@ -114,8 +115,8 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
       }
     }
 
-    if (utils.isBioformats2rawlayout(attrs)) {
-      const sources = await loadBf2Raw(config, node, attrs);
+    if (parsedData.type === "Bf2RawSchema") {
+      const sources = await loadBf2Raw(config, node, parsedData.data as Ome.Bioformats2rawlayout);
       return sources;
       //let toUrl = `${utils.OME_VALIDATOR_URL}?source=${config.source}`;
       //throw new utils.RedirectError("Please open in ome-ngff-validator", toUrl);

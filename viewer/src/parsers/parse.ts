@@ -1,22 +1,21 @@
 import type { Attributes } from "zarrita";
 import type { z } from "zod";
-import * as omeNgffSchemas from "zod-ome-ngff";
+import { v01, v02, v03, v04, v05, v06 } from "zod-ome-ngff";
 
-const imageTypes = ["ImageSchema", "WellSchema", "PlateSchema"] as const;
-const versions = ["v01", "v02", "v03", "v04", "v05", "v06"] as const;
-
+const omeNgffSchemas = { v01: v01, v02: v02, v03: v03, v04: v04, v05: v05, v06: v06 };
 interface Schema {
-  type: (typeof imageTypes)[number] | "SceneSchema";
-  version: (typeof versions)[number];
+  type: string;
+  version: string;
   schema: z.ZodType<unknown, z.ZodTypeDef, unknown>;
 }
 
-const schemas: Schema[] = imageTypes.flatMap((type: (typeof imageTypes)[number]) => {
-  return versions.flatMap((version: (typeof versions)[number]) => {
+const schemas: Schema[] = Object.keys(omeNgffSchemas).flatMap((version) => {
+  const imageTypes = Object.keys(omeNgffSchemas[version as keyof typeof omeNgffSchemas]);
+  return imageTypes.flatMap((imageType) => {
     return {
-      type: type,
+      type: imageType,
       version: version,
-      schema: omeNgffSchemas[version][type],
+      schema: omeNgffSchemas[version][imageType],
     };
   });
 });
@@ -30,12 +29,12 @@ schemas.push({ type: "SceneSchema", version: "v06", schema: omeNgffSchemas.v06.S
 // Then only attempt parsing against this version and type.
 export function parse(data: Attributes) {
   const validParsers = schemas.filter((schema) => {
+    if (!schema) return false;
     const parsedData = schema.schema.safeParse(data);
     return parsedData.success;
   });
 
   const parser = validParsers[validParsers.length - 1];
-
   if (parser) {
     return {
       data: parser.schema.parse(data),
