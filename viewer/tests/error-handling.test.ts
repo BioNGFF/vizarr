@@ -60,7 +60,7 @@ beforeEach(() => {
       return;
     });
   });
-  server.listen(() => { });
+  server.listen(() => {});
   port = server.address().port;
   server_url = `http://localhost:${port}`;
 });
