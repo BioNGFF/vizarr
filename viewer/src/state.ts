@@ -121,7 +121,6 @@ type WithId<T> = T & { id: string };
 export const viewStateAtom = atom<ViewState | null>(null);
 
 export const sourceErrorAtom = atom<string | null>(null);
-export const sourceWarningAtom = atom<string[]>([]);
 
 /**
  * Derived atom that exposes the current Z-axis selection and metadata
