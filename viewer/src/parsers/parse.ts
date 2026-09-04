@@ -29,7 +29,6 @@ export function parse(data: Attributes) {
   });
 
   const parser = validParsers[validParsers.length - 1];
-
   return {
     data: parser.schema.parse(data),
     version: parser.version,

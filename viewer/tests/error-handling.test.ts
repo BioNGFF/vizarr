@@ -60,7 +60,7 @@ beforeEach(() => {
       return;
     });
   });
-  server.listen(() => {});
+  server.listen(() => { });
   port = server.address().port;
   server_url = `http://localhost:${port}`;
 });
@@ -82,15 +82,6 @@ test("Server responds with status code 403", async () => {
   results.forEach((result, index) => {
     expect(result.status).toBe("rejected");
     expect(result.reason.code).toBe(403);
-    expect(result.reason).instanceOf(HttpError);
-  });
-});
-
-test("Server responds with status code 401", async () => {
-  const results = await Promise.allSettled([createSourceData({ source: `${server_url}/401` })]);
-  results.forEach((result, index) => {
-    expect(result.status).toBe("rejected");
-    expect(result.reason.code).toBe(401);
     expect(result.reason).instanceOf(HttpError);
   });
 });

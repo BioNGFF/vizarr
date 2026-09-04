@@ -1,7 +1,15 @@
 import * as zarr from "zarrita";
 import { normalizeStore } from "../utils";
 
-const MAYBE_CORS_ERROR_MESSAGE = "Failed to fetch";
+const MAYBE_CHROMIUM_CORS_ERROR_MESSAGE = "Failed to fetch";
+const MAYBE_FIREFOX_CORS_ERROR_MESSAGE = "Load failed";
+const MAYBE_SAFARI_CORS_ERROR_MESSAGE = "NetworkError when attempting to fetch resource.";
+
+const MAYBE_CORS_ERROR_MESSAGES = [
+  MAYBE_CHROMIUM_CORS_ERROR_MESSAGE,
+  MAYBE_FIREFOX_CORS_ERROR_MESSAGE,
+  MAYBE_SAFARI_CORS_ERROR_MESSAGE,
+];
 
 export class HttpError extends Error {
   message: string;
@@ -49,6 +57,7 @@ export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr
   }
   try {
     const { statusText, status } = await fetch(url, { method: "GET" });
+
     if (status === 400) {
       throw new HttpError(
         `400: The server could not process the request to access the resource at ${source}. The request was invalid.`,
@@ -73,12 +82,13 @@ export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr
       );
     }
 
+    //Catching 404 here is over-eager for some images, defer to zarrita for more accurate errors
     const store = await normalizeStore(source);
     const location = await zarr.open(store, { kind: "group" });
     return location;
   } catch (error) {
     if (error instanceof TypeError) {
-      if (error.message === MAYBE_CORS_ERROR_MESSAGE) {
+      if (MAYBE_CORS_ERROR_MESSAGES.includes(error.message)) {
         throw new HttpError(
           `An unknown error occurred while trying to fetch the resource ${source} from the server - this is most likely a CORs issue.`,
           error.message,
