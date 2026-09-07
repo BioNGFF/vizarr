@@ -1,15 +1,12 @@
 import pMap from "p-map";
 import * as zarr from "zarrita";
-import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
-
-import { ZarrPixelSource } from "./ZarrPixelSource";
 import * as utils from "./utils";
+import { z } from "zod";
 
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
-
+import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
+import { ZarrPixelSource } from "./ZarrPixelSource";
 import { createSourceData } from "./io";
-
-import { z } from "zod";
 
 export async function loadScene(
   config: ImageLayerConfig,
