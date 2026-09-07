@@ -1,4 +1,5 @@
 import { createSourceData } from "../io";
+import { loadPlate } from "../ome";
 import * as bf2raw from "../parsers/bioformats2raw";
 import type { ImageLayerConfig, SourceData } from "../state";
 
@@ -55,6 +56,7 @@ function OMEXMLToObject(xmlString: string): Record<string, unknown> {
     compact: true,
     ignoreAttributes: false,
     nativeType: true,
+    //@ts-ignore
     nativeTypeAttributes: true,
     alwaysArray: [
       "Image",
@@ -94,20 +96,22 @@ export async function loadBf2Raw(
   metadata: Ome.Bioformats2rawlayout,
 ): Promise<SourceData[]> {
   if ("plate" in metadata) {
-    return;
+    return createSourceData(config);
   }
   const xml = await fetch(`${config.source}/${XML_METADATA_LOCATION}/${XML_METADATA_FILE_NAME}`);
 
   const xmlString = await xml.text();
   const xmlAsObject = OMEXMLToObject(xmlString);
   const parsedData = bf2raw.parseOMEXML(xmlAsObject);
-  let series;
+  if (!parsedData?.OME.Image) {
+    throw new Error();
+  }
+  let series: string[] | undefined;
   try {
     const OMENode = await zarr.open(grp.resolve("OME"), { kind: "group" });
     const OMEZattrs = bf2raw.parseOMEZattrs(OMENode.attrs);
     series = OMEZattrs.series;
   } catch (error) {
-    //console.log(error);
   } finally {
     series = getDefaultSeries(parsedData?.OME.Image.length);
   }

@@ -12,5 +12,8 @@
     "types": [
       "vite/client"
     ]
-  }
+  },
+  "exclude": [
+    "tests"
+  ]
 }

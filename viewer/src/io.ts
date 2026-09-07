@@ -5,7 +5,7 @@ import { parse } from "./parsers/parse";
 import * as utils from "./utils";
 import type { z } from "zod";
 
-import { v06 } from "zod-ome-ngff";
+import type { v06 } from "zod-ome-ngff";
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
@@ -81,7 +81,6 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
     const parsedData = parse(node.attrs);
-    debugger;
     if (parsedData.version === "v06") {
       if (parsedData.type === "SceneSchema") {
         // TODO
