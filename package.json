@@ -39,8 +39,7 @@
   "packageManager": "pnpm@9.5.0",
   "pnpm": {
     "patchedDependencies": {
-      "@vivjs/loaders@0.17.2": "patches/@vivjs__loaders@0.17.2.patch",
-      "zod-ome-ngff@0.3.0": "patches/zod-ome-ngff@0.3.0.patch"
+      "@vivjs/loaders@0.17.2": "patches/@vivjs__loaders@0.17.2.patch"
     }
   }
 }

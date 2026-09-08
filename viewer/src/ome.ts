@@ -1,15 +1,12 @@
 import pMap from "p-map";
 import * as zarr from "zarrita";
-import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
-
-import { ZarrPixelSource } from "./ZarrPixelSource";
+import { z } from "zod";
 import * as utils from "./utils";
 
+import { ZarrPixelSource } from "./ZarrPixelSource";
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
-
 import { createSourceData } from "./io";
-
-import { z } from "zod";
+import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
 
 export async function loadScene(
   config: ImageLayerConfig,
@@ -416,7 +413,9 @@ export async function loadOmeMultiscales(
         originalSizeZ: zDownsampled ? originalSizeZ : undefined,
       }),
   );
+
   const labels = await resolveOmeLabelsFromMultiscales(grp);
+
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
   const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);
   return {
@@ -489,15 +488,7 @@ function resolveLabelAttrs(attrs: unknown): string[] {
 }
 
 async function resolveOmeLabelsFromMultiscales(grp: zarr.Group<zarr.Readable>): Promise<Array<string>> {
-  return zarr
-    .open(grp.resolve("labels"), { kind: "group" })
-    .then(({ attrs }) => {
-      return (resolveLabelAttrs(attrs) ?? []) as Array<string>;
-    })
-    .catch((e) => {
-      utils.rethrowUnless(e, zarr.NodeNotFoundError);
-      return [];
-    });
+  return (resolveLabelAttrs(grp.attrs) ?? []) as Array<string>;
 }
 
 type Meta = {
