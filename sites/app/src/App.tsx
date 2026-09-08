@@ -81,8 +81,7 @@ export default function App() {
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "black" }}>
       <Vizarr
-        sources={sources}
-        labelUrls={labels}
+        sources={[...sources, ...labels]}
         viewState={viewState}
         onViewStateChange={handleViewStateChange}
         onViewerStateChange={setViewerInfo}

@@ -414,17 +414,12 @@ export async function loadOmeMultiscales(
       }),
   );
   let labels: string[] = [];
-  if (config.label) {
-    const labelRoot = await utils.normalizeStore(config.label);
-    const location = await zarr.open(labelRoot.resolve("labels"), { kind: "group" });
-    labels = await resolveOmeLabelsFromMultiscales(location);
-  } else {
-    try {
-      const labelLocation = await zarr.open(grp.resolve("labels"), { kind: "group" });
-      labels = await resolveOmeLabelsFromMultiscales(labelLocation);
-    } catch (e) {
-      utils.rethrowUnless(e, zarr.NodeNotFoundError);
-    }
+
+  try {
+    const labelLocation = await zarr.open(grp.resolve("labels"), { kind: "group" });
+    labels = await resolveOmeLabelsFromMultiscales(labelLocation);
+  } catch (e) {
+    utils.rethrowUnless(e, zarr.NodeNotFoundError);
   }
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
   const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);

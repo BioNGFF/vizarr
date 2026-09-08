@@ -117,8 +117,6 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     if (parsedData.type === "Bf2RawSchema") {
       const sources = await loadBf2Raw(config, node, parsedData.data as Ome.Bioformats2rawlayout);
       return sources;
-      //let toUrl = `${utils.OME_VALIDATOR_URL}?source=${config.source}`;
-      //throw new utils.RedirectError("Please open in ome-ngff-validator", toUrl);
     }
     utils.assert(utils.isMultiscales(attrs), "Group is missing multiscales specification.");
     data = await utils.loadMultiscales(node, attrs.multiscales);

@@ -9,7 +9,7 @@ import * as zarr from "zarrita";
 const XML_METADATA_LOCATION = "OME";
 const XML_METADATA_FILE_NAME = "METADATA.ome.xml";
 
-function unpackText(node: {}) {
+function unpackText(node: xml2js.ElementCompact): xml2js.ElementCompact | string {
   if (Array.isArray(node)) {
     return node.map(unpackText);
   }
@@ -18,11 +18,11 @@ function unpackText(node: {}) {
     const keys = Object.keys(node);
 
     // Only contains _text
-    if (keys.length === 1 && keys[0] === "_text") {
+    if (keys.length === 1 && keys[0] === "_text" && typeof node._text === "string") {
       return node._text;
     }
 
-    const out = {};
+    const out: xml2js.ElementCompact = {};
     for (const key of keys) {
       out[key] = unpackText(node[key]);
     }
@@ -32,11 +32,7 @@ function unpackText(node: {}) {
   return node;
 }
 
-function unpackProperty(obj: {}, property: string): {} {
-  if (obj === null || typeof obj !== "object") {
-    return;
-  }
-
+function unpackProperty(obj: xml2js.ElementCompact, property: string): xml2js.ElementCompact {
   if (obj[property] && typeof obj[property] === "object" && !Array.isArray(obj[property])) {
     Object.assign(obj, obj[property]);
     delete obj[property];
@@ -51,7 +47,7 @@ function unpackProperty(obj: {}, property: string): {} {
   return obj;
 }
 
-function OMEXMLToObject(xmlString: string): Record<string, unknown> {
+function OMEXMLToObject(xmlString: string): xml2js.ElementCompact {
   const result = xml2js.xml2js(xmlString, {
     compact: true,
     ignoreAttributes: false,
@@ -83,6 +79,9 @@ function OMEXMLToObject(xmlString: string): Record<string, unknown> {
 
   const unpackedAttributes = unpackProperty(result, "_attributes");
   const unpackedText = unpackText(unpackedAttributes);
+  if (typeof unpackedText === "string") {
+    throw new Error("Expected object, received string");
+  }
   return unpackedText;
 }
 
