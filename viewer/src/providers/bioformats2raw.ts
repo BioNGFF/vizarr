@@ -1,5 +1,4 @@
 import { createSourceData } from "../io";
-import { loadPlate } from "../ome";
 import * as bf2raw from "../parsers/bioformats2raw";
 import type { ImageLayerConfig, SourceData } from "../state";
 
@@ -109,7 +108,7 @@ export async function loadBf2Raw(
   try {
     const OMENode = await zarr.open(grp.resolve("OME"), { kind: "group" });
     const OMEZattrs = bf2raw.parseOMEZattrs(OMENode.attrs);
-    series = OMEZattrs.series;
+    series = OMEZattrs?.series;
   } catch (error) {
   } finally {
     series = getDefaultSeries(parsedData?.OME.Image.length);

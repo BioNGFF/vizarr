@@ -1,8 +1,8 @@
 import { test } from "vitest";
-import { loadBf2Raw } from "../src/providers/bioformats2raw";
 import { open } from "zarrita";
-import * as utils from "../src/utils";
 import { createSourceData } from "../src/io";
+import { loadBf2Raw } from "../src/providers/bioformats2raw";
+import * as utils from "../src/utils";
 
 const sources = [
   "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0079A/idr0079_images.zarr",

@@ -1,15 +1,15 @@
 import * as zarr from "zarrita";
+import type { z } from "zod";
 import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
 import { parse } from "./parsers/parse";
 import * as utils from "./utils";
-import type { z } from "zod";
 
 import type { v06 } from "zod-ome-ngff";
 import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
-import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 import { loadBf2Raw } from "./providers/bioformats2raw";
+import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 
 async function loadSingleChannel(config: SingleChannelConfig, data: Array<ZarrPixelSource>): Promise<SourceData> {
   const { color, contrast_limits, visibility, name, colormap = "", opacity = 1 } = config;

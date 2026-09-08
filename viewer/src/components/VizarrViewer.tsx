@@ -41,7 +41,6 @@ export interface ViewerInfo {
 export interface VizarrViewerProps {
   /**  Source image urls*/
   sources?: string[];
-  labelUrls?: string[];
   /** View state of the viewer*/
   viewState?: ViewState;
   /** Callback to execute side effects when view state changes */
