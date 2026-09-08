@@ -1,5 +1,31 @@
 # Changelog
 
+# [1.3.0](https://github.com/BioNGFF/vizarr/compare/v1.2.1...v1.3.0) (2026-08-31)
+
+
+### Bug Fixes
+
+* build plugin before check ([9e678bf](https://github.com/BioNGFF/vizarr/commit/9e678bf7bde3665eb02f2eea1020bbedd997bdde))
+* change rel path and dev constraint for fractal integration ([504c7fd](https://github.com/BioNGFF/vizarr/commit/504c7fd92d178faf85ffa7258c5fd43a9160f473))
+* correct for lint and check to pass ([378e670](https://github.com/BioNGFF/vizarr/commit/378e670244793e836468ee6e23bd1283da4eb830))
+* correct go to roi bugs ([4048192](https://github.com/BioNGFF/vizarr/commit/4048192c8efdedf0eb7a318190346f0cb4d2b029))
+* load imported roi names correctly ([a18ac12](https://github.com/BioNGFF/vizarr/commit/a18ac125441a610047c2bc55e3f895d04842f4bc))
+* make saved ROIs list scrollable and bounded to viewport size ([6febf7d](https://github.com/BioNGFF/vizarr/commit/6febf7d102eb190a645ee280f6775e8e83bb92e7))
+* remove duplicate ViewState interface in VizarrVizarr ([5d95abe](https://github.com/BioNGFF/vizarr/commit/5d95abe70c795c7db112f69d41ed72d25d8643f1))
+* removed unnecessary conversion in inport time ([20c45c0](https://github.com/BioNGFF/vizarr/commit/20c45c0cb03e8a77999a20342438d3cfa11a79da))
+* single roi exported as 1-item list to match fractal task requirement ([9953b2b](https://github.com/BioNGFF/vizarr/commit/9953b2b7e7029b9e02e906688ef21fcee37baaba))
+* solve bug of UI manual coord edit field able to save out of bound coords ([9c17dbd](https://github.com/BioNGFF/vizarr/commit/9c17dbd910288e43f36346c276743f93b8ea75cc))
+* **tests:** correct transformation assertions and increase CI timeout ([ec7d249](https://github.com/BioNGFF/vizarr/commit/ec7d249b0b53bcde10f09672c6579512ee1d1736))
+
+
+### Features
+
+* add tooltip for import roi btn ([472c26a](https://github.com/BioNGFF/vizarr/commit/472c26a945bd3a4f34c7d2aee64ea663f4bf6799))
+* bounds ROI (x,y,z) to image sizes ([fce69f7](https://github.com/BioNGFF/vizarr/commit/fce69f756a81db41a41da3cc2f0c9d2bb52ddff2))
+* delete all button. confirmation dialog before delete 1 or more ROIs ([b793476](https://github.com/BioNGFF/vizarr/commit/b79347642ff766c9ce09cb02a92f13f9b495fe8d))
+* Remove hardcoded axes in scene, plus cleanup ([da9bb57](https://github.com/BioNGFF/vizarr/commit/da9bb576bd0f7fcd9038e3895a593279c9dc282e))
+* support roi names ([e8bca7a](https://github.com/BioNGFF/vizarr/commit/e8bca7ad29fe868432fb56c9f4101712fe77f8ec))
+
 ## [1.2.1](https://github.com/BioNGFF/vizarr/compare/v1.2.0...v1.2.1) (2026-04-01)
 
 
