@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/BioNGFF/vizarr/compare/v1.3.0...v1.3.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* trigger release ([436364b](https://github.com/BioNGFF/vizarr/commit/436364b3f551046370f4e9f417587d770da0ac04))
+
 # [1.3.0](https://github.com/BioNGFF/vizarr/compare/v1.2.1...v1.3.0) (2026-08-31)
 
 
