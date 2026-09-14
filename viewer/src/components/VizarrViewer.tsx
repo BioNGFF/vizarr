@@ -153,18 +153,27 @@ function VizarrViewerComponent({
     }
   }, [initialViewState, setViewStateAtom]);
 
-  const viewStateAtomWithEffect: PrimitiveAtom<ViewState | null> = atom(
-    (get) => get(viewStateAtom),
-    (get, set, update) => {
-      const viewState = typeof update === "function" ? update(get(viewStateAtom)) : update;
-      if (viewState) {
-        onViewStateChange?.({
-          target: viewState.target,
-          zoom: viewState.zoom,
-        });
-        set(viewStateAtom, update);
-      }
-    },
+  // Ref keeps the latest callback accessible inside the atom.
+  const onViewStateChangeRef = React.useRef(onViewStateChange);
+  React.useLayoutEffect(() => {
+    onViewStateChangeRef.current = onViewStateChange;
+  }, [onViewStateChange]);
+
+  // Atom is created once on mount so its reference remains stable across renders.
+  const [viewStateAtomWithEffect] = React.useState<PrimitiveAtom<ViewState | null>>(() =>
+    atom(
+      (get) => get(viewStateAtom),
+      (get, set, update) => {
+        const viewState = typeof update === "function" ? update(get(viewStateAtom)) : update;
+        if (viewState) {
+          onViewStateChangeRef.current?.({
+            target: viewState.target,
+            zoom: viewState.zoom,
+          });
+          set(viewStateAtom, update);
+        }
+      },
+    ),
   );
 
   const [configs] = React.useState(
