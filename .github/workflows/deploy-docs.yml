@@ -2,10 +2,7 @@ name: Deploy Viewer Docs
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "docs/viewer/**"
+  workflow_dispatch:
 
 permissions:
   contents: read
