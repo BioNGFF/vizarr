@@ -482,7 +482,7 @@ function resolveLabelAttrs(attrs: unknown): string[] {
   for (const schema of schemas) {
     const parseResult = schema.safeParse(attrs);
     if (parseResult.success) {
-      return parseResult.data;
+      return parseResult.data.ome.labels;
     }
     console.log("Error reading labels: ", parseResult.error);
   }
