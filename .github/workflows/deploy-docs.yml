@@ -1,0 +1,35 @@
+name: Deploy Viewer Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/viewer/**"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy viewer
+        run: |
+          gcloud storage rsync docs/viewer gs://${{ secrets.GCS_BUCKET }} \
+            --recursive \
+            --delete-unmatched-destination-objects
