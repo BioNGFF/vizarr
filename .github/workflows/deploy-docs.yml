@@ -1,9 +1,15 @@
 name: Deploy Viewer Docs
 
-# TEMPORARY: triggers on every push so this can be validated before merge.
-# Narrow to the block in the PR description before merging.
 on:
   push:
+    branches:
+      - main
+    paths:
+      - "docs/viewer/**"
+      - "viewer/src/**"
+      - "roi-selector/src/**"
+      - "typedoc.json"
+      - "viewer/typedoc.json"
   workflow_dispatch:
 
 permissions:
