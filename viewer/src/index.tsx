@@ -5,7 +5,9 @@ export { default as Vizarr } from "./components/VizarrViewer";
 export type { VizarrViewerProps, ViewerInfo } from "./components/VizarrViewer";
 
 export { createViewer } from "./api";
-export type { VizarrViewer, labelColor } from "./api";
+export type { VizarrViewer } from "./api";
+
+export type { OmeColor } from "./layers/label-layer";
 
 export type { ViewState, ImageLayerConfig, ViewportSize } from "./state";
 

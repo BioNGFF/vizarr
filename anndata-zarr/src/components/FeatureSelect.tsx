@@ -1,5 +1,4 @@
-import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import ListItem from "@mui/material/ListItem";
@@ -7,61 +6,60 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { List } from "react-window";
+import { List, type RowComponentProps } from "react-window";
 
-import type { ColourProps, Feature } from "../hooks";
+import type { ColourProps } from "../hooks";
+import type { LabelType } from "./AnndataController";
 import { Legend } from "./Legend";
 
-const RowComponent = ({
-  index,
-  items,
-  style,
-  onSelect,
-  selectedIndex,
-}: {
-  index: number;
-  items: { matrixIndex: number; name: string }[];
-  style: React.DetailedHTMLProps<React.StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>;
-  onSelect: (labelIndex: string, labelType: "observation" | "feature") => void;
-  selectedIndex?: number;
-}) => {
+const ROW_HEIGHT = 25;
+
+type FeatureRowProps = {
+  items: string[];
+  onSelect: (labelIndex: string, labelType: LabelType) => void;
+  selectedName?: string;
+};
+
+const RowComponent = ({ index, items, style, onSelect, selectedName }: RowComponentProps<FeatureRowProps>) => {
+  const name = items[index];
   return (
-    <ListItem style={style} key={index} component="div" disablePadding>
+    <ListItem style={style} component="div" disablePadding>
       <ListItemButton
         style={{ height: "100%" }}
-        onClick={() => onSelect(items[index].name, "feature")}
-        selected={items[index].matrixIndex === selectedIndex}
+        onClick={() => onSelect(name, "feature")}
+        selected={name === selectedName}
       >
-        <ListItemText primary={items[index].name} />
+        <ListItemText primary={name} />
       </ListItemButton>
     </ListItem>
   );
 };
+
 export const FeatureSelect = ({
   featureNames,
-  selectedFeatureIndex,
+  selectedFeatureName,
   onFeatureSelect,
   legendData,
 }: {
   featureNames: string[];
-  selectedFeatureIndex?: string;
-  onFeatureSelect: (labelIndex: string, labelType: "observation" | "feature") => void;
+  selectedFeatureName?: string;
+  onFeatureSelect: (labelIndex: string, labelType: LabelType) => void;
   legendData?: ColourProps;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const items = useMemo(() => {
-    const allItems = featureNames.map((name: string, index: number) => {
-      return {
-        name: name,
-        matrixIndex: index,
-      };
-    });
     if (!searchTerm) {
-      return allItems;
+      return featureNames;
     }
-    return allItems.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const term = searchTerm.toLowerCase();
+    return featureNames.filter((name) => name.toLowerCase().includes(term));
   }, [featureNames, searchTerm]);
+
+  const rowProps = useMemo<FeatureRowProps>(
+    () => ({ items, onSelect: onFeatureSelect, selectedName: selectedFeatureName }),
+    [items, onFeatureSelect, selectedFeatureName],
+  );
 
   const legend = useMemo(() => {
     if (legendData?.colorscale) {
@@ -87,17 +85,7 @@ export const FeatureSelect = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <List
-          rowComponent={RowComponent}
-          rowCount={items.length}
-          rowHeight={25}
-          //@ts-expect-error
-          rowProps={{
-            items: items,
-            onSelect: onFeatureSelect,
-            selectedIndex: Number(selectedFeatureIndex),
-          }}
-        />
+        <List rowComponent={RowComponent} rowCount={items.length} rowHeight={ROW_HEIGHT} rowProps={rowProps} />
         {legend}
       </Stack>
     </Box>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -21,60 +21,64 @@ export const AnndataController = ({
 }: { adata: string; callback: (colorData: labelColor[]) => void }) => {
   const [selectedLabel, setSelectedLabel] = useState<{ labelIndex: string; type: LabelType } | undefined>(undefined);
 
-  const url = { url: new URL(adata) };
+  const url = useMemo(() => new URL(adata), [adata]);
 
-  function handleLabelSelect(labelIndex: string, labelType: "feature" | "observation") {
-    setSelectedLabel({
-      labelIndex: labelIndex,
-      type: labelType,
-    });
-  }
+  const handleLabelSelect = useCallback((labelIndex: string, labelType: LabelType) => {
+    setSelectedLabel({ labelIndex, type: labelType });
+  }, []);
 
-  const labels = useTableLabels(url.url);
+  const labels = useTableLabels(url);
 
   //A necessary evil for now, I think in principle the UI should be more or less agnostic of whether it is an observation or a feature.
   const selectedLabelDisplayData =
     labels.data && selectedLabel
-      ? labels.data.filter((label) => label.labelIndex === selectedLabel.labelIndex)[0]
+      ? labels.data.find((label) => label.labelIndex === selectedLabel.labelIndex)
       : undefined;
   const selectedFeature =
     selectedLabelDisplayData?.type === "feature" ? selectedLabelDisplayData.labelIndex : undefined;
   const selectedObservation =
     selectedLabelDisplayData?.type === "observation" ? selectedLabelDisplayData.labelIndex : undefined;
 
-  const colorData = useAnndataColors(url.url, selectedLabel, { enabled: !!selectedLabel });
+  const featureNames = useMemo(
+    () => (labels.data ?? []).filter((label) => label.type === "feature").map((metadata) => metadata.labelIndex),
+    [labels.data],
+  );
+  const observations = useMemo(
+    () => (labels.data ?? []).filter((label) => label.type === "observation"),
+    [labels.data],
+  );
+
+  const { data: colourData, isError, isLoading } = useAnndataColors(url, selectedLabel, { enabled: !!selectedLabel });
 
   useEffect(() => {
-    if (colorData?.isError) {
+    if (isError) {
       callback([]);
       return;
     }
-    if (!colorData?.isLoading && colorData?.data) {
-      callback(colorData.data.colors);
+    if (!isLoading && colourData) {
+      callback(colourData.colors);
     }
-  }, [colorData, callback]);
+  }, [colourData, isError, isLoading, callback]);
 
   return (
     <Stack sx={{ height: "100%" }}>
       <Box sx={{ height: "50%" }}>
         {labels.data && (
           <FeatureSelect
-            featureNames={labels.data
-              .filter((label) => label.type === "feature")
-              .map((metadata) => metadata.labelIndex)}
-            selectedFeatureIndex={selectedFeature}
+            featureNames={featureNames}
+            selectedFeatureName={selectedFeature}
             onFeatureSelect={handleLabelSelect}
-            legendData={selectedFeature ? colorData.data : undefined}
+            legendData={selectedFeature ? colourData : undefined}
           />
         )}
       </Box>
       <Box sx={{ height: "50%" }}>
         {labels.data && (
           <ObsSelect
-            observations={labels.data.filter((label) => label.type === "observation")}
+            observations={observations}
             selectedObservation={selectedObservation}
             onObservationSelect={handleLabelSelect}
-            legendData={selectedObservation ? colorData.data : undefined}
+            legendData={selectedObservation ? colourData : undefined}
           />
         )}
       </Box>

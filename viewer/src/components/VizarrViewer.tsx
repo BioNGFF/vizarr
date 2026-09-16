@@ -3,20 +3,19 @@ import { ThemeProvider } from "@mui/material";
 import { Box, Link, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
-import React, { useId } from "react";
+import React from "react";
 import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
 import { loadSources } from "../io";
-import { createSourceData } from "../io";
 import type { OmeColor } from "../layers/label-layer";
 import {
-  type ImageLayerConfig,
   type ViewState,
   type ViewportSize,
   currentImageBoundsAtom,
   currentTInfoAtom,
   currentZInfoAtom,
   redirectObjAtom,
+  setLabelColorsAtom,
   setTSliceAtom,
   setZSliceAtom,
   sourceErrorAtom,
@@ -27,7 +26,7 @@ import {
 } from "../state";
 import theme from "../theme";
 import Menu from "./Menu";
-import { InfoSnackbar } from "./Snackbar";
+import { InfoSnackbar, SnackbarHost } from "./Snackbar";
 import Viewer from "./Viewer";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
@@ -37,6 +36,7 @@ export interface ViewerInfo {
   zInfo: { zValue: number; zMax: number } | null;
   tInfo: { tValue: number; tMax: number } | null;
   viewport: ViewportSize | null;
+  setViewState: (vs: ViewState) => void;
   setZSlice: (z: number) => void;
   setTSlice: (t: number) => void;
 }
@@ -46,7 +46,8 @@ export interface VizarrViewerProps {
   viewState?: ViewState;
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
-  labelColours?: OmeColor[][];
+  /** Label colours per source, indexed in parallel with `sources`. */
+  labelColours?: ReadonlyArray<ReadonlyArray<OmeColor>>;
   additionalLayers?: Layer[];
   pluginCursor?: string;
   onPluginClick?: (coordinate: [number, number]) => boolean;
@@ -82,6 +83,7 @@ function ViewerBridge({
   const zInfo = useAtomValue(currentZInfoAtom);
   const tInfo = useAtomValue(currentTInfoAtom);
   const viewport = useAtomValue(viewportAtom);
+  const [, setViewState] = useViewState();
   const setZSlice = useSetAtom(setZSliceAtom);
   const setTSlice = useSetAtom(setTSliceAtom);
 
@@ -93,10 +95,11 @@ function ViewerBridge({
       zInfo,
       tInfo,
       viewport,
+      setViewState,
       setZSlice,
       setTSlice,
     });
-  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, setZSlice, setTSlice, onViewerStateChange]);
+  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, setViewState, setZSlice, setTSlice, onViewerStateChange]);
 
   return (
     <>
@@ -130,31 +133,51 @@ function VizarrViewerComponent({
   const redirectObj = useAtomValue(redirectObjAtom);
   const setSourceError = useSetAtom(sourceErrorAtom);
   const sourceWarning = useAtomValue(sourceWarningAtom);
+  const sourceInfo = useAtomValue(sourceInfoAtom);
+  const setLabelColors = useSetAtom(setLabelColorsAtom);
 
-  if (initialViewState) {
-    setViewStateAtom(initialViewState);
-  }
+  React.useEffect(() => {
+    if (initialViewState) {
+      setViewStateAtom(initialViewState);
+    }
+  }, [initialViewState, setViewStateAtom]);
 
-  const viewStateAtomWithEffect: PrimitiveAtom<ViewState | null> = atom(
-    (get) => get(viewStateAtom),
-    (get, set, update) => {
-      const viewState = typeof update === "function" ? update(get(viewStateAtom)) : update;
-      if (viewState) {
-        onViewStateChange?.({
-          target: viewState.target,
-          zoom: viewState.zoom,
-        });
-        set(viewStateAtom, update);
-      }
-    },
+  // Kept in a ref so the atom below never has to be rebuilt: a new atom identity on every
+  // render invalidates every useViewState() consumer and re-fires onViewerStateChange,
+  // which drives the host into a render loop.
+  const onViewStateChangeRef = React.useRef(onViewStateChange);
+  React.useEffect(() => {
+    onViewStateChangeRef.current = onViewStateChange;
+  }, [onViewStateChange]);
+
+  const viewStateAtomWithEffect: PrimitiveAtom<ViewState | null> = React.useMemo(
+    () =>
+      atom(
+        (get) => get(viewStateAtom),
+        (get, set, update) => {
+          const viewState = typeof update === "function" ? update(get(viewStateAtom)) : update;
+          if (viewState) {
+            onViewStateChangeRef.current?.({
+              target: viewState.target,
+              zoom: viewState.zoom,
+            });
+            set(viewStateAtom, update);
+          }
+        },
+      ),
+    [],
   );
 
   React.useEffect(() => {
-    loadSources(sources, labelColours).then((results) => {
+    let cancelled = false;
+    loadSources(sources).then((results) => {
+      if (cancelled) {
+        return;
+      }
       if (!sourceDataValid(results)) {
         setSourceError(writeUserErrorMessage(getSourceDataError(results)));
       }
-      let sourceDatas = [];
+      const sourceDatas = [];
       for (const res of results) {
         if (res.status === "fulfilled") {
           sourceDatas.push(res.value);
@@ -162,10 +185,21 @@ function VizarrViewerComponent({
           console.error(res.reason);
         }
       }
-      const sourceData = sourceDatas.filter((s) => s !== null);
-      setSourceInfo(sourceData);
+      setSourceInfo(sourceDatas.filter((s) => s !== null));
     });
-  }, [sources, labelColours, setSourceInfo, setSourceError]);
+    return () => {
+      cancelled = true;
+    };
+  }, [sources, setSourceInfo, setSourceError]);
+
+  // Recolouring is applied to the loaded layer state, so it must also run once the
+  // sources themselves arrive (colours can be selected before the image has loaded).
+  React.useEffect(() => {
+    if (!sourceInfo.length) {
+      return;
+    }
+    setLabelColors(labelColours);
+  }, [labelColours, sourceInfo, setLabelColors]);
 
   return (
     <>
@@ -208,10 +242,10 @@ function VizarrViewerComponent({
           </p>
         </Box>
       )}
-      {!!sourceWarning.length &&
-        sourceWarning.map((warning, index) => {
-          return <InfoSnackbar message={warning} key={useId()} />;
-        })}
+      <SnackbarHost />
+      {sourceWarning.map((warning) => (
+        <InfoSnackbar message={warning} key={warning} />
+      ))}
       {redirectObj !== null && (
         <Box
           sx={{

@@ -222,7 +222,7 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
   let labels = undefined;
   if (source.labels && source.labels.length > 0) {
     labels = source.labels.map((label, i) => ({
-      on: label.on ? label.on : false,
+      on: false,
       transformSourceSelection: getSourceSelectionTransform(label.loader[0], source.loader[0]),
       layerProps: {
         id: `${source.id}_${i}`,
@@ -274,25 +274,34 @@ function getSourceSelectionTransform(
   };
 }
 
-export async function loadSources(sources: string[], labelColors?: OmeColor[][]) {
-  const results = await Promise.allSettled(
+/**
+ * Apply externally-supplied label colours to a layer state, switching the label layer on.
+ *
+ * Returns `null` when the source has no label to colour, which the caller surfaces as a
+ * user-facing error. Colours are applied to the layer state rather than the source data so
+ * that recolouring never requires re-fetching the image.
+ */
+export function applyLabelColors<T extends LayerState>(layerState: T, colors: ReadonlyArray<OmeColor>): T | null {
+  if (!layerState.labels?.length) {
+    return null;
+  }
+  return {
+    ...layerState,
+    labels: layerState.labels.map((label, i) =>
+      i === 0 ? { ...label, on: true, layerProps: { ...label.layerProps, colors } } : label,
+    ),
+  };
+}
+
+export async function loadSources(sources: string[]) {
+  return await Promise.allSettled(
     sources.map(async (source, index) => {
       const sourceData = await createSourceData({ source: source });
       const id = Math.random().toString(36).slice(2);
       if (!sourceData.name) {
         sourceData.name = `image_${index}`;
       }
-      if (labelColors?.[index].length) {
-        if (!sourceData.labels || !sourceData.labels.length) {
-          throw new utils.AssertionError("Feature colours provided but source image has no label.");
-        }
-        //Really not the best way to do this but the layer state is heavily wrapped up in
-        //being derived directly from the sourceData and would require a fairly large refactor to find
-        sourceData.labels[0].colors = labelColors[index];
-        sourceData.labels[0].on = true;
-      }
       return { id, ...sourceData };
     }),
   );
-  return results;
 }

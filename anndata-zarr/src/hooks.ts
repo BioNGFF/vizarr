@@ -1,36 +1,10 @@
-import { type UseQueryResult, useQueries, useQuery } from "@tanstack/react-query";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import _ from "lodash";
-import { useCallback } from "react";
 
-import type { argv0 } from "node:process";
-import {
-  fetchDataFromZarr,
-  getFeatureDataPath,
-  getFeatureNames,
-  getLabels,
-  getObservationDataPath,
-  getObservationNames,
-} from "./anndata";
+import { fetchDataFromZarr, getFeatureDataPath, getLabels, getObservationDataPath } from "./anndata";
 import type { LabelType, labelColor } from "./components/AnndataController";
 import { COLORSCALES } from "./constants/colorscales";
 import { getColors } from "./utils";
-
-export interface Feature {
-  index: string;
-  name?: string;
-  namesCol?: string;
-}
-
-export interface MatrixProps {
-  feature?: {
-    index?: number;
-    name?: string;
-    namesCol?: string;
-  };
-  obs?: {
-    col?: string;
-  };
-}
 
 interface ColourData {
   colors: labelColor[];
@@ -46,19 +20,6 @@ export interface ColourProps {
   colorscale?: string[];
 }
 
-export interface AnndataURL {
-  url: URL;
-}
-
-export interface FeatureParams {
-  type: "feature";
-  index: number;
-}
-export interface ObservationParams {
-  type: "observation";
-  index: string;
-}
-
 export const getAnndataColors = async (
   url: URL,
   labelQueryParameters: LabelQueryParameters | undefined,
@@ -69,40 +30,37 @@ export const getAnndataColors = async (
     return Promise.reject(new Error("Invalid params"));
   }
 
-  if (labelQueryParameters.type !== "feature" && labelQueryParameters.type !== "observation") {
-    throw new Error("Unknown table parameter type: ", labelQueryParameters.type);
-  }
+  const path =
+    labelQueryParameters.type === "feature"
+      ? await getFeatureDataPath(url, labelQueryParameters.labelIndex)
+      : await getObservationDataPath(labelQueryParameters.labelIndex);
 
-  let path: { path: string; slice: undefined | (number | null)[] };
-
-  if (labelQueryParameters.type === "feature") {
-    path = await getFeatureDataPath(url, labelQueryParameters.labelIndex);
-  } else {
-    path = await getObservationDataPath(labelQueryParameters.labelIndex);
-  }
   const data = await fetchDataFromZarr(url, path.path, path.slice);
-  let min = 0;
-  let max = 0;
 
+  let min: number;
+  let max: number;
   let colorscale: string[] | undefined;
-  let categories: string[] | undefined;
-  if ("categories" in data && data.categories) {
-    const categories = data.categories;
-    max = categories.length - 1;
+  // Categorical data is coloured by its integer code, so the domain is the category range
+  // and `categories` maps each code back to its name for the legend and tooltips.
+  const categories = data.categories;
+  if (categories) {
     min = 0;
+    max = categories.length - 1;
     colorscale = COLORSCALES.Accent;
   } else {
-    max = colorProps?.max || _.max(data.data) || 0;
-    min = colorProps?.min || _.min(data.data) || 0;
+    max = colorProps?.max ?? _.max(data.data) ?? 0;
+    min = colorProps?.min ?? _.min(data.data) ?? 0;
     colorscale = colorProps?.colorscale;
   }
+
   const colours = getColors({
     data: data.data,
     max,
     min,
-    colorscale: colorscale,
+    colorscale,
     categories,
   });
+
   return {
     colors: colours,
     max,
@@ -130,64 +88,20 @@ export type ObservationMetadata = {
 };
 
 export function useTableLabels(url: URL): UseQueryResult<(FeatureMetadata | ObservationMetadata)[]> {
-  const labels = useQuery({
-    queryKey: ["labels", url],
+  return useQuery({
+    queryKey: ["labels", url.href],
     queryFn: () => getLabels(url),
   });
-
-  return labels;
 }
 
 export const useAnndataColors = (
   url: URL,
   labelQueryParameters: LabelQueryParameters | undefined,
-  opts = {},
+  opts: { enabled?: boolean } = {},
 ): UseQueryResult<ColourData> => {
-  const result = useQuery({
-    queryKey: ["anndataColor", url, labelQueryParameters],
+  return useQuery({
+    queryKey: ["anndataColor", url.href, labelQueryParameters],
     queryFn: () => getAnndataColors(url, labelQueryParameters),
     ...opts,
   });
-  return result;
-};
-
-export const useAnndatasColors = (adatas = [], opts = {}) => {
-  const combine = useCallback((results: UseQueryResult[]) => {
-    return {
-      data: results.map((result) => result.data),
-      isLoading: results.some((result) => result.isLoading),
-      serverError: results.find((result) => result.error),
-    };
-  }, []);
-
-  const {
-    data = null,
-    isLoading = false,
-    serverError = null,
-  } = useQueries({
-    queries: adatas.map(({ url, matrixProps, colorProps }) => ({
-      queryKey: ["anndataColor", url, matrixProps, colorProps],
-      queryFn: () => getAnndataColors(url, matrixProps, colorProps),
-    })),
-    ...opts,
-    combine,
-  });
-
-  return { data, isLoading, serverError };
-};
-
-export const useAnndataFeatures = (adata: AnndataURL): UseQueryResult<FeatureMetadata[]> => {
-  const result = useQuery({
-    queryKey: ["anndataFeatures", adata.url],
-    queryFn: () => getFeatureNames(adata.url),
-  });
-  return result;
-};
-
-export const useAnndataObs = (adata: AnndataURL): UseQueryResult<ObservationMetadata[]> => {
-  const result = useQuery({
-    queryKey: ["anndataObs", adata.url],
-    queryFn: () => getObservationNames(adata.url),
-  });
-  return result;
 };
