@@ -41,6 +41,7 @@ export interface ViewerInfo {
 export interface VizarrViewerProps {
   /**  Source image urls*/
   sources?: string[];
+  labels?: string[];
   /** View state of the viewer*/
   viewState?: ViewState;
   /** Callback to execute side effects when view state changes */
@@ -123,6 +124,7 @@ function ViewerBridge({
 
 function VizarrViewerComponent({
   sources = [],
+  labels = [],
   viewState: initialViewState,
   onViewStateChange,
   onViewerStateChange,
@@ -162,6 +164,7 @@ function VizarrViewerComponent({
     sources.map((source, index) => {
       const config: ImageLayerConfig = {
         source: source,
+        label: labels[index],
       };
       return config;
     }),

@@ -115,7 +115,7 @@ export async function loadBf2Raw(
   }
   const results = await Promise.all(
     series.flatMap((imagePath) => {
-      return createSourceData({ source: `${config.source}/${imagePath}` });
+      return createSourceData({ source: `${config.source}/${imagePath}`, label: config.label });
     }),
   );
   return results.flat();

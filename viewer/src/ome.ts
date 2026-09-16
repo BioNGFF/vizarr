@@ -389,8 +389,8 @@ export async function loadOmeMultiscales(
     : getDefaultCoordinateSystem(attrs.multiscales);
   const selectedCoordinateSystem = config.coordinateSystem
     ? coordinateSystems.filter((coordinateSystem) => {
-        return coordinateSystem.name === config.coordinateSystem;
-      })[0]
+      return coordinateSystem.name === config.coordinateSystem;
+    })[0]
     : coordinateSystems[0];
   let meta: Meta;
   if (utils.isOmeMultiscales(attrs)) {
@@ -415,7 +415,6 @@ export async function loadOmeMultiscales(
   );
 
   const labels = await resolveOmeLabelsFromMultiscales(grp);
-
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
   const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);
   return {
@@ -478,17 +477,22 @@ const OmeLabelSchema = z.object({
 });
 
 function resolveLabelAttrs(attrs: unknown): string[] {
-  if (LabelSchema.safeParse(attrs).success) {
-    return LabelSchema.parse(attrs).labels;
+  const schemas = [LabelSchema, OmeLabelSchema];
+
+  for (const schema of schemas) {
+    const parseResult = schema.safeParse(attrs);
+    if (parseResult.success) {
+      return parseResult.data;
+    }
+    console.log("Error reading labels: ", parseResult.error);
   }
-  if (OmeLabelSchema.safeParse(attrs).success) {
-    return OmeLabelSchema.parse(attrs).ome.labels;
-  }
+
   return [];
 }
 
 async function resolveOmeLabelsFromMultiscales(grp: zarr.Group<zarr.Readable>): Promise<Array<string>> {
-  return (resolveLabelAttrs(grp.attrs) ?? []) as Array<string>;
+  const labelGroup = await zarr.open(grp.resolve("labels"), { kind: "group" });
+  return (resolveLabelAttrs(labelGroup.attrs) ?? []) as Array<string>;
 }
 
 type Meta = {
