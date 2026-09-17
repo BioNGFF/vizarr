@@ -5,7 +5,7 @@ import { useSetAtom } from "jotai";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
-import { sourceWarningAtom } from "../../state";
+import { addSourceWarningAtom } from "../../state";
 import { arraysIdentical, getDefaultChannelLabels } from "../../utils";
 import ColorPalette from "./ColorPalette";
 
@@ -23,14 +23,15 @@ function ChannelOptions({ channelIndex }: Props) {
   const [layer, setLayer] = useLayerState();
   const [anchorEl, setAnchorEl] = useState<null | Element>(null);
   const { channel_axis, names } = sourceData;
-  const setSourceWarning = useSetAtom(sourceWarningAtom);
-  const defaultNames = getDefaultChannelLabels(names.length);
+  const addSourceWarning = useSetAtom(addSourceWarningAtom);
+  // Memoised so the warning effect below does not re-run on every render.
+  const defaultNames = React.useMemo(() => getDefaultChannelLabels(names.length), [names.length]);
 
   React.useEffect(() => {
     if (arraysIdentical(names, defaultNames)) {
-      setSourceWarning((prev) => [...prev, "Channel metadata either does not exist or was not loaded correctly."]);
+      addSourceWarning("Channel metadata either does not exist or was not loaded correctly.");
     }
-  }, [setSourceWarning, names, defaultNames]);
+  }, [addSourceWarning, names, defaultNames]);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);

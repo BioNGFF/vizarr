@@ -14,7 +14,7 @@ import type { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import type { Matrix4 } from "math.gl";
 import type * as zarr from "zarrita";
 import type { ZarrPixelSource } from "./ZarrPixelSource";
-import { initLayerStateFromSource } from "./io";
+import { applyLabelColors, initLayerStateFromSource } from "./io";
 
 import { GridLayer, type GridLayerProps, type GridLoader } from "./layers/grid-layer";
 import { LabelLayer, type LabelLayerProps, type OmeColor } from "./layers/label-layer";
@@ -68,7 +68,6 @@ export type ImageLabels = Array<{
   loader: ZarrPixelSource[];
   modelMatrix: Matrix4;
   colors?: ReadonlyArray<OmeColor>;
-  on?: boolean;
 }>;
 
 export type SourceData = {
@@ -121,6 +120,15 @@ export const viewStateAtom = atom<ViewState | null>(null);
 
 export const sourceErrorAtom = atom<string | null>(null);
 export const sourceWarningAtom = atom<string[]>([]);
+
+/**
+ * Append a warning, ignoring one that is already displayed, so it is only shown once.
+ * Uses the updater form so that concurrent writes in a single commit cannot each append
+ * against a stale list.
+ */
+export const addSourceWarningAtom = atom(null, (_get, set, warning: string) => {
+  set(sourceWarningAtom, (warnings) => (warnings.includes(warning) ? warnings : [...warnings, warning]));
+});
 
 /**
  * Derived atom that exposes the current Z-axis selection and metadata
@@ -278,6 +286,41 @@ export const sourceInfoAtomAtoms = splitAtom(sourceInfoAtom);
 export const layerFamilyAtom: AtomFamily<WithId<SourceData>, PrimitiveAtom<WithId<LayerState>>> = atomFamily(
   (param: WithId<SourceData>) => atom({ ...initLayerStateFromSource(param), id: param.id }),
   (a, b) => a.id === b.id,
+);
+
+/**
+ * Apply externally-supplied label colours (e.g. from a table plugin) to the already
+ * loaded sources, indexed in parallel with the `sources` prop.
+ *
+ * Colours are written into the existing layer state rather than into the source data so
+ * that recolouring does not require re-fetching the image, which would also discard any
+ * layer settings the user has changed.
+ */
+export const setLabelColorsAtom = atom(
+  null,
+  (get, set, labelColors: ReadonlyArray<ReadonlyArray<OmeColor>> | undefined) => {
+    if (!labelColors) {
+      return;
+    }
+    for (const [index, source] of get(sourceInfoAtom).entries()) {
+      const colors = labelColors[index];
+      if (!colors?.length) {
+        continue;
+      }
+      const layerStateAtom = layerFamilyAtom(source);
+      const layerState = get(layerStateAtom);
+      if (layerState.labels?.[0]?.layerProps.colors === colors) {
+        continue;
+      }
+      const next = applyLabelColors(layerState, colors);
+      if (!next) {
+        // The image itself is fine, so this is a warning rather than a load error.
+        set(addSourceWarningAtom, `Label colours were provided for "${source.name}", which has no label image.`);
+        continue;
+      }
+      set(layerStateAtom, next);
+    }
+  },
 );
 
 export type VizarrLayer =

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -16,11 +16,14 @@ import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 
-import type { CategoricalObservation, Observation } from "../anndata";
 import { COLORSCALES } from "../constants/colorscales";
 import type { ColourProps, ObservationMetadata } from "../hooks";
-import { getColor } from "../utils";
+import { getColor, normalise } from "../utils";
+import type { LabelType } from "./AnndataController";
 import { Legend } from "./Legend";
+
+/** Categorical columns can have an unbounded number of categories; only list this many. */
+const MAX_LISTED_CATEGORIES = 100;
 
 // @TODO: fix styling (width)
 const CategoricalCol = ({
@@ -42,13 +45,13 @@ const CategoricalCol = ({
         {open ? <ExpandLess /> : <ExpandMore />}
       </Box>
       <Collapse in={open} timeout="auto" unmountOnExit>
-        {categories.length > 100 && (
+        {categories.length > MAX_LISTED_CATEGORIES && (
           <Alert severity="warning" variant="outlined">
-            Truncated to 100 categories
+            Truncated to {MAX_LISTED_CATEGORIES} categories
           </Alert>
         )}
         <List>
-          {categories.slice(0, 100).map((cat, i) => (
+          {categories.slice(0, MAX_LISTED_CATEGORIES).map((cat, i) => (
             <ListItem key={cat} sx={{ pl: 4 }} disablePadding>
               {showColor && (
                 <ListItemIcon sx={{ minWidth: 0, mr: 1 }}>
@@ -57,7 +60,7 @@ const CategoricalCol = ({
                       width: 10,
                       height: 10,
                       bgcolor: `rgba(${getColor({
-                        value: i / (categories.length - 1),
+                        value: normalise(i, 0, categories.length - 1),
                         colorscale: COLORSCALES.Accent,
                       })})`,
                     }}
@@ -79,7 +82,7 @@ const NumericalCol = ({ name }: { name: string }) => {
 interface ObservationControlsProps {
   observations: ObservationMetadata[];
   selectedObservation?: string;
-  onObservationSelect: (labelIndex: string, labelType: "observation" | "feature") => void;
+  onObservationSelect: (labelIndex: string, labelType: LabelType) => void;
   legendData?: ColourProps;
 }
 
@@ -91,7 +94,7 @@ export const ObsSelect = ({
 }: ObservationControlsProps) => {
   const legend = useMemo(() => {
     if (legendData?.colorscale) {
-      return <Legend min={legendData.min} max={legendData.max} colorscale={legendData?.colorscale} />;
+      return <Legend min={legendData.min} max={legendData.max} colorscale={legendData.colorscale} />;
     }
   }, [legendData]);
 

@@ -1,6 +1,6 @@
-import { type ViewState, Vizarr, type labelColor } from "@biongff/vizarr";
+import { type ViewState, Vizarr } from "@biongff/vizarr";
 
-import { AnndataController, AnndataProvider } from "@biongff/anndata-zarr";
+import { AnndataController, AnndataProvider, type labelColor } from "@biongff/anndata-zarr";
 import { RoiSelector, useRoiDeckExtension } from "@biongff/roi-selector";
 import type { PendingRoi, RoiDrawState, SavedRoi, ViewerInfo } from "@biongff/roi-selector";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -9,6 +9,8 @@ import debounce from "just-debounce-it";
 import * as React from "react";
 
 import "@biongff/anndata-zarr/dist/anndata-zarr.css";
+
+const EMPTY_COLORS: labelColor[] = [];
 
 const darkTheme = createTheme({
   palette: {
@@ -56,7 +58,14 @@ export default function App() {
     };
   }, [urlString]);
 
-  const [colors, setColors] = React.useState((): labelColor[][] => Array(sources.length).fill([]));
+  // Keyed by source index rather than a fixed-length array, so it stays correct if the
+  // number of sources in the URL changes.
+  const [colorsBySource, setColorsBySource] = React.useState<Record<number, labelColor[]>>({});
+
+  const labelColours = React.useMemo(
+    () => sources.map((_source, i) => colorsBySource[i] ?? EMPTY_COLORS),
+    [sources, colorsBySource],
+  );
 
   // Debounced viewState change handler
   const handleViewStateChange = React.useMemo(
@@ -76,9 +85,7 @@ export default function App() {
   );
 
   const selectCallback = React.useCallback((colorData: labelColor[], i: number) => {
-    setColors((prev) => {
-      return prev.map((c, ci) => (ci === i ? colorData : c));
-    });
+    setColorsBySource((prev) => (prev[i] === colorData ? prev : { ...prev, [i]: colorData }));
   }, []);
 
   const anndataControllers = React.useMemo(() => {
@@ -127,7 +134,7 @@ export default function App() {
             pluginCursor={enableRoi ? cursor : undefined}
             onPluginClick={enableRoi ? onClick : undefined}
             onPluginHover={enableRoi ? onHover : undefined}
-            labelColours={colors}
+            labelColours={labelColours}
           >
             {enableRoi && viewerInfo && (
               <RoiSelector

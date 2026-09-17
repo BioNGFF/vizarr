@@ -23,7 +23,7 @@ const interpolateColor = (color1: string, color2: string, factor: number): [r: n
 };
 
 const computeColor = (colormap: string[], value: number): [r: number, g: number, b: number] => {
-  if (!colormap || Number.isNaN(value)) {
+  if (!colormap?.length || Number.isNaN(value)) {
     return [0, 0, 0];
   }
   if (value <= 0) {
@@ -45,6 +45,13 @@ export const getColor = ({
   return [...computeColor(colorscale, value), 255];
 };
 
+/**
+ * Scale a value into the [0, 1] colorscale domain. A zero-width domain (a column
+ * with a single distinct value) would otherwise divide by zero and render black.
+ */
+export const normalise = (value: number, min: number, max: number): number =>
+  max === min ? 0 : (value - min) / (max - min);
+
 export const getColors = ({
   data,
   max,
@@ -54,7 +61,7 @@ export const getColors = ({
 }: { data: number[]; max: number; min: number; colorscale?: string[]; categories?: string[] }): labelColor[] => {
   return _.map(data, (v: number, i: number) => ({
     labelValue: i + 1,
-    rgba: getColor({ value: (v - min) / (max - min), colorscale }),
+    rgba: getColor({ value: normalise(v, min, max), colorscale }),
     value: categories ? (categories[v] ?? v) : v,
   }));
 };

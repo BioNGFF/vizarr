@@ -1,21 +1,13 @@
-import type { URL } from "node:url";
-import { FetchStore, open } from "zarrita";
+import { type Group, type Readable, open } from "zarrita";
 import { z } from "zod";
-import type { FeatureMetadata, ObservationMetadata, ObservationParams } from "./hooks";
+import type { FeatureMetadata, ObservationMetadata } from "./hooks";
 import { fetchZarrGroup, getData } from "./zarr";
 
 const OBSERVATION_NAMES_PATH = "obs";
 const FEATURE_NAMES_PATH = "var";
 const CATEGORY_NAMES_PATH = "categories";
 const CATEGORY_DATA_PATH = "codes";
-const VAR_NAMES_PATH = "_index";
-
-export interface Observation {
-  name: string;
-}
-export interface CategoricalObservation extends Observation {
-  categories: string[];
-}
+const DEFAULT_INDEX_NAME = "_index";
 
 const ZarrAttrsSchema = z.object({
   "encoding-type": z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]),
@@ -109,18 +101,24 @@ export async function getLabels(url: URL): Promise<(FeatureMetadata | Observatio
   return [...featureNames, ...observationNames];
 }
 
+/**
+ * Read `var`'s index column, which holds the feature (row) names of the `X` matrix.
+ * The column name comes from `var`'s `_index` attribute, falling back to the AnnData default.
+ */
+async function getVarNames(root: Group<Readable>, namesCol?: string): Promise<string[]> {
+  const node = await open(root.resolve(FEATURE_NAMES_PATH));
+  const parsedAttrs = ZarrObservationAttrsSchema.parse(node.attrs);
+  const path = `${FEATURE_NAMES_PATH}/${namesCol ?? parsedAttrs._index ?? DEFAULT_INDEX_NAME}`;
+  const { data } = await getData(root, path);
+  return parseStringArray(data);
+}
+
 export const getFeatureNames = async (url: URL): Promise<FeatureMetadata[]> => {
   try {
     const root = await fetchZarrGroup(url);
+    const varNames = await getVarNames(root);
 
-    const node = await open(root.resolve(FEATURE_NAMES_PATH));
-    const parsedAttrs = ZarrObservationAttrsSchema.parse(node.attrs);
-    const path = `${FEATURE_NAMES_PATH}/${parsedAttrs._index}`;
-    const { data, dtype } = await getData(root, path);
-
-    const parsedData = parseStringArray(data);
-
-    return parsedData.map((name) => {
+    return varNames.map((name) => {
       return {
         type: "feature",
         labelIndex: name,
@@ -144,7 +142,6 @@ export const getObservationNames = async (url: URL): Promise<Array<ObservationMe
     const root = await fetchZarrGroup(url);
 
     const node = await open(root.resolve(OBSERVATION_NAMES_PATH), { kind: "group" });
-    console.log("Fetching observation names from attrs:", node.attrs);
     const attrs = parseZarrObservationAttrs(node.attrs);
     const cols = attrs["column-order"];
     const obs = await Promise.all(
@@ -165,7 +162,7 @@ export const getObservationNames = async (url: URL): Promise<Array<ObservationMe
         }
 
         if (parsedAttrs["encoding-type"] === "categorical") {
-          const { data, dtype } = await getData(root, dataPath);
+          const { data } = await getData(root, dataPath);
           const parsedCategories = AnndataCategoriesSchema.parse(data);
           metadata.categories = parsedCategories;
           return metadata;
@@ -182,35 +179,35 @@ export const getObservationNames = async (url: URL): Promise<Array<ObservationMe
 
 const ARRAY_PATH = "X";
 
-export const getVarIndex = async (url: URL, varId: string, namesCol = VAR_NAMES_PATH) => {
-  const store = new FetchStore(url);
-  const node = await open(store, { kind: "group" });
-
-  const { data, dtype } = await getData(node, `${VAR_NAMES_PATH}/${namesCol}`);
-
-  const varNames = parseStringArray(data);
-  const varIndex = varNames.findIndex((name: string) => name === varId);
-  return varIndex;
+export const getVarIndex = async (url: URL, varId: string, namesCol?: string): Promise<number> => {
+  const root = await fetchZarrGroup(url);
+  const varNames = await getVarNames(root, namesCol);
+  return varNames.findIndex((name: string) => name === varId);
 };
 
+/**
+ * Resolve a feature name to a column slice of the `X` matrix.
+ *
+ * `name` is the feature's entry in `var`'s index, not its position: numeric
+ * coercion would silently produce a `NaN` slice for any dataset whose features
+ * are named (e.g. gene symbols), which zarrita accepts without erroring.
+ */
 export async function getFeatureDataPath(
   url: URL,
-  index: string,
-  name?: string,
+  name: string,
+  namesCol?: string,
 ): Promise<{ path: string; slice: (number | null)[] }> {
-  if (index) {
-    return {
-      path: ARRAY_PATH,
-      slice: [null, Number(index)],
-    };
+  if (!name) {
+    throw new Error("A feature name is needed to determine the feature data path");
   }
-  if (name) {
-    return {
-      path: ARRAY_PATH,
-      slice: [null, await getVarIndex(url, name)],
-    };
+  const index = await getVarIndex(url, name, namesCol);
+  if (index < 0) {
+    throw new Error(`Feature "${name}" not found in "${FEATURE_NAMES_PATH}"`);
   }
-  throw new Error("Index or name needed to determine feature data path");
+  return {
+    path: ARRAY_PATH,
+    slice: [null, index],
+  };
 }
 
 export async function getObservationDataPath(name: string): Promise<{ path: string; slice: undefined }> {

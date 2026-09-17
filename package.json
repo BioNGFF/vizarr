@@ -7,11 +7,11 @@
     "dev": "pnpm --filter app dev",
     "lint": "biome ci",
     "fix": "biome check --write",
-    "check": "pnpm build:viewer && pnpm build:anndata-zarr && pnpm build:roi-selector  && pnpm -r run check",
+    "check": "pnpm build:viewer && pnpm build:anndata-zarr && pnpm build:roi-selector && pnpm -r run check",
     "build:viewer": "pnpm --filter vizarr build",
     "build:roi-selector": "pnpm --filter @biongff/roi-selector build",
     "build:app": "pnpm --filter app build",
-    "build:anndata-zarr": "pnpm --filter anndata-zarr build",
+    "build:anndata-zarr": "pnpm --filter @biongff/anndata-zarr build",
     "build": "pnpm build:viewer && pnpm build:anndata-zarr && pnpm build:roi-selector && pnpm build:app",
     "test": "vitest"
   },
@@ -28,16 +28,20 @@
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/coverage-v8": "4.0.15",
+    "@vitest/coverage-v8": "^4.1.11",
     "semantic-release": "^25.0.2",
     "typescript": "^5.8.2",
     "vite": "^6.2.7",
-    "vitest": "^4.0.15"
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@9.5.0",
   "pnpm": {
     "patchedDependencies": {
       "@vivjs/loaders@0.17.2": "patches/@vivjs__loaders@0.17.2.patch"
+    },
+    "overrides": {
+      "react-is": "^18.3.1",
+      "wgsl_reflect": "1.2.0"
     }
   }
 }
