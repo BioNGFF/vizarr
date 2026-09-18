@@ -1,25 +1,16 @@
-import { type ViewState, Vizarr } from "@biongff/vizarr";
+import { type ViewState, Vizarr, theme } from "@biongff/vizarr";
 
 import { AnndataController, AnndataProvider, type labelColor } from "@biongff/anndata-zarr";
 import { RoiSelector, useRoiDeckExtension } from "@biongff/roi-selector";
 import type { PendingRoi, RoiDrawState, SavedRoi, ViewerInfo } from "@biongff/roi-selector";
 import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import debounce from "just-debounce-it";
 import * as React from "react";
 
 import "@biongff/anndata-zarr/dist/anndata-zarr.css";
 
 const EMPTY_COLORS: labelColor[] = [];
-
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-  typography: {
-    fontSize: 12,
-  },
-});
 
 function parseViewStateFromUrl(): ViewState | undefined {
   const url = new URL(window.location.href);
@@ -121,11 +112,13 @@ export default function App() {
   });
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "black" }}>
-      <ThemeProvider theme={darkTheme}>
+      <ThemeProvider theme={theme}>
         <CssBaseline />
         <AnndataProvider>
           <div className="container-right">{anndataControllers}</div>
           <Vizarr
+            // The ThemeProvider above already covers the viewer and the plugin panels.
+            theme={null}
             sources={sources}
             viewState={viewState}
             onViewerStateChange={setViewerInfo}
