@@ -1,0 +1,63 @@
+name: Deploy Viewer Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/viewer/**"
+      - "viewer/src/**"
+      - "roi-selector/src/**"
+      - "typedoc.json"
+      - "viewer/typedoc.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.5.0
+          run_install: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Build docs
+        run: pnpm build:docs
+
+      - name: Verify build output
+        run: test -s docs/build/index.html
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy viewer docs
+        run: |
+          gcloud storage rsync docs/build gs://${{ secrets.GCS_BUCKET }} \
+            --recursive \
+            --delete-unmatched-destination-objects \
+            --cache-control="no-cache"

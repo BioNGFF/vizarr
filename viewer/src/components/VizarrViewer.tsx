@@ -1,16 +1,22 @@
-import { Info } from "@mui/icons-material";
-import { ThemeProvider } from "@mui/material";
-import { Box, Link, Typography } from "@mui/material";
+import { Box, Link, ThemeProvider, Typography } from "@mui/material";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React from "react";
-import { getSourceDataError, sourceDataValid, writeUserErrorMessage } from "../error";
+import type { Logger } from "../api";
+import {
+  getSourceDataError,
+  getSourceDataWarnings,
+  handleError,
+  sourceDataValid,
+  writeUserErrorMessage,
+} from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
 import { loadSources } from "../io";
 import type { OmeColor } from "../layers/label-layer";
 import {
   type ViewState,
   type ViewportSize,
+  addSourceWarningAtom,
   currentImageBoundsAtom,
   currentTInfoAtom,
   currentZInfoAtom,
@@ -42,8 +48,11 @@ export interface ViewerInfo {
 }
 
 export interface VizarrViewerProps {
+  /**  Source image urls*/
   sources?: string[];
+  /** View state of the viewer*/
   viewState?: ViewState;
+  /** Callback to execute side effects when view state changes */
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
   /** Label colours per source, indexed in parallel with `sources`. */
@@ -53,6 +62,7 @@ export interface VizarrViewerProps {
   onPluginClick?: (coordinate: [number, number]) => boolean;
   onPluginHover?: (coordinate: [number, number] | null) => void;
   children?: React.ReactNode;
+  logger?: Logger;
 }
 
 /**
@@ -126,6 +136,7 @@ function VizarrViewerComponent({
   onPluginClick,
   onPluginHover,
   children,
+  logger = console,
 }: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
@@ -135,6 +146,7 @@ function VizarrViewerComponent({
   const sourceWarning = useAtomValue(sourceWarningAtom);
   const sourceInfo = useAtomValue(sourceInfoAtom);
   const setLabelColors = useSetAtom(setLabelColorsAtom);
+  const addSourceWarning = useSetAtom(addSourceWarningAtom);
 
   React.useEffect(() => {
     if (initialViewState) {
@@ -167,30 +179,51 @@ function VizarrViewerComponent({
       ),
     [],
   );
-
   React.useEffect(() => {
     let cancelled = false;
-    loadSources(sources).then((results) => {
-      if (cancelled) {
-        return;
-      }
-      if (!sourceDataValid(results)) {
-        setSourceError(writeUserErrorMessage(getSourceDataError(results)));
-      }
-      const sourceDatas = [];
-      for (const res of results) {
-        if (res.status === "fulfilled") {
-          sourceDatas.push(res.value);
-        } else {
-          console.error(res.reason);
+    let reportedError = false;
+    logger.debug("Loading sources");
+    loadSources(sources)
+      .then((results) => {
+        if (cancelled) {
+          return;
         }
-      }
-      setSourceInfo(sourceDatas.filter((s) => s !== null));
-    });
+        if (!sourceDataValid(results)) {
+          const error = getSourceDataError(results);
+          setSourceError(writeUserErrorMessage(error));
+          reportedError = true;
+          // Logs and rethrows, which the .catch below handles; nothing after this runs.
+          handleError(error, logger);
+        }
+        // One source url can yield several images (a v0.6 scene), so results are flattened.
+        const sourceDatas = [];
+        for (const res of results) {
+          if (res.status === "fulfilled") {
+            sourceDatas.push(...res.value);
+          } else {
+            logger.error(String(res.reason));
+          }
+        }
+        const loaded = sourceDatas.filter((s) => s !== null);
+        for (const sourceData of loaded) {
+          for (const warning of getSourceDataWarnings(sourceData)) {
+            addSourceWarning(warning);
+          }
+        }
+        setSourceInfo(loaded);
+      })
+      .catch((err: unknown) => {
+        if (cancelled || reportedError) {
+          return;
+        }
+        const error = err instanceof Error ? err : Error(String(err));
+        setSourceError(writeUserErrorMessage(error));
+        logger.error(error.message);
+      });
     return () => {
       cancelled = true;
     };
-  }, [sources, setSourceInfo, setSourceError]);
+  }, [sources, setSourceInfo, setSourceError, addSourceWarning, logger]);
 
   // Recolouring is applied to the loaded layer state, so it must also run once the
   // sources themselves arrive (colours can be selected before the image has loaded).
@@ -272,6 +305,9 @@ function VizarrViewerComponent({
   );
 }
 
+/**
+ *Component to render source images
+ */
 export default function VizarrViewer({ children, ...props }: VizarrViewerProps) {
   return (
     <ThemeProvider theme={theme}>

@@ -1,6 +1,5 @@
 import { ScaleBarLayer } from "@hms-dbmi/viv";
-import DeckGL from "deck.gl";
-import { type Layer, OrthographicView } from "deck.gl";
+import DeckGL, { type Layer, OrthographicView } from "deck.gl";
 import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";

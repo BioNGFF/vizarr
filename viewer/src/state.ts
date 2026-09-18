@@ -26,7 +26,9 @@ import {
 } from "./layers/viv-layers";
 
 export interface ViewState {
+  /**Level of zoom */
   zoom: number;
+  /** Coordinates to center the view state on */
   target: [number, number];
   width?: number;
   height?: number;
@@ -40,6 +42,7 @@ interface BaseConfig {
   opacity?: number;
   acquisition?: string;
   model_matrix?: string | number[];
+  coordinateSystem?: string;
   onClick?: (e: unknown) => void;
 }
 
@@ -58,7 +61,6 @@ export interface SingleChannelConfig extends BaseConfig {
 }
 
 export type ImageLayerConfig = MultichannelConfig | SingleChannelConfig;
-
 export type OnClickData = Record<string, unknown> & {
   gridCoord?: { row: number; column: number };
 };
@@ -80,6 +82,8 @@ export type SourceData = {
   acquisitions?: Ome.Acquisition[];
   acquisitionId?: number;
   name?: string;
+  /** Index of the `sources` entry this image was loaded from; see `loadSources`. */
+  sourceIndex?: number;
   channel_axis: number | null;
   colors: string[];
   names: string[];
@@ -267,10 +271,10 @@ export const addImageAtom = atom(null, async (get, set, config: ImageLayerConfig
   try {
     const sourceData = await createSourceData(config);
     const prevSourceInfo = get(sourceInfoAtom);
-    if (!sourceData.name) {
-      sourceData.name = `image_${Object.keys(prevSourceInfo).length}`;
+    if (!sourceData[0].name) {
+      sourceData[0].name = `image_${Object.keys(prevSourceInfo).length}`;
     }
-    set(sourceInfoAtom, [...prevSourceInfo, { id, ...sourceData }]);
+    set(sourceInfoAtom, [...prevSourceInfo, { id, ...sourceData[0] }]);
   } catch (err) {
     rethrowUnless(err, Error);
     if (err instanceof RedirectError) {
@@ -303,7 +307,9 @@ export const setLabelColorsAtom = atom(
       return;
     }
     for (const [index, source] of get(sourceInfoAtom).entries()) {
-      const colors = labelColors[index];
+      // A v0.6 scene expands one source url into several images, so position in sourceInfo
+      // is not the position in `sources`; fall back to it only for sources loaded elsewhere.
+      const colors = labelColors[source.sourceIndex ?? index];
       if (!colors?.length) {
         continue;
       }

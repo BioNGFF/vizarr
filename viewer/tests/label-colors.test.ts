@@ -20,7 +20,9 @@ async function loadLayerState(url: string) {
   if (result.status !== "fulfilled") {
     throw result.reason;
   }
-  return initLayerStateFromSource(result.value);
+  // A url yields one image per entry; these fixtures are plain images, so exactly one.
+  expect(result.value).toHaveLength(1);
+  return initLayerStateFromSource(result.value[0]);
 }
 
 test("Externally-defined label colours are applied to the label layer", async () => {
