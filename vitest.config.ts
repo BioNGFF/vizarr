@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     // Glob pattern to include all package configs or directories
     projects: ["anndata-zarr", "viewer", "roi-selector"],
-    testTimeout: 10000,
+    // Note: test options set here do not reach the projects above; each project is
+    // configured by its own vite config. Timeouts live there.
   },
 });
