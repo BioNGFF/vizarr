@@ -1,4 +1,6 @@
-import { Box, Link, ThemeProvider, Typography } from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Box, Button, Link, Paper, ThemeProvider, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
@@ -15,12 +17,14 @@ import { ViewStateContext, useViewState } from "../hooks";
 import { loadSources } from "../io";
 import type { OmeColor } from "../layers/label-layer";
 import {
+  type InteractionMode,
   type ViewState,
   type ViewportSize,
   addSourceWarningAtom,
   currentImageBoundsAtom,
   currentTInfoAtom,
   currentZInfoAtom,
+  interactionModeAtom,
   redirectObjAtom,
   setLabelColorsAtom,
   setTSliceAtom,
@@ -46,6 +50,9 @@ export interface ViewerInfo {
   setViewState: (vs: ViewState) => void;
   setZSlice: (z: number) => void;
   setTSlice: (t: number) => void;
+  /** Pointer tool selected in the viewer toolbar; plugins implement the behaviour. */
+  interactionMode: InteractionMode;
+  setInteractionMode: (mode: InteractionMode) => void;
 }
 
 export interface VizarrViewerProps {
@@ -64,6 +71,12 @@ export interface VizarrViewerProps {
   onPluginHover?: (coordinate: [number, number] | null) => void;
   children?: React.ReactNode;
   logger?: Logger;
+  /**
+   * Show the toolbar's pan/select tools. Off by default: the select tool only does
+   * something when a plugin acts on `interactionMode`, and a button that looks
+   * enabled but does nothing is worse than no button.
+   */
+  enableSelectTool?: boolean;
   /**
    * Theme for the viewer and anything rendered inside it, defaulting to vizarr's own.
    *
@@ -88,6 +101,7 @@ function ViewerBridge({
   pluginCursor,
   onPluginClick,
   onPluginHover,
+  enableSelectTool,
   children,
 }: {
   sourceUrls: string[];
@@ -97,6 +111,7 @@ function ViewerBridge({
   pluginCursor?: string;
   onPluginClick?: (coordinate: [number, number]) => boolean;
   onPluginHover?: (coordinate: [number, number] | null) => void;
+  enableSelectTool?: boolean;
   children?: React.ReactNode;
 }) {
   const imageBounds = useAtomValue(currentImageBoundsAtom);
@@ -106,6 +121,8 @@ function ViewerBridge({
   const [, setViewState] = useViewState();
   const setZSlice = useSetAtom(setZSliceAtom);
   const setTSlice = useSetAtom(setTSliceAtom);
+  const interactionMode = useAtomValue(interactionModeAtom);
+  const setInteractionMode = useSetAtom(interactionModeAtom);
 
   // Notify host application when viewer state changes
   React.useEffect(() => {
@@ -118,12 +135,26 @@ function ViewerBridge({
       setViewState,
       setZSlice,
       setTSlice,
+      interactionMode,
+      setInteractionMode,
     });
-  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, setViewState, setZSlice, setTSlice, onViewerStateChange]);
+  }, [
+    sourceUrls,
+    imageBounds,
+    zInfo,
+    tInfo,
+    viewport,
+    setViewState,
+    setZSlice,
+    setTSlice,
+    interactionMode,
+    setInteractionMode,
+    onViewerStateChange,
+  ]);
 
   return (
     <>
-      <Menu />
+      <Menu enableSelectTool={enableSelectTool} />
       <Viewer
         additionalLayers={additionalLayers}
         pluginCursor={pluginCursor}
@@ -145,6 +176,7 @@ function VizarrViewerComponent({
   pluginCursor,
   onPluginClick,
   onPluginHover,
+  enableSelectTool,
   children,
   logger = console,
 }: VizarrViewerProps) {
@@ -259,6 +291,7 @@ function VizarrViewerComponent({
             pluginCursor={pluginCursor}
             onPluginClick={onPluginClick}
             onPluginHover={onPluginHover}
+            enableSelectTool={enableSelectTool}
           >
             {children}
           </ViewerBridge>
@@ -268,24 +301,59 @@ function VizarrViewerComponent({
         <Box
           sx={{
             position: "fixed",
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            color: "#fff",
+            inset: 0,
             display: "flex",
             alignItems: "center",
-            textAlign: "center",
             justifyContent: "center",
-            fontSize: "120%",
+            p: 3,
           }}
         >
-          <p>
-            {" "}
-            Sorry, we were unable to load this image due to the following error: <br /> <br /> {sourceError} <br />{" "}
-            <br /> If you believe this is an error with our application, please open an issue:{" "}
-            <a href="https://github.com/BioNGFF/vizarr/issues "> here </a>
-          </p>
+          <Paper
+            elevation={4}
+            sx={{
+              maxWidth: 480,
+              width: "100%",
+              p: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              textAlign: "center",
+              borderTop: "3px solid",
+              borderColor: "error.main",
+            }}
+          >
+            <ErrorOutlineIcon color="error" sx={{ fontSize: 40 }} />
+            <Typography variant="h6" fontWeight={600}>
+              Failed to load image
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                fontFamily: "monospace",
+                bgcolor: "rgba(255,255,255,0.05)",
+                borderRadius: 1,
+                px: 2,
+                py: 1.5,
+                width: "100%",
+                wordBreak: "break-word",
+                textAlign: "left",
+              }}
+            >
+              {sourceError}
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              endIcon={<OpenInNewIcon />}
+              href="https://github.com/BioNGFF/vizarr/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              component="a"
+            >
+              Open an issue
+            </Button>
+          </Paper>
         </Box>
       )}
       <SnackbarHost />

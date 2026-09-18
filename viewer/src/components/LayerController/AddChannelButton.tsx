@@ -5,6 +5,7 @@ import type { ChangeEvent, MouseEvent } from "react";
 
 import { useLayerState, useSourceData } from "../../hooks";
 import { MAX_CHANNELS, calcDataRange, hexToRGB, resolveLoaderFromLayerProps } from "../../utils";
+import { denseSelectSx, popoverPaperSx } from "./controls";
 
 function AddChannelButton() {
   const [source, setSource] = useSourceData();
@@ -94,15 +95,10 @@ function AddChannelButton() {
           horizontal: "left",
         }}
       >
-        <Paper style={{ padding: "0px 4px", marginBottom: 4, width: "8em" }}>
+        <Paper sx={{ ...popoverPaperSx, width: "8em" }}>
           <Typography variant="caption">selection: </Typography>
           <Divider />
-          <NativeSelect
-            fullWidth
-            style={{ fontSize: "0.7em" }}
-            id={`layer-${source.id}-channel-select`}
-            onChange={handleChange}
-          >
+          <NativeSelect fullWidth sx={denseSelectSx} id={`layer-${source.id}-channel-select`} onChange={handleChange}>
             <option aria-label="None" value="">
               None
             </option>

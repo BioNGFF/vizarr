@@ -12,6 +12,7 @@
     "@biongff/anndata-zarr": "workspace:*",
     "@biongff/roi-selector": "workspace:*",
     "@biongff/vizarr": "workspace:*",
+    "@fontsource/inter": "^5.1.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.2.0",

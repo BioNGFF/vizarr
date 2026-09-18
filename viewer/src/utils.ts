@@ -13,6 +13,9 @@ import { Matrix4 } from "math.gl";
 
 export const MAX_CHANNELS = 6;
 
+/** Project repository, linked from the panel header and the load-error message. */
+export const REPOSITORY_URL = "https://github.com/BioNGFF/vizarr";
+
 export const COLORS = {
   cyan: "#00FFFF",
   yellow: "#FFFF00",
