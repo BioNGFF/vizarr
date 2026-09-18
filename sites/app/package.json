@@ -9,6 +9,7 @@
     "check": "tsc"
   },
   "dependencies": {
+    "@biongff/anndata-zarr": "workspace:*",
     "@biongff/roi-selector": "workspace:*",
     "@biongff/vizarr": "workspace:*",
     "@emotion/react": "^11.14.0",

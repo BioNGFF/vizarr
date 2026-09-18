@@ -5,7 +5,7 @@ import { parse } from "./parsers/parse";
 import * as utils from "./utils";
 
 import type { SceneSchema } from "zod-ome-ngff/0.6";
-import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
+import { DEFAULT_LABEL_OPACITY, type OmeColor } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 
@@ -246,7 +246,6 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
       },
     }));
   }
-
   return {
     kind: "multiscale",
     layerProps: {
@@ -288,4 +287,45 @@ function getSourceSelectionTransform(
       excludeFromTransformedSelection.has(name) ? 0 : sourceSelection[source.labels.indexOf(name)],
     );
   };
+}
+
+/**
+ * Apply externally-supplied label colours to a layer state, switching the label layer on.
+ *
+ * Returns `null` when the source has no label to colour, which the caller surfaces as a
+ * user-facing error. Colours are applied to the layer state rather than the source data so
+ * that recolouring never requires re-fetching the image.
+ */
+export function applyLabelColors<T extends LayerState>(layerState: T, colors: ReadonlyArray<OmeColor>): T | null {
+  if (!layerState.labels?.length) {
+    return null;
+  }
+  return {
+    ...layerState,
+    labels: layerState.labels.map((label, i) =>
+      i === 0 ? { ...label, on: true, layerProps: { ...label.layerProps, colors } } : label,
+    ),
+  };
+}
+
+/**
+ * Loads every source url, settling independently so that one bad url does not sink the rest.
+ *
+ * A single url can yield more than one image (an OME-NGFF v0.6 scene), so each result is an
+ * array. `sourceIndex` records which entry of `sources` an image came from, which callers
+ * need because that mapping is no longer positional once the results are flattened.
+ */
+export async function loadSources(sources: string[]) {
+  return await Promise.allSettled(
+    sources.map(async (source, index) => {
+      const sourceData = await createSourceData({ source: source });
+      return sourceData.map((data, subIndex) => {
+        const id = Math.random().toString(36).slice(2);
+        if (!data.name) {
+          data.name = sourceData.length > 1 ? `image_${index}_${subIndex}` : `image_${index}`;
+        }
+        return { id, sourceIndex: index, ...data };
+      });
+    }),
+  );
 }
