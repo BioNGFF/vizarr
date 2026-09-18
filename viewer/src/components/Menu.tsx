@@ -1,19 +1,38 @@
 import { Add, ChevronLeft, ChevronRight, Fullscreen, HighlightAlt, PanTool, Remove } from "@mui/icons-material";
-import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, IconButton, Typography } from "@mui/material";
-import { useAtomValue } from "jotai";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useReducer, useState } from "react";
 
-import { SourceDataContext } from "../hooks";
-import { sourceInfoAtom, sourceInfoAtomAtoms } from "../state";
+import { SourceDataContext, useViewState } from "../hooks";
+import { firstLayerFitAtom, interactionModeAtom, sourceInfoAtom, sourceInfoAtomAtoms } from "../state";
+import { tokens } from "../theme";
 import LayerController from "./LayerController";
 
-function Menu(props: { open?: boolean }) {
+/** Zoom applied per press of the zoom in/out buttons. */
+const ZOOM_STEP = 0.5;
+
+function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelectTool?: boolean }) {
   const sourceInfo = useAtomValue(sourceInfoAtom);
   const sourceAtoms = useAtomValue(sourceInfoAtomAtoms);
-  const [hidden, toggle] = useReducer((v) => !v, !(props.open ?? true));
+  const [hidden, toggle] = useReducer((v) => !v, !(open ?? true));
   const [metadataOpen, setMetadataOpen] = useState(false);
-  const [interactionMode, setInteractionMode] = useState<"drag" | "polygon">("drag");
+  const [interactionMode, setInteractionMode] = useAtom(interactionModeAtom);
+  const [, setViewState] = useViewState();
+  const fitViewState = useAtomValue(firstLayerFitAtom);
   const activeSource = sourceInfo[0];
+
+  const zoomBy = (delta: number) =>
+    setViewState((current) => (current ? { ...current, zoom: current.zoom + delta } : current));
 
   const sourceDescription = useMemo(() => {
     if (!activeSource) {
@@ -25,14 +44,26 @@ function Menu(props: { open?: boolean }) {
   }, [activeSource]);
 
   const railButtonSx = {
-    color: "white",
-    border: "1px solid #2a2a2a",
-    borderRadius: "8px",
-    backgroundColor: "#151515",
+    color: "common.white",
+    border: `1px solid ${tokens.rail.border}`,
+    borderRadius: `${tokens.rail.radius}px`,
+    backgroundColor: tokens.rail.background,
     "&:hover": {
-      backgroundColor: "#232323",
+      backgroundColor: tokens.rail.hover,
     },
   };
+
+  // Buttons grouped into one bordered stack, so only the group carries the outline.
+  const railGroupSx = {
+    display: "flex",
+    flexDirection: "column",
+    border: `1px solid ${tokens.rail.border}`,
+    borderRadius: `${tokens.rail.radius}px`,
+    overflow: "hidden",
+    marginTop: "10px",
+  };
+  const railGroupButtonSx = { ...railButtonSx, width: "100%", border: 0, borderRadius: 0 };
+  const railDividerSx = { borderBottom: `1px solid ${tokens.rail.border}` };
 
   return (
     <Box
@@ -63,55 +94,42 @@ function Menu(props: { open?: boolean }) {
             flexDirection: "column",
             height: "100%",
             width: { xs: 250, sm: 300 },
-            backgroundColor: "rgba(0, 0, 0, 0.72)",
-            borderRight: "2px solid rgba(255, 255, 255, 0.38)",
-            boxShadow: "inset -1px 0 0 rgba(255, 255, 255, 0.18)",
+            backgroundColor: tokens.panel.background,
+            borderRight: `2px solid ${tokens.panel.border}`,
+            boxShadow: `inset -1px 0 0 ${tokens.panel.inset}`,
           }}
           aria-hidden={hidden}
         >
           <Box sx={{ px: 1, py: 1 }}>
-            <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.95)", fontWeight: 600 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
               {activeSource?.name ?? "Dataset"}
             </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "rgba(255, 255, 255, 0.72)", display: "block", mt: 0.5, lineHeight: 1.4 }}
-            >
+            <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mt: 0.5, lineHeight: 1.4 }}>
               {sourceDescription}
             </Typography>
             <Button
               size="small"
               variant="outlined"
               onClick={() => setMetadataOpen(true)}
-              sx={{
-                mt: 1,
-                color: "#fff",
-                borderColor: "rgba(255, 255, 255, 0.35)",
-                textTransform: "none",
-                fontSize: "0.72rem",
-                "&:hover": {
-                  borderColor: "rgba(255, 255, 255, 0.65)",
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                },
-              }}
+              sx={{ mt: 1, fontSize: "0.72rem" }}
             >
               View Full Metadata
             </Button>
           </Box>
-          <Divider sx={{ borderColor: "rgba(255, 255, 255, 0.12)" }} />
+          <Divider />
           <Typography
             variant="caption"
             sx={{
               px: 1,
               py: 0.5,
-              color: "rgba(255, 255, 255, 0.72)",
+              color: "text.secondary",
               letterSpacing: "0.04em",
               textTransform: "uppercase",
             }}
           >
             Spatial Controls
           </Typography>
-          <Divider sx={{ borderColor: "rgba(255, 255, 255, 0.12)" }} />
+          <Divider />
           <Box
             sx={{
               p: 1,
@@ -123,10 +141,10 @@ function Menu(props: { open?: boolean }) {
                 width: "8px",
               },
               "&::-webkit-scrollbar-thumb": {
-                background: "rgba(255, 255, 255, 0.22)",
+                background: tokens.scrollbarThumb,
                 borderRadius: "8px",
               },
-              scrollbarColor: "rgba(255, 255, 255, 0.22) transparent",
+              scrollbarColor: `${tokens.scrollbarThumb} transparent`,
             }}
           >
             {sourceAtoms.map((sourceAtom) => (
@@ -154,94 +172,67 @@ function Menu(props: { open?: boolean }) {
         >
           {hidden ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            border: "1px solid #2a2a2a",
-            borderRadius: "8px",
-            overflow: "hidden",
-            marginTop: "10px",
-          }}
-        >
-          <IconButton
-            sx={{
-              ...railButtonSx,
-              width: "100%",
-              border: 0,
-              borderRadius: 0,
-              borderBottom: "1px solid #2a2a2a",
-              backgroundColor: interactionMode === "drag" ? "#2f2f2f" : "#151515",
-            }}
-            onClick={() => setInteractionMode("drag")}
-            aria-label="Interaction mode: drag"
-            aria-pressed={interactionMode === "drag"}
-          >
-            <PanTool />
-          </IconButton>
-          <IconButton
-            sx={{
-              ...railButtonSx,
-              width: "100%",
-              border: 0,
-              borderRadius: 0,
-              backgroundColor: interactionMode === "polygon" ? "#2f2f2f" : "#151515",
-            }}
-            onClick={() => setInteractionMode("polygon")}
-            aria-label="Interaction mode: polygon"
-            aria-pressed={interactionMode === "polygon"}
-          >
-            <HighlightAlt />
-          </IconButton>
-        </Box>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            border: "1px solid #2a2a2a",
-            borderRadius: "8px",
-            overflow: "hidden",
-            marginTop: "10px",
-          }}
-        >
-          <IconButton
-            sx={{
-              ...railButtonSx,
-              width: "100%",
-              border: 0,
-              borderRadius: 0,
-              borderBottom: "1px solid #2a2a2a",
-            }}
-            aria-label="Zoom in"
-          >
-            <Add />
-          </IconButton>
-          <IconButton
-            sx={{
-              ...railButtonSx,
-              width: "100%",
-              border: 0,
-              borderRadius: 0,
-              borderBottom: "1px solid #2a2a2a",
-            }}
-            aria-label="Zoom out"
-          >
-            <Remove />
-          </IconButton>
-          <IconButton
-            sx={{
-              width: "100%",
-              border: 0,
-              borderRadius: 0,
-              backgroundColor: "#151515",
-              "&:hover": {
-                backgroundColor: "#232323",
-              },
-            }}
-            aria-label="Reset view to full screen"
-          >
-            <Fullscreen />
-          </IconButton>
+        {/* Only shown when a host plugin consumes the mode, so there is no inert tool. */}
+        {enableSelectTool && (
+          <Box sx={railGroupSx}>
+            <Tooltip title="Pan" placement="right">
+              <IconButton
+                sx={{
+                  ...railGroupButtonSx,
+                  ...railDividerSx,
+                  backgroundColor: interactionMode === "pan" ? tokens.rail.active : tokens.rail.background,
+                }}
+                onClick={() => setInteractionMode("pan")}
+                aria-label="Pan the image"
+                aria-pressed={interactionMode === "pan"}
+              >
+                <PanTool />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Select region of interest" placement="right">
+              <IconButton
+                sx={{
+                  ...railGroupButtonSx,
+                  backgroundColor: interactionMode === "select" ? tokens.rail.active : tokens.rail.background,
+                }}
+                onClick={() => setInteractionMode("select")}
+                aria-label="Select a region of interest"
+                aria-pressed={interactionMode === "select"}
+              >
+                <HighlightAlt />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+        <Box sx={railGroupSx}>
+          <Tooltip title="Zoom in" placement="right">
+            <IconButton
+              sx={{ ...railGroupButtonSx, ...railDividerSx }}
+              onClick={() => zoomBy(ZOOM_STEP)}
+              aria-label="Zoom in"
+            >
+              <Add />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Zoom out" placement="right">
+            <IconButton
+              sx={{ ...railGroupButtonSx, ...railDividerSx }}
+              onClick={() => zoomBy(-ZOOM_STEP)}
+              aria-label="Zoom out"
+            >
+              <Remove />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Fit image to view" placement="right">
+            <IconButton
+              sx={railGroupButtonSx}
+              disabled={!fitViewState}
+              onClick={() => fitViewState && setViewState(() => fitViewState)}
+              aria-label="Fit image to view"
+            >
+              <Fullscreen />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
       <Dialog open={metadataOpen} onClose={() => setMetadataOpen(false)} fullWidth maxWidth="md">
@@ -253,8 +244,8 @@ function Menu(props: { open?: boolean }) {
               m: 0,
               p: 1.5,
               borderRadius: 1,
-              backgroundColor: "#0f1115",
-              color: "#e6edf3",
+              backgroundColor: tokens.code.background,
+              color: tokens.code.color,
               overflow: "auto",
               fontSize: "0.78rem",
               lineHeight: 1.4,

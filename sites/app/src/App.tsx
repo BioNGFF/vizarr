@@ -1,8 +1,8 @@
-import { type ViewState, Vizarr, theme } from "@biongff/vizarr";
+import { type ViewState, type ViewerInfo, Vizarr, theme } from "@biongff/vizarr";
 
 import { AnndataController, AnndataProvider, type labelColor } from "@biongff/anndata-zarr";
 import { RoiSelector, useRoiDeckExtension } from "@biongff/roi-selector";
-import type { PendingRoi, RoiDrawState, SavedRoi, ViewerInfo } from "@biongff/roi-selector";
+import type { PendingRoi, RoiDrawState, SavedRoi } from "@biongff/roi-selector";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import debounce from "just-debounce-it";
@@ -100,6 +100,9 @@ export default function App() {
   const [pendingRoi, setPendingRoi] = React.useState<PendingRoi | null>(null);
 
   // ---- ROI deck.gl integration (layers, click, hover) ----
+  // The viewer's toolbar owns the ROI tool; the panel and pointer handling follow it.
+  const selecting = enableRoi && viewerInfo?.interactionMode === "select";
+
   const { layers, cursor, onClick, onHover } = useRoiDeckExtension({
     roiDrawState,
     setRoiDrawState,
@@ -115,21 +118,8 @@ export default function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AnndataProvider>
-          <div className="container-right">{anndataControllers}</div>
-          <Vizarr
-            // The ThemeProvider above already covers the viewer and the plugin panels.
-            theme={null}
-            sources={sources}
-            viewState={viewState}
-            onViewerStateChange={setViewerInfo}
-            onViewStateChange={handleViewStateChange}
-            additionalLayers={enableRoi ? layers : undefined}
-            pluginCursor={enableRoi ? cursor : undefined}
-            onPluginClick={enableRoi ? onClick : undefined}
-            onPluginHover={enableRoi ? onHover : undefined}
-            labelColours={labelColours}
-          >
-            {enableRoi && viewerInfo && (
+          <div className="container-right">
+            {selecting && viewerInfo && (
               <RoiSelector
                 roiDrawState={roiDrawState}
                 setRoiDrawState={setRoiDrawState}
@@ -140,7 +130,24 @@ export default function App() {
                 viewerInfo={viewerInfo}
               />
             )}
-          </Vizarr>
+            {anndataControllers}
+          </div>
+          <Vizarr
+            // The ThemeProvider above already covers the viewer and the plugin panels.
+            theme={null}
+            sources={sources}
+            viewState={viewState}
+            onViewerStateChange={setViewerInfo}
+            onViewStateChange={handleViewStateChange}
+            additionalLayers={enableRoi ? layers : undefined}
+            pluginCursor={selecting ? cursor : undefined}
+            // Only intercept pointer events while the select tool is active, so panning
+            // stays unaffected; saved ROI layers keep rendering either way.
+            onPluginClick={selecting ? onClick : undefined}
+            onPluginHover={selecting ? onHover : undefined}
+            labelColours={labelColours}
+            enableSelectTool={enableRoi}
+          />
         </AnndataProvider>
       </ThemeProvider>
     </div>

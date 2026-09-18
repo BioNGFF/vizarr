@@ -17,12 +17,14 @@ import { ViewStateContext, useViewState } from "../hooks";
 import { loadSources } from "../io";
 import type { OmeColor } from "../layers/label-layer";
 import {
+  type InteractionMode,
   type ViewState,
   type ViewportSize,
   addSourceWarningAtom,
   currentImageBoundsAtom,
   currentTInfoAtom,
   currentZInfoAtom,
+  interactionModeAtom,
   redirectObjAtom,
   setLabelColorsAtom,
   setTSliceAtom,
@@ -48,6 +50,9 @@ export interface ViewerInfo {
   setViewState: (vs: ViewState) => void;
   setZSlice: (z: number) => void;
   setTSlice: (t: number) => void;
+  /** Pointer tool selected in the viewer toolbar; plugins implement the behaviour. */
+  interactionMode: InteractionMode;
+  setInteractionMode: (mode: InteractionMode) => void;
 }
 
 export interface VizarrViewerProps {
@@ -66,6 +71,12 @@ export interface VizarrViewerProps {
   onPluginHover?: (coordinate: [number, number] | null) => void;
   children?: React.ReactNode;
   logger?: Logger;
+  /**
+   * Show the toolbar's pan/select tools. Off by default: the select tool only does
+   * something when a plugin acts on `interactionMode`, and a button that looks
+   * enabled but does nothing is worse than no button.
+   */
+  enableSelectTool?: boolean;
   /**
    * Theme for the viewer and anything rendered inside it, defaulting to vizarr's own.
    *
@@ -90,6 +101,7 @@ function ViewerBridge({
   pluginCursor,
   onPluginClick,
   onPluginHover,
+  enableSelectTool,
   children,
 }: {
   sourceUrls: string[];
@@ -99,6 +111,7 @@ function ViewerBridge({
   pluginCursor?: string;
   onPluginClick?: (coordinate: [number, number]) => boolean;
   onPluginHover?: (coordinate: [number, number] | null) => void;
+  enableSelectTool?: boolean;
   children?: React.ReactNode;
 }) {
   const imageBounds = useAtomValue(currentImageBoundsAtom);
@@ -108,6 +121,8 @@ function ViewerBridge({
   const [, setViewState] = useViewState();
   const setZSlice = useSetAtom(setZSliceAtom);
   const setTSlice = useSetAtom(setTSliceAtom);
+  const interactionMode = useAtomValue(interactionModeAtom);
+  const setInteractionMode = useSetAtom(interactionModeAtom);
 
   // Notify host application when viewer state changes
   React.useEffect(() => {
@@ -120,12 +135,26 @@ function ViewerBridge({
       setViewState,
       setZSlice,
       setTSlice,
+      interactionMode,
+      setInteractionMode,
     });
-  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, setViewState, setZSlice, setTSlice, onViewerStateChange]);
+  }, [
+    sourceUrls,
+    imageBounds,
+    zInfo,
+    tInfo,
+    viewport,
+    setViewState,
+    setZSlice,
+    setTSlice,
+    interactionMode,
+    setInteractionMode,
+    onViewerStateChange,
+  ]);
 
   return (
     <>
-      <Menu />
+      <Menu enableSelectTool={enableSelectTool} />
       <Viewer
         additionalLayers={additionalLayers}
         pluginCursor={pluginCursor}
@@ -147,6 +176,7 @@ function VizarrViewerComponent({
   pluginCursor,
   onPluginClick,
   onPluginHover,
+  enableSelectTool,
   children,
   logger = console,
 }: VizarrViewerProps) {
@@ -261,6 +291,7 @@ function VizarrViewerComponent({
             pluginCursor={pluginCursor}
             onPluginClick={onPluginClick}
             onPluginHover={onPluginHover}
+            enableSelectTool={enableSelectTool}
           >
             {children}
           </ViewerBridge>
