@@ -1,21 +1,22 @@
-import { Add, ChevronLeft, ChevronRight, Fullscreen, HighlightAlt, PanTool, Remove } from "@mui/icons-material";
 import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  IconButton,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+  Add,
+  ChevronLeft,
+  ChevronRight,
+  Fullscreen,
+  GitHub,
+  HighlightAlt,
+  InfoOutlined,
+  PanTool,
+  Remove,
+} from "@mui/icons-material";
+import { Box, Dialog, DialogContent, DialogTitle, Divider, IconButton, Tooltip, Typography } from "@mui/material";
 import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useReducer, useState } from "react";
 
 import { SourceDataContext, useViewState } from "../hooks";
 import { firstLayerFitAtom, interactionModeAtom, sourceInfoAtom, sourceInfoAtomAtoms } from "../state";
 import { tokens } from "../theme";
+import { REPOSITORY_URL } from "../utils";
 import LayerController from "./LayerController";
 
 /** Zoom applied per press of the zoom in/out buttons. */
@@ -100,21 +101,26 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
           }}
           aria-hidden={hidden}
         >
-          <Box sx={{ px: 1, py: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              {activeSource?.name ?? "Dataset"}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, px: 1, py: 0.5 }}>
+            <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700, letterSpacing: "0.08em" }}>
+              VIZARR
             </Typography>
-            <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mt: 0.5, lineHeight: 1.4 }}>
-              {sourceDescription}
-            </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => setMetadataOpen(true)}
-              sx={{ mt: 1, fontSize: "0.72rem" }}
-            >
-              View Full Metadata
-            </Button>
+            <Tooltip title="View on GitHub">
+              <IconButton
+                component="a"
+                href={REPOSITORY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View vizarr on GitHub"
+              >
+                <GitHub />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="More info">
+              <IconButton onClick={() => setMetadataOpen(true)} aria-label="More information about this image">
+                <InfoOutlined />
+              </IconButton>
+            </Tooltip>
           </Box>
           <Divider />
           <Box
@@ -227,24 +233,10 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
           </Tooltip>
         </Box>
       </Box>
-      <Dialog open={metadataOpen} onClose={() => setMetadataOpen(false)} fullWidth maxWidth="md">
-        <DialogTitle>Image Metadata</DialogTitle>
+      <Dialog open={metadataOpen} onClose={() => setMetadataOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>{activeSource?.name ?? "No image loaded"}</DialogTitle>
         <DialogContent dividers>
-          <Box
-            component="pre"
-            sx={{
-              m: 0,
-              p: 1.5,
-              borderRadius: 1,
-              backgroundColor: tokens.code.background,
-              color: tokens.code.color,
-              overflow: "auto",
-              fontSize: "0.78rem",
-              lineHeight: 1.4,
-            }}
-          >
-            {JSON.stringify(activeSource ?? { message: "No source metadata loaded yet." }, null, 2)}
-          </Box>
+          <Typography variant="body2">{sourceDescription}</Typography>
         </DialogContent>
       </Dialog>
     </Box>

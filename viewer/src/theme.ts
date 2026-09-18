@@ -23,8 +23,6 @@ export const tokens = {
     radius: 8,
   },
   scrollbarThumb: "rgba(255, 255, 255, 0.22)",
-  /** Monospaced blocks, e.g. the metadata dump. */
-  code: { background: "#0f1115", color: "#e6edf3" },
 } as const;
 
 export default createTheme({
