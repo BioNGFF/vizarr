@@ -1,14 +1,9 @@
 import { MoreHoriz } from "@mui/icons-material";
-import { Divider, IconButton, Input, Paper, Popover, Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { Divider, IconButton, Paper, Popover, Typography } from "@mui/material";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
-
-const DenseInput = styled(Input)`
-  width: 5.5em;
-  font-size: 0.7em;
-`;
+import { DenseInput, popoverPaperSx } from "./controls";
 
 interface Props {
   axisIndex: number;
@@ -79,7 +74,7 @@ function AxisOptions({ axisIndex, max }: Props) {
           horizontal: "left",
         }}
       >
-        <Paper style={{ padding: "0px 4px", marginBottom: 4 }}>
+        <Paper sx={popoverPaperSx}>
           <Typography variant="caption">Index:</Typography>
           <Divider />
           <DenseInput value={value} onChange={handleIndexChange} type="number" id="max" fullWidth={false} />

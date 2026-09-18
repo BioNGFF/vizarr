@@ -1,8 +1,9 @@
 import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
-import { Grid, IconButton, Slider, Typography } from "@mui/material";
+import { Grid, IconButton } from "@mui/material";
 import React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import ChannelOptions from "./ChannelOptions";
+import { ControlLabel, DenseSlider, inlineIconButtonSx } from "./controls";
 
 function ChannelController({ channelIndex }: { channelIndex: number }) {
   const [sourceData] = useSourceData();
@@ -39,11 +40,7 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
     <>
       <Grid container justifyContent="space-between" wrap="nowrap">
         <Grid size={{ xs: 10 }}>
-          <div style={{ width: 165, overflow: "hidden", textOverflow: "ellipsis" }}>
-            <Typography variant="caption" noWrap>
-              {label}
-            </Typography>
-          </div>
+          <ControlLabel>{label}</ControlLabel>
         </Grid>
         <Grid size={{ xs: 1 }}>
           <ChannelOptions channelIndex={channelIndex} />
@@ -51,30 +48,12 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
       </Grid>
       <Grid container justifyContent="space-between">
         <Grid size={{ xs: 2 }}>
-          <IconButton
-            style={{
-              color,
-              backgroundColor: "transparent",
-              padding: 0,
-              zIndex: 2,
-            }}
-            onClick={handleVisibilityChange}
-          >
+          <IconButton sx={{ ...inlineIconButtonSx, color }} onClick={handleVisibilityChange}>
             {on ? <RadioButtonChecked /> : <RadioButtonUnchecked />}
           </IconButton>
         </Grid>
         <Grid size={{ xs: 10 }}>
-          <Slider
-            value={value}
-            onChange={handleContrastChange}
-            min={min}
-            max={max}
-            step={0.01}
-            style={{
-              padding: "10px 0px 5px 0px",
-              color,
-            }}
-          />
+          <DenseSlider value={value} onChange={handleContrastChange} min={min} max={max} step={0.01} sx={{ color }} />
         </Grid>
       </Grid>
     </>

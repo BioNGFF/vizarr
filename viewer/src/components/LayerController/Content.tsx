@@ -1,5 +1,4 @@
 import { AccordionDetails, Divider, Grid, Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import React from "react";
 
 import AcquisitionController from "./AcquisitionController";
@@ -11,24 +10,21 @@ import OpacitySlider from "./OpacitySlider";
 
 import { useLayerState } from "../../hooks";
 import { range } from "../../utils";
-
-const Details = styled(AccordionDetails)`
-  padding: 2px 5px;
-  border-left: 1px solid rgba(150, 150, 150, .2);
-  border-right: 1px solid rgba(150, 150, 150, .2);
-`;
+import { sectionLabelSx } from "./controls";
 
 function Content() {
   const [layer] = useLayerState();
   const nChannels = layer.layerProps.selections.length;
   return (
-    <Details>
+    <AccordionDetails sx={{ px: 0.5, py: 0.5 }}>
       <Grid container direction="column">
         <AcquisitionController />
         <Grid>
           <Grid container justifyContent="space-between">
             <Grid size={{ xs: 3 }}>
-              <Typography variant="caption">opacity:</Typography>
+              <Typography variant="caption" sx={sectionLabelSx}>
+                opacity:
+              </Typography>
             </Grid>
             <Grid size={{ xs: 8 }}>
               <OpacitySlider />
@@ -38,7 +34,9 @@ function Content() {
         <AxisSliders />
         <Grid container justifyContent="space-between">
           <Grid size={{ xs: 3 }}>
-            <Typography variant="caption">channels:</Typography>
+            <Typography variant="caption" sx={sectionLabelSx}>
+              channels:
+            </Typography>
           </Grid>
           <Grid size={{ xs: 1 }}>
             <AddChannelButton />
@@ -53,7 +51,9 @@ function Content() {
         {layer.labels?.length && (
           <>
             <Grid container justifyContent="space-between">
-              <Typography variant="caption">labels:</Typography>
+              <Typography variant="caption" sx={sectionLabelSx}>
+                labels:
+              </Typography>
             </Grid>
             <Divider />
             <Grid>
@@ -64,7 +64,7 @@ function Content() {
           </>
         )}
       </Grid>
-    </Details>
+    </AccordionDetails>
   );
 }
 

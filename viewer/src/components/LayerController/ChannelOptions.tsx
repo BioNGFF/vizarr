@@ -1,15 +1,10 @@
 import { MoreHoriz, Remove } from "@mui/icons-material";
-import { Divider, IconButton, Input, NativeSelect, Paper, Popover, Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { Box, Divider, IconButton, NativeSelect, Paper, Popover, Typography } from "@mui/material";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import ColorPalette from "./ColorPalette";
-
-const DenseInput = styled(Input)`
-  width: 5.5em;
-  font-size: 0.7em;
-`;
+import { DenseInput, denseSelectSx, popoverPaperSx } from "./controls";
 
 interface Props {
   channelIndex: number;
@@ -140,19 +135,19 @@ function ChannelOptions({ channelIndex }: Props) {
           horizontal: "left",
         }}
       >
-        <Paper style={{ padding: "0px 4px", marginBottom: 4 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <Paper sx={popoverPaperSx}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="caption">remove:</Typography>
             <IconButton onClick={handleRemove}>
               <Remove />
             </IconButton>
-          </div>
+          </Box>
           <Divider />
           <Typography variant="caption">selection:</Typography>
           <Divider />
           <NativeSelect
             fullWidth
-            style={{ fontSize: "0.7em" }}
+            sx={denseSelectSx}
             id={`layer-${sourceData.name}-channel-select`}
             onChange={handleSelectionChange}
             value={layer.layerProps.selections[channelIndex][channel_axis as number]}
@@ -171,9 +166,9 @@ function ChannelOptions({ channelIndex }: Props) {
           <Divider />
           <Typography variant="caption">color:</Typography>
           <Divider />
-          <div style={{ display: "flex", justifyContent: "center" }}>
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
             <ColorPalette handleChange={handleColorChange} />
-          </div>
+          </Box>
         </Paper>
       </Popover>
     </>

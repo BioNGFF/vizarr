@@ -1,15 +1,8 @@
-import { Divider, Grid, Slider, Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { Divider, Grid } from "@mui/material";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import DimensionOptions from "./AxisOptions";
-
-const DenseSlider = styled(Slider)`
-  color: white;
-  padding: 10px 0px 5px 0px;
-  margin-right: 5px;
-  :active { box-shadow: 0px 0px 0px 8px rgba(158, 158, 158, 0.16); }
-`;
+import { ControlLabel, DenseSlider } from "./controls";
 
 interface Props {
   axisIndex: number;
@@ -55,11 +48,9 @@ function AxisSlider({ axisIndex, max }: Props) {
       <Grid>
         <Grid container justifyContent="space-between">
           <Grid size={{ xs: 10 }}>
-            <div style={{ width: 165, overflow: "hidden", textOverflow: "ellipsis" }}>
-              <Typography variant="caption" noWrap>
-                {axisLabel}: {value}/{max}
-              </Typography>
-            </div>
+            <ControlLabel>
+              {axisLabel}: {value}/{max}
+            </ControlLabel>
           </Grid>
           <Grid size={{ xs: 1 }}>
             <DimensionOptions axisIndex={axisIndex} max={max} />

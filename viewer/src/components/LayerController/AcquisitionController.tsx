@@ -2,6 +2,7 @@ import { Grid, NativeSelect } from "@mui/material";
 import React from "react";
 import type { ChangeEvent } from "react";
 import { useSourceData } from "../../hooks";
+import { denseSelectSx } from "./controls";
 
 function AcquisitionController() {
   const [sourceData] = useSourceData();
@@ -25,7 +26,7 @@ function AcquisitionController() {
   return (
     <>
       <Grid>
-        <NativeSelect fullWidth style={{ fontSize: "0.7em" }} onChange={handleSelectionChange} value={acquisitionId}>
+        <NativeSelect fullWidth sx={denseSelectSx} onChange={handleSelectionChange} value={acquisitionId}>
           <option value="-1" key="-1">
             Filter by Acquisition
           </option>
