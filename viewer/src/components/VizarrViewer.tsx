@@ -1,4 +1,5 @@
 import { Box, Link, ThemeProvider, Typography } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React from "react";
@@ -30,7 +31,7 @@ import {
   viewStateAtom,
   viewportAtom,
 } from "../state";
-import theme from "../theme";
+import defaultTheme from "../theme";
 import Menu from "./Menu";
 import { InfoSnackbar, SnackbarHost } from "./Snackbar";
 import Viewer from "./Viewer";
@@ -63,6 +64,15 @@ export interface VizarrViewerProps {
   onPluginHover?: (coordinate: [number, number] | null) => void;
   children?: React.ReactNode;
   logger?: Logger;
+  /**
+   * Theme for the viewer and anything rendered inside it, defaulting to vizarr's own.
+   *
+   * Pass `null` when the host application already has a ThemeProvider: the viewer then
+   * inherits it instead of nesting a second provider. Nesting one silently overrides the
+   * host's styling for this subtree, so sibling UI outside the viewer resolves a
+   * different theme and the two stop matching.
+   */
+  theme?: Theme | null;
 }
 
 /**
@@ -311,12 +321,12 @@ function VizarrViewerComponent({
 /**
  *Component to render source images
  */
-export default function VizarrViewer({ children, ...props }: VizarrViewerProps) {
-  return (
-    <ThemeProvider theme={theme}>
-      <Provider>
-        <VizarrViewerComponent {...props}>{children}</VizarrViewerComponent>
-      </Provider>
-    </ThemeProvider>
+export default function VizarrViewer({ children, theme = defaultTheme, ...props }: VizarrViewerProps) {
+  const viewer = (
+    <Provider>
+      <VizarrViewerComponent {...props}>{children}</VizarrViewerComponent>
+    </Provider>
   );
+  // No provider when the host supplies the theme, so that one theme governs the whole page.
+  return theme ? <ThemeProvider theme={theme}>{viewer}</ThemeProvider> : viewer;
 }
