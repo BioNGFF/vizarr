@@ -157,27 +157,30 @@ function VizarrViewerComponent({
   // Kept in a ref so the atom below never has to be rebuilt: a new atom identity on every
   // render invalidates every useViewState() consumer and re-fires onViewerStateChange,
   // which drives the host into a render loop.
+  // Assigned in a layout effect so the ref is current before the browser paints, closing
+  // the window in which a view state write would otherwise see the previous callback.
   const onViewStateChangeRef = React.useRef(onViewStateChange);
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     onViewStateChangeRef.current = onViewStateChange;
   }, [onViewStateChange]);
 
-  const viewStateAtomWithEffect: PrimitiveAtom<ViewState | null> = React.useMemo(
-    () =>
-      atom(
-        (get) => get(viewStateAtom),
-        (get, set, update) => {
-          const viewState = typeof update === "function" ? update(get(viewStateAtom)) : update;
-          if (viewState) {
-            onViewStateChangeRef.current?.({
-              target: viewState.target,
-              zoom: viewState.zoom,
-            });
-            set(viewStateAtom, update);
-          }
-        },
-      ),
-    [],
+  // useState rather than useMemo: React treats a useMemo cache as a hint it may discard,
+  // whereas a useState initialiser is guaranteed to run exactly once. A stable atom
+  // identity is the whole point here, so it needs the guarantee and not the hint.
+  const [viewStateAtomWithEffect] = React.useState<PrimitiveAtom<ViewState | null>>(() =>
+    atom(
+      (get) => get(viewStateAtom),
+      (get, set, update) => {
+        const viewState = typeof update === "function" ? update(get(viewStateAtom)) : update;
+        if (viewState) {
+          onViewStateChangeRef.current?.({
+            target: viewState.target,
+            zoom: viewState.zoom,
+          });
+          set(viewStateAtom, update);
+        }
+      },
+    ),
   );
   React.useEffect(() => {
     let cancelled = false;
