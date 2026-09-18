@@ -224,14 +224,19 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
             </IconButton>
           </Tooltip>
           <Tooltip title="Fit image to view" placement="right">
-            <IconButton
-              sx={railGroupButtonSx}
-              disabled={!fitViewState}
-              onClick={() => fitViewState && setViewState(() => fitViewState)}
-              aria-label="Fit image to view"
-            >
-              <Fullscreen />
-            </IconButton>
+            {/* A disabled button fires no events, so Tooltip has nothing to listen on and
+                warns. The span is the wrapper MUI asks for; display:flex keeps it from
+                changing the rail's layout. */}
+            <span style={{ display: "flex" }}>
+              <IconButton
+                sx={railGroupButtonSx}
+                disabled={!fitViewState}
+                onClick={() => fitViewState && setViewState(() => fitViewState)}
+                aria-label="Fit image to view"
+              >
+                <Fullscreen />
+              </IconButton>
+            </span>
           </Tooltip>
         </Box>
       </Box>
