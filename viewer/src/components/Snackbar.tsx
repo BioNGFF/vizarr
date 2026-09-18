@@ -1,32 +1,41 @@
 import { type SnackbarKey, SnackbarProvider, closeSnackbar, enqueueSnackbar } from "notistack";
 import React from "react";
 
-export function InfoSnackbar(props: { message: string }) {
-  const hideSnackbar = (snackbarId: SnackbarKey) => (
-    <>
-      <button
-        type={"button"}
-        onClick={() => {
-          closeSnackbar(snackbarId);
-        }}
-      >
-        Dismiss
-      </button>
-    </>
-  );
+const dismissAction = (snackbarId: SnackbarKey) => (
+  <button
+    type="button"
+    onClick={() => {
+      closeSnackbar(snackbarId);
+    }}
+  >
+    Dismiss
+  </button>
+);
 
-  React.useEffect(() => {
-    enqueueSnackbar(props.message, { action: hideSnackbar });
-  });
-
+/**
+ * Hosts the notistack container. Render exactly once, before any <InfoSnackbar/>:
+ * `enqueueSnackbar` is a global imperative API, so several containers would compete
+ * for the same queue.
+ */
+export function SnackbarHost() {
   return (
-    <div>
-      <SnackbarProvider
-        anchorOrigin={{ horizontal: "right", vertical: "top" }}
-        autoHideDuration={null}
-        variant={"warning"}
-        preventDuplicate={true}
-      />
-    </div>
+    <SnackbarProvider
+      anchorOrigin={{ horizontal: "right", vertical: "top" }}
+      autoHideDuration={null}
+      variant={"warning"}
+      preventDuplicate={true}
+    />
   );
+}
+
+/**
+ * Enqueues a single message. Keyed on the message so it is enqueued once rather than
+ * on every render, which would restart the toast's animation indefinitely.
+ */
+export function InfoSnackbar({ message }: { message: string }) {
+  React.useEffect(() => {
+    enqueueSnackbar(message, { action: dismissAction });
+  }, [message]);
+
+  return null;
 }

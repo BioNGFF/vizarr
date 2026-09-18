@@ -1,11 +1,15 @@
 import * as zarr from "zarrita";
 import { ZarrPixelSource } from "./ZarrPixelSource";
-import { loadOmeMultiscales, loadPlate, loadWell } from "./ome";
+import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
+import { parse } from "./parsers/parse";
 import * as utils from "./utils";
 
-import { DEFAULT_LABEL_OPACITY } from "./layers/label-layer";
+import type { SceneSchema } from "zod-ome-ngff/0.6";
+import { DEFAULT_LABEL_OPACITY, type OmeColor } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
+
+import { openZarrRoot } from "./services/http";
 
 async function loadSingleChannel(config: SingleChannelConfig, data: Array<ZarrPixelSource>): Promise<SourceData> {
   const { color, contrast_limits, visibility, name, colormap = "", opacity = 1 } = config;
@@ -71,22 +75,34 @@ async function loadMultiChannel(
   };
 }
 
-export async function createSourceData(config: ImageLayerConfig): Promise<SourceData> {
-  const node = await utils.open(config.source);
+export async function createSourceData(config: ImageLayerConfig): Promise<SourceData[]> {
+  const node = await openZarrRoot(config.source);
+
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
+    const parsedData = parse(node.attrs);
+    if (parsedData.version === "v06") {
+      if (parsedData.type === "SceneSchema") {
+        // TODO
+        //Temporary assertion until parsing layer implemented
+        const data = parsedData.data as typeof SceneSchema;
+        const scene = data.ome.scene as Ome.Scene;
+        return loadScene(config, node, scene);
+      }
+    }
+
     let attrs = utils.resolveAttrs(node.attrs);
     if (utils.isOmePlate(attrs)) {
-      return loadPlate(config, node, attrs.plate);
+      return [await loadPlate(config, node, attrs.plate)];
     }
 
     if (utils.isOmeWell(attrs)) {
-      return loadWell(config, node, attrs.well);
+      return [await loadWell(config, node, attrs.well)];
     }
 
     if (utils.isMultiscales(attrs)) {
-      return loadOmeMultiscales(config, node, attrs);
+      return [await loadOmeMultiscales(config, node, attrs)];
     }
 
     if (Object.keys(attrs).length === 0 && node.path) {
@@ -94,7 +110,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
       const parent = await zarr.open(node.resolve(".."), { kind: "group" });
       const parentAttrs = utils.resolveAttrs(parent.attrs);
       if (utils.isOmePlate(parentAttrs)) {
-        return loadPlate(config, parent, parentAttrs.plate);
+        return [await loadPlate(config, parent, parentAttrs.plate)];
       }
     }
 
@@ -104,9 +120,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     }
     utils.assert(utils.isMultiscales(attrs), "Group is missing multiscales specification.");
     data = await utils.loadMultiscales(node, attrs.multiscales);
-    if (attrs.multiscales[0].axes) {
-      axes = utils.getNgffAxes(attrs.multiscales);
-    }
+    axes = utils.getNgffAxes(attrs.multiscales);
   } else {
     data = [node];
   }
@@ -122,12 +136,12 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
 
   if ("channel_axis" in config || channel_axis > -1) {
     config = config as MultichannelConfig;
-    return loadMultiChannel(config, loader, Number(config.channel_axis ?? channel_axis));
+    return [await loadMultiChannel(config, loader, Number(config.channel_axis ?? channel_axis))];
   }
 
   const nDims = base.shape.length;
   if (nDims === 2 || !("channel_axis" in config)) {
-    return loadSingleChannel(config as SingleChannelConfig, loader);
+    return [await loadSingleChannel(config as SingleChannelConfig, loader)];
   }
 
   throw Error("Failed to load image.");
@@ -159,7 +173,6 @@ function getAxisLabelsAndChannelAxis(
 
 export function initLayerStateFromSource(source: SourceData & { id: string }): LayerState {
   const { selection, opacity, colormap } = source.defaults;
-
   const selections: number[][] = [];
   const colors: [number, number, number][] = [];
   const contrastLimits: [start: number, end: number][] = [];
@@ -233,7 +246,6 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
       },
     }));
   }
-
   return {
     kind: "multiscale",
     layerProps: {
@@ -259,7 +271,9 @@ function getSourceSelectionTransform(
   );
   utils.assert(
     labels.labels.every((label) => source.labels.includes(label)),
-    `Label axes MUST be a subset of source. Source: ${JSON.stringify(source.labels)} Labels: ${JSON.stringify(labels.labels)}`,
+    `Label axes MUST be a subset of source. Source: ${JSON.stringify(source.labels)} Labels: ${JSON.stringify(
+      labels.labels,
+    )}`,
   );
   // Identify labels that should always map to 0, regardless of the source selection.
   const excludeFromTransformedSelection = new Set(
@@ -273,4 +287,45 @@ function getSourceSelectionTransform(
       excludeFromTransformedSelection.has(name) ? 0 : sourceSelection[source.labels.indexOf(name)],
     );
   };
+}
+
+/**
+ * Apply externally-supplied label colours to a layer state, switching the label layer on.
+ *
+ * Returns `null` when the source has no label to colour, which the caller surfaces as a
+ * user-facing error. Colours are applied to the layer state rather than the source data so
+ * that recolouring never requires re-fetching the image.
+ */
+export function applyLabelColors<T extends LayerState>(layerState: T, colors: ReadonlyArray<OmeColor>): T | null {
+  if (!layerState.labels?.length) {
+    return null;
+  }
+  return {
+    ...layerState,
+    labels: layerState.labels.map((label, i) =>
+      i === 0 ? { ...label, on: true, layerProps: { ...label.layerProps, colors } } : label,
+    ),
+  };
+}
+
+/**
+ * Loads every source url, settling independently so that one bad url does not sink the rest.
+ *
+ * A single url can yield more than one image (an OME-NGFF v0.6 scene), so each result is an
+ * array. `sourceIndex` records which entry of `sources` an image came from, which callers
+ * need because that mapping is no longer positional once the results are flattened.
+ */
+export async function loadSources(sources: string[]) {
+  return await Promise.allSettled(
+    sources.map(async (source, index) => {
+      const sourceData = await createSourceData({ source: source });
+      return sourceData.map((data, subIndex) => {
+        const id = Math.random().toString(36).slice(2);
+        if (!data.name) {
+          data.name = sourceData.length > 1 ? `image_${index}_${subIndex}` : `image_${index}`;
+        }
+        return { id, sourceIndex: index, ...data };
+      });
+    }),
+  );
 }

@@ -1,0 +1,5 @@
+source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0047A/4496763.zarr
+name: 0a11ad7d-ed50-4cbe-affa-0355148c9595.yaml
+testable: true
+features:
+  multiscale: true

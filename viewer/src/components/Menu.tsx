@@ -161,7 +161,7 @@ function Menu(props: { open?: boolean }) {
             border: "1px solid #2a2a2a",
             borderRadius: "8px",
             overflow: "hidden",
-            marginTop: "10px"
+            marginTop: "10px",
           }}
         >
           <IconButton
@@ -201,7 +201,7 @@ function Menu(props: { open?: boolean }) {
             border: "1px solid #2a2a2a",
             borderRadius: "8px",
             overflow: "hidden",
-            marginTop: "10px"
+            marginTop: "10px",
           }}
         >
           <IconButton

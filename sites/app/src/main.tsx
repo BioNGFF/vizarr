@@ -5,6 +5,7 @@ import "@fontsource/inter/600.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import "./index.css";
 
 console.log(`vizarr v${version}: https://github.com/BioNGFF/vizarr`);
 
