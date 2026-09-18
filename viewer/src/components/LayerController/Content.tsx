@@ -23,7 +23,7 @@ function Content() {
           <Grid container justifyContent="space-between">
             <Grid size={{ xs: 3 }}>
               <Typography variant="caption" sx={sectionLabelSx}>
-                opacity:
+                opacity
               </Typography>
             </Grid>
             <Grid size={{ xs: 8 }}>
@@ -35,7 +35,7 @@ function Content() {
         <Grid container justifyContent="space-between">
           <Grid size={{ xs: 3 }}>
             <Typography variant="caption" sx={sectionLabelSx}>
-              channels:
+              channels
             </Typography>
           </Grid>
           <Grid size={{ xs: 1 }}>
@@ -52,7 +52,7 @@ function Content() {
           <>
             <Grid container justifyContent="space-between">
               <Typography variant="caption" sx={sectionLabelSx}>
-                labels:
+                labels
               </Typography>
             </Grid>
             <Divider />

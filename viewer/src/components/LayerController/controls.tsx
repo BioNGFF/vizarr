@@ -19,14 +19,12 @@ export const sectionLabelSx: SxProps<Theme> = {
 /** Slider sized to the panel's row height. Callers override `color` per channel. */
 export const DenseSlider = styled(Slider)({
   color: "#fff",
-  padding: "10px 0 5px 0",
-  marginRight: 5,
+  marginRight: 4,
 });
 
 /** Numeric field in the option popovers. */
 export const DenseInput = styled(Input)({
   width: "5.5em",
-  fontSize: "0.7em",
 });
 
 /** Toggle that should read as an inline control rather than a button. */
@@ -40,8 +38,8 @@ export const inlineIconButtonSx: SxProps<Theme> = {
 /** Option popover body. The theme paints the surface; this is only spacing. */
 export const popoverPaperSx: SxProps<Theme> = { px: 0.5, mb: 0.5 };
 
-/** Select scaled to the panel's dense type. */
-export const denseSelectSx: SxProps<Theme> = { fontSize: "0.7em" };
+/** Select in the panel. Left at the theme's small size rather than shrunk further. */
+export const denseSelectSx: SxProps<Theme> = { fontSize: "0.8rem" };
 
 /**
  * Row label that truncates to whatever width the row gives it. This replaced a

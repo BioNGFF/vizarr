@@ -1,5 +1,4 @@
-import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
-import { Grid, IconButton } from "@mui/material";
+import { Checkbox, Grid } from "@mui/material";
 import React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import ChannelOptions from "./ChannelOptions";
@@ -48,9 +47,12 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
       </Grid>
       <Grid container justifyContent="space-between">
         <Grid size={{ xs: 2 }}>
-          <IconButton sx={{ ...inlineIconButtonSx, color }} onClick={handleVisibilityChange}>
-            {on ? <RadioButtonChecked /> : <RadioButtonUnchecked />}
-          </IconButton>
+          <Checkbox
+            checked={on}
+            onChange={handleVisibilityChange}
+            sx={{ ...inlineIconButtonSx, color, "&.Mui-checked": { color } }}
+            inputProps={{ "aria-label": `Toggle channel ${label}` }}
+          />
         </Grid>
         <Grid size={{ xs: 10 }}>
           <DenseSlider value={value} onChange={handleContrastChange} min={min} max={max} step={0.01} sx={{ color }} />

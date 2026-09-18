@@ -82,7 +82,7 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
       <Box
         sx={{
           pointerEvents: "auto",
-          width: hidden ? 0 : { xs: 250, sm: 300 },
+          width: hidden ? 0 : { xs: 280, sm: 340 },
           transition: "width 220ms ease",
           overflow: "hidden",
           height: "100%",
@@ -93,7 +93,7 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
             display: "flex",
             flexDirection: "column",
             height: "100%",
-            width: { xs: 250, sm: 300 },
+            width: { xs: 280, sm: 340 },
             backgroundColor: tokens.panel.background,
             borderRight: `2px solid ${tokens.panel.border}`,
             boxShadow: `inset -1px 0 0 ${tokens.panel.inset}`,
@@ -116,19 +116,6 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
               View Full Metadata
             </Button>
           </Box>
-          <Divider />
-          <Typography
-            variant="caption"
-            sx={{
-              px: 1,
-              py: 0.5,
-              color: "text.secondary",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}
-          >
-            Spatial Controls
-          </Typography>
           <Divider />
           <Box
             sx={{

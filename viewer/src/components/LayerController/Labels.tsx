@@ -1,5 +1,4 @@
-import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
-import { Grid, IconButton } from "@mui/material";
+import { Checkbox, Grid } from "@mui/material";
 import React from "react";
 
 import { useLayerState, useSourceData } from "../../hooks";
@@ -36,9 +35,11 @@ export default function Labels({ labelIndex }: { labelIndex: number }) {
       </Grid>
       <Grid container justifyContent="space-between">
         <Grid size={{ xs: 2 }}>
-          <IconButton
+          <Checkbox
+            checked={label.on}
             sx={inlineIconButtonSx}
-            onClick={() => {
+            inputProps={{ "aria-label": `Toggle label ${name}` }}
+            onChange={() => {
               setLayer((prev) => {
                 assert(prev.kind === "multiscale" && prev.labels, "Missing image labels");
                 return {
@@ -50,9 +51,7 @@ export default function Labels({ labelIndex }: { labelIndex: number }) {
                 };
               });
             }}
-          >
-            {label.on ? <RadioButtonChecked /> : <RadioButtonUnchecked />}
-          </IconButton>
+          />
         </Grid>
         <Grid size={{ xs: 10 }}>
           <DenseSlider value={label.layerProps.opacity} onChange={handleOpacityChange} min={0} max={1} step={0.01} />

@@ -63,43 +63,14 @@ export default createTheme({
     MuiButtonBase: {
       defaultProps: { disableRipple: true },
     },
-    MuiFilledInput: {
-      defaultProps: { margin: "dense" },
-    },
-    MuiFormControl: {
-      defaultProps: { margin: "dense" },
-    },
-    MuiFormHelperText: {
-      defaultProps: { margin: "dense" },
-    },
     MuiIconButton: {
       defaultProps: { size: "small" },
     },
-    MuiInputBase: {
-      defaultProps: { margin: "dense" },
-    },
-    MuiInputLabel: {
-      defaultProps: { margin: "dense" },
-    },
-    MuiOutlinedInput: {
-      defaultProps: { margin: "dense" },
-    },
-
+    // Small keeps the controls compact without the bespoke geometry this used to set:
+    // an 11x5 thumb with a 15% radius, which read as a dated rectangular handle rather
+    // than a slider.
     MuiSlider: {
-      defaultProps: {
-        size: "small",
-      },
-      styleOverrides: {
-        thumb: {
-          "&:focus, &:hover": {
-            boxShadow: "none",
-          },
-          height: 11,
-          width: 5,
-          borderRadius: "15%",
-          marginLeft: -1,
-        },
-      },
+      defaultProps: { size: "small" },
     },
     MuiInput: {
       styleOverrides: {
@@ -119,12 +90,7 @@ export default createTheme({
       },
     },
     MuiSvgIcon: {
-      styleOverrides: {
-        root: {
-          width: "0.7em",
-          height: "0.7em",
-        },
-      },
+      defaultProps: { fontSize: "small" },
     },
   },
 });
