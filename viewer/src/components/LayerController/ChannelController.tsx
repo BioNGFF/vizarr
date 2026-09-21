@@ -2,6 +2,7 @@ import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
 import { Grid, IconButton, Slider, Typography } from "@mui/material";
 import React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
+import ChannelHistogram from "./ChannelHistogram";
 import ChannelOptions from "./ChannelOptions";
 
 function ChannelController({ channelIndex }: { channelIndex: number }) {
@@ -64,6 +65,8 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
           </IconButton>
         </Grid>
         <Grid size={{ xs: 10 }}>
+          {/* Shares the cell with the slider, so its extent matches the rail. */}
+          <ChannelHistogram channelIndex={channelIndex} />
           <Slider
             value={value}
             onChange={handleContrastChange}

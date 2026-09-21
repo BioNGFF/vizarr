@@ -218,6 +218,7 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
         columnLabels: source.columnNames,
       },
       on: true,
+      histogramScale: utils.DEFAULT_HISTOGRAM_SCALE,
     };
   }
 
@@ -229,6 +230,7 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
         loader: source.loader[0],
       },
       on: true,
+      histogramScale: utils.DEFAULT_HISTOGRAM_SCALE,
     };
   }
 
@@ -253,6 +255,7 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
       loader: source.loader,
     },
     on: true,
+    histogramScale: utils.DEFAULT_HISTOGRAM_SCALE,
     labels,
   };
 }

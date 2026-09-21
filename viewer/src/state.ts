@@ -107,10 +107,18 @@ type LayerPropsMap = {
   grid: GridLayerProps;
 };
 
+/** y-axis scaling for the per-channel intensity sparklines. */
+export type HistogramScale = "log" | "linear";
+
 export type LayerState<T extends LayerType = LayerType> = {
   kind: T;
   layerProps: LayerPropsMap[T];
   on: boolean;
+  /**
+   * UI-only. Must stay outside `layerProps`, which is spread wholesale into the
+   * deck.gl layer constructor.
+   */
+  histogramScale: HistogramScale;
   labels?: Array<{
     layerProps: Omit<LabelLayerProps, "selection">;
     on: boolean;
