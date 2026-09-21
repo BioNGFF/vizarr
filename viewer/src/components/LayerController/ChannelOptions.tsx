@@ -1,9 +1,24 @@
 import { MoreHoriz, Remove } from "@mui/icons-material";
-import { Divider, IconButton, Input, NativeSelect, Paper, Popover, Typography } from "@mui/material";
+import {
+  Button,
+  Divider,
+  IconButton,
+  Input,
+  NativeSelect,
+  Paper,
+  Popover,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
+import { DEFAULT_AUTO_CONTRAST_QUANTILES, maxValue, percentiles } from "../../histogram";
 import { useLayerState, useSourceData } from "../../hooks";
+import { useChannelHistogram } from "../../hooks/useChannelHistogram";
+import { type HistogramScale, sourceWarningAtom } from "../../state";
+import { arraysIdentical, getDefaultChannelLabels } from "../../utils";
 import ColorPalette from "./ColorPalette";
 
 const DenseInput = styled(Input)`
@@ -19,6 +34,8 @@ function ChannelOptions({ channelIndex }: Props) {
   const [sourceData] = useSourceData();
   const [layer, setLayer] = useLayerState();
   const [anchorEl, setAnchorEl] = useState<null | Element>(null);
+  // Same cache key as the sparkline, so opening the popover issues no new fetch.
+  const { histogram } = useChannelHistogram(channelIndex);
   const { channel_axis, names } = sourceData;
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -67,6 +84,41 @@ function ChannelOptions({ channelIndex }: Props) {
         layerProps: { ...prev.layerProps, contrastLimits, contrastLimitsRange },
       };
     });
+  };
+
+  const handleAutoContrast = () => {
+    if (!histogram || histogram.total === 0) return;
+    const [lo, hi] = percentiles(histogram, DEFAULT_AUTO_CONTRAST_QUANTILES);
+
+    setLayer((prev) => {
+      const contrastLimits = [...prev.layerProps.contrastLimits];
+      const contrastLimitsRange = [...prev.layerProps.contrastLimitsRange];
+      const [rmin, rmax] = contrastLimitsRange[channelIndex];
+
+      // Widen the slider domain to cover the data rather than clamping into it.
+      // Clamping would make this a no-op whenever omero metadata declares a
+      // narrow window (e.g. [0, 255]) over wider data.
+      const nmin = Math.min(rmin, histogram.min);
+      const nmax = Math.max(rmax, maxValue(histogram));
+
+      // viv needs min < max; a flat plane would otherwise render black.
+      let [umin, umax] = [lo, hi];
+      if (!(umax > umin)) {
+        umin = nmin;
+        umax = Math.min(nmax, nmin + (histogram.binWidth || 1));
+        if (!(umax > umin)) umax = umin + 1;
+      }
+
+      contrastLimitsRange[channelIndex] = [nmin, nmax];
+      contrastLimits[channelIndex] = [umin, umax];
+      return { ...prev, layerProps: { ...prev.layerProps, contrastLimits, contrastLimitsRange } };
+    });
+  };
+
+  const handleHistogramScaleChange = (_: MouseEvent<HTMLElement>, value: HistogramScale | null) => {
+    // An exclusive ToggleButtonGroup reports null when the active button is re-clicked.
+    if (!value) return;
+    setLayer((prev) => ({ ...prev, histogramScale: value }));
   };
 
   const handleRemove = () => {
@@ -168,6 +220,31 @@ function ChannelOptions({ channelIndex }: Props) {
           <Divider />
           <DenseInput value={min} onChange={handleContrastLimitChange} type="number" id="min" fullWidth={false} />
           <DenseInput value={max} onChange={handleContrastLimitChange} type="number" id="max" fullWidth={false} />
+          <Button
+            fullWidth
+            onClick={handleAutoContrast}
+            disabled={!histogram || histogram.total === 0}
+            style={{ fontSize: "0.6em", minWidth: 0 }}
+          >
+            auto 1–99%
+          </Button>
+          <Divider />
+          <Typography variant="caption">histogram scale:</Typography>
+          <Divider />
+          <ToggleButtonGroup
+            exclusive
+            fullWidth
+            size="small"
+            value={layer.histogramScale}
+            onChange={handleHistogramScaleChange}
+          >
+            <ToggleButton value="log" style={{ fontSize: "0.6em", padding: "1px 8px" }}>
+              log
+            </ToggleButton>
+            <ToggleButton value="linear" style={{ fontSize: "0.6em", padding: "1px 8px" }}>
+              linear
+            </ToggleButton>
+          </ToggleButtonGroup>
           <Divider />
           <Typography variant="caption">color:</Typography>
           <Divider />

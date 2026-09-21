@@ -13,6 +13,12 @@ import { Matrix4 } from "math.gl";
 
 export const MAX_CHANNELS = 6;
 
+/**
+ * Fluorescence histograms are dominated by a background peak that flattens
+ * everything else on a linear axis, so log is the more useful default.
+ */
+export const DEFAULT_HISTOGRAM_SCALE = "log" as const;
+
 export const COLORS = {
   cyan: "#00FFFF",
   yellow: "#FFFF00",
