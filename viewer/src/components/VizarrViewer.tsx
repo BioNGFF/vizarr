@@ -1,4 +1,5 @@
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, Link, Paper, ThemeProvider, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
@@ -30,7 +31,14 @@ import {
   viewStateAtom,
   viewportAtom,
 } from "../state";
-import defaultTheme from "../theme";
+import defaultTheme, { tokens } from "../theme";
+
+/** Keeps full-screen overlays clear of the controls panel and toolbar rail. */
+const overlayInset = {
+  xs: `${tokens.layout.panelWidth.xs + tokens.layout.railWidth}px`,
+  sm: `${tokens.layout.panelWidth.sm + tokens.layout.railWidth}px`,
+};
+import { REPOSITORY_URL } from "../utils";
 import Menu from "./Menu";
 import { InfoSnackbar, SnackbarHost } from "./Snackbar";
 import Viewer from "./Viewer";
@@ -225,6 +233,10 @@ function VizarrViewerComponent({
     ),
   );
   React.useEffect(() => {
+    if (sources.length === 0) {
+      log.debug("No sources provided, nothing to load");
+      return;
+    }
     let cancelled = false;
     log.debug("Loading sources", { sources });
     loadSources(sources)
@@ -298,6 +310,56 @@ function VizarrViewerComponent({
           </ViewerBridge>
         </ViewStateContext.Provider>
       )}
+      {sources.length === 0 && sourceError === null && redirectObj === null && (
+        <Box
+          sx={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 3,
+            pl: overlayInset,
+            pointerEvents: "none",
+          }}
+        >
+          <Paper
+            elevation={4}
+            sx={{
+              maxWidth: 480,
+              width: "100%",
+              p: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              textAlign: "center",
+              borderTop: "3px solid",
+              borderColor: "divider",
+              pointerEvents: "auto",
+            }}
+          >
+            <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.secondary" }} />
+            <Typography variant="h6" fontWeight={600}>
+              No image to display
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              No data source was provided. Add a <code>source</code> parameter pointing at an OME-Zarr image to view it.
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              endIcon={<OpenInNewIcon />}
+              href={REPOSITORY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              component="a"
+            >
+              Read the documentation
+            </Button>
+          </Paper>
+        </Box>
+      )}
       {sourceError !== null && (
         <Box
           sx={{
@@ -307,6 +369,7 @@ function VizarrViewerComponent({
             alignItems: "center",
             justifyContent: "center",
             p: 3,
+            pl: overlayInset,
           }}
         >
           <Paper
@@ -347,7 +410,7 @@ function VizarrViewerComponent({
               variant="outlined"
               size="small"
               endIcon={<OpenInNewIcon />}
-              href="https://github.com/BioNGFF/vizarr/issues"
+              href={`${REPOSITORY_URL}/issues`}
               target="_blank"
               rel="noopener noreferrer"
               component="a"

@@ -48,63 +48,90 @@ export class MetadataNotFoundError extends MetadataError {
   }
 }
 
-export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr.Group<zarr.Readable<unknown>>> {
-  let url: string;
+function isCorsFailure(error: unknown): error is TypeError {
+  return error instanceof TypeError && MAYBE_CORS_ERROR_MESSAGES.includes(error.message);
+}
 
-  if (typeof source === "string") {
-    url = source;
-  } else {
-    url = zarr.root(source).path;
+/**
+ * Ask the server directly what it makes of the url.
+ *
+ * Only called once an open has already failed. zarrita reports failures in its own
+ * terms — a missing node, or a message with the status embedded in the text — which is
+ * accurate but not something to show a user, and matching on its wording would break
+ * the moment that wording changed. One request against the url the user actually gave
+ * us is a more durable way to say why it did not work.
+ */
+async function explainFailure(source: string | zarr.Readable, url: string, error: unknown): Promise<Error> {
+  // A blocked request never reaches the server, so there is nothing to ask it about.
+  if (isCorsFailure(error)) {
+    log.debug("Open failed, classified as CORS", { url, cause: error.message });
+    return new HttpError(
+      `An unknown error occurred while trying to fetch the resource ${source} from the server - this is most likely a CORs issue.`,
+      error.message,
+    );
   }
-  log.debug("Opening source", { url });
+
+  let status: number | undefined;
+  let statusText = "";
   try {
-    const { statusText, status } = await fetch(url, { method: "GET" });
-
-    if (status === 400) {
-      throw new HttpError(
-        `400: The server could not process the request to access the resource at ${source}. The request was invalid.`,
-        statusText,
-        status,
+    ({ status, statusText } = await fetch(url, { method: "GET" }));
+  } catch (probeError) {
+    if (isCorsFailure(probeError)) {
+      log.debug("Open failed, probe blocked, classified as CORS", { url });
+      return new HttpError(
+        `An unknown error occurred while trying to fetch the resource ${source} from the server - this is most likely a CORs issue.`,
+        probeError.message,
       );
     }
+  }
+  log.debug("Open failed, probed source", { url, status, error });
 
-    if (status === 403) {
-      throw new HttpError(
-        `403: Unauthorized to access resource at ${source}. Please check the specified URL is correct and that permission to access it is not restricted.`,
-        statusText,
-        status,
-      );
-    }
+  if (status === 400) {
+    return new HttpError(
+      `400: The server could not process the request to access the resource at ${source}. The request was invalid.`,
+      statusText,
+      status,
+    );
+  }
 
-    if (status === 401) {
-      throw new HttpError(
-        `401: Unauthorized to access resource at ${source}. Please check the specified URL is correct and that permission to access it is not restricted.`,
-        statusText,
-        status,
-      );
-    }
+  if (status === 403) {
+    return new HttpError(
+      `403: Unauthorized to access resource at ${source}. Please check the specified URL is correct and that permission to access it is not restricted.`,
+      statusText,
+      status,
+    );
+  }
 
-    //Catching 404 here is over-eager for some images, defer to zarrita for more accurate errors
+  if (status === 401) {
+    return new HttpError(
+      `401: Unauthorized to access resource at ${source}. Please check the specified URL is correct and that permission to access it is not restricted.`,
+      statusText,
+      status,
+    );
+  }
+
+  if (error instanceof zarr.NodeNotFoundError) {
+    return new MetadataNotFoundError(
+      `404: No valid metadata file found at zarr group ${source}, please check the specified URL is correct.`,
+      error.message,
+    );
+  }
+
+  return error instanceof Error ? error : Error(String(error));
+}
+
+export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr.Group<zarr.Readable<unknown>>> {
+  const url = typeof source === "string" ? source : zarr.root(source).path;
+  log.debug("Opening source", { url });
+
+  // zarrita first. It has to make these requests anyway, so probing the url up front
+  // only added a round trip to every successful load — and against the group directory,
+  // which is not a real resource and returns whatever the server feels like (a 409, in
+  // one case). We only ask the server to explain itself once something has gone wrong.
+  try {
     const store = await normalizeStore(source);
-    const location = await zarr.open(store, { kind: "group" });
-    return location;
+    return await zarr.open(store, { kind: "group" });
   } catch (error) {
-    if (error instanceof TypeError) {
-      if (MAYBE_CORS_ERROR_MESSAGES.includes(error.message)) {
-        throw new HttpError(
-          `An unknown error occurred while trying to fetch the resource ${source} from the server - this is most likely a CORs issue.`,
-          error.message,
-        );
-      }
-    }
-
-    if (error instanceof zarr.NodeNotFoundError) {
-      throw new MetadataNotFoundError(
-        `404: No valid metadata file found at zarr group ${source}, please check the specified URL is correct.`,
-        error.message,
-      );
-    }
-
-    throw error;
+    throw await explainFailure(source, url, error);
   }
 }

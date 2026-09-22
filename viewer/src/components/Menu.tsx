@@ -83,7 +83,7 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
       <Box
         sx={{
           pointerEvents: "auto",
-          width: hidden ? 0 : { xs: 280, sm: 340 },
+          width: hidden ? 0 : tokens.layout.panelWidth,
           transition: "width 220ms ease",
           overflow: "hidden",
           height: "100%",
@@ -94,7 +94,7 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
             display: "flex",
             flexDirection: "column",
             height: "100%",
-            width: { xs: 280, sm: 340 },
+            width: tokens.layout.panelWidth,
             backgroundColor: tokens.panel.background,
             borderRight: `2px solid ${tokens.panel.border}`,
             boxShadow: `inset -1px 0 0 ${tokens.panel.inset}`,
