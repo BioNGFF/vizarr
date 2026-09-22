@@ -1,4 +1,5 @@
 import * as zarr from "zarrita";
+import { log } from "../logger";
 import { normalizeStore } from "../utils";
 
 const MAYBE_CHROMIUM_CORS_ERROR_MESSAGE = "Failed to fetch";
@@ -55,6 +56,7 @@ export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr
   } else {
     url = zarr.root(source).path;
   }
+  log.debug("Opening source", { url });
   try {
     const { statusText, status } = await fetch(url, { method: "GET" });
 

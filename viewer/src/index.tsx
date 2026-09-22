@@ -12,3 +12,6 @@ export type { OmeColor } from "./layers/label-layer";
 export type { ViewState, ImageLayerConfig, ViewportSize, InteractionMode } from "./state";
 
 export { useViewState, ViewStateContext } from "./hooks";
+
+export { createLogger, setLogger } from "./logger";
+export type { Logger, LogFunction } from "./logger";
