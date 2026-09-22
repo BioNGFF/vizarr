@@ -7,10 +7,9 @@ import { createTheme } from "@mui/material/styles";
  * Plugins should style their own panels from these so they match the viewer's chrome.
  */
 export const tokens = {
-  /** Width of the collapsible controls panel, and of the toolbar rail beside it. */
+  /** Width of the collapsible controls panel. */
   layout: {
     panelWidth: { xs: 280, sm: 340 },
-    railWidth: 56,
   },
   /** Floating panel laid over the image. */
   panel: {

@@ -21,7 +21,6 @@ import {
   currentTInfoAtom,
   currentZInfoAtom,
   interactionModeAtom,
-  menuCollapsedAtom,
   redirectObjAtom,
   setLabelColorsAtom,
   setTSliceAtom,
@@ -32,16 +31,7 @@ import {
   viewStateAtom,
   viewportAtom,
 } from "../state";
-import defaultTheme, { tokens } from "../theme";
-
-/** Keeps full-screen overlays clear of the controls panel and toolbar rail. */
-function overlayInsetFor(menuCollapsed: boolean) {
-  const panel = menuCollapsed ? { xs: 0, sm: 0 } : tokens.layout.panelWidth;
-  return {
-    xs: `${panel.xs + tokens.layout.railWidth}px`,
-    sm: `${panel.sm + tokens.layout.railWidth}px`,
-  };
-}
+import defaultTheme from "../theme";
 import { REPOSITORY_URL } from "../utils";
 import Menu from "./Menu";
 import { InfoSnackbar, SnackbarHost } from "./Snackbar";
@@ -130,6 +120,10 @@ function ViewerBridge({
   const setTSlice = useSetAtom(setTSliceAtom);
   const interactionMode = useAtomValue(interactionModeAtom);
   const setInteractionMode = useSetAtom(interactionModeAtom);
+  const sourceError = useAtomValue(sourceErrorAtom);
+  // Both overlays imply nothing is on screen: an error is only set when every source
+  // failed, and no urls means nothing was asked for.
+  const nothingToShow = sourceUrls.length === 0 || sourceError !== null;
 
   // Notify host application when viewer state changes
   React.useEffect(() => {
@@ -161,7 +155,7 @@ function ViewerBridge({
 
   return (
     <>
-      <Menu enableSelectTool={enableSelectTool} />
+      {!nothingToShow && <Menu enableSelectTool={enableSelectTool} />}
       <Viewer
         additionalLayers={additionalLayers}
         pluginCursor={pluginCursor}
@@ -196,7 +190,6 @@ function VizarrViewerComponent({
   const sourceInfo = useAtomValue(sourceInfoAtom);
   const setLabelColors = useSetAtom(setLabelColorsAtom);
   const addSourceWarning = useSetAtom(addSourceWarningAtom);
-  const overlayInset = overlayInsetFor(useAtomValue(menuCollapsedAtom));
 
   React.useEffect(() => {
     setLogger(logger);
@@ -324,7 +317,6 @@ function VizarrViewerComponent({
             alignItems: "center",
             justifyContent: "center",
             p: 3,
-            pl: overlayInset,
             pointerEvents: "none",
           }}
         >
@@ -374,7 +366,6 @@ function VizarrViewerComponent({
             alignItems: "center",
             justifyContent: "center",
             p: 3,
-            pl: overlayInset,
           }}
         >
           <Paper

@@ -126,12 +126,6 @@ export const sourceErrorAtom = atom<string | null>(null);
 export const sourceWarningAtom = atom<string[]>([]);
 
 /**
- * Whether the controls panel is collapsed. Shared rather than local to the Menu so
- * that full-screen overlays can centre themselves in the space it actually leaves.
- */
-export const menuCollapsedAtom = atom(false);
-
-/**
  * Which pointer interaction the toolbar has selected. "pan" is the viewer's own default;
  * "select" means a host plugin (e.g. the ROI selector) is driving region selection, so
  * the viewer only reports the mode and leaves the behaviour to that plugin.

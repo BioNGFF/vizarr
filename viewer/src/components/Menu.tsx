@@ -11,17 +11,10 @@ import {
 } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, DialogTitle, Divider, IconButton, Tooltip, Typography } from "@mui/material";
 import { useAtom, useAtomValue } from "jotai";
-import React, { useMemo, useState } from "react";
+import { useMemo, useReducer, useState } from "react";
 
 import { SourceDataContext, useViewState } from "../hooks";
-import {
-  firstLayerFitAtom,
-  interactionModeAtom,
-  menuCollapsedAtom,
-  sourceErrorAtom,
-  sourceInfoAtom,
-  sourceInfoAtomAtoms,
-} from "../state";
+import { firstLayerFitAtom, interactionModeAtom, sourceInfoAtom, sourceInfoAtomAtoms } from "../state";
 import { tokens } from "../theme";
 import { REPOSITORY_URL } from "../utils";
 import LayerController from "./LayerController";
@@ -32,22 +25,7 @@ const ZOOM_STEP = 0.5;
 function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelectTool?: boolean }) {
   const sourceInfo = useAtomValue(sourceInfoAtom);
   const sourceAtoms = useAtomValue(sourceInfoAtomAtoms);
-  const [hidden, setHidden] = useAtom(menuCollapsedAtom);
-  const sourceError = useAtomValue(sourceErrorAtom);
-  const toggle = () => setHidden((v) => !v);
-
-  // Honour the initial `open` prop once, then leave the panel under the user's control.
-  React.useEffect(() => {
-    setHidden(!(open ?? true));
-  }, [open, setHidden]);
-
-  // Nothing loaded means the panel has nothing to show, and it would otherwise sit
-  // empty beside the error. Collapsed rather than hidden, so it can still be reopened.
-  React.useEffect(() => {
-    if (sourceError !== null) {
-      setHidden(true);
-    }
-  }, [sourceError, setHidden]);
+  const [hidden, toggle] = useReducer((v) => !v, !(open ?? true));
   const [metadataOpen, setMetadataOpen] = useState(false);
   const [interactionMode, setInteractionMode] = useAtom(interactionModeAtom);
   const [, setViewState] = useViewState();
