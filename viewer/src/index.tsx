@@ -13,5 +13,6 @@ export type { ViewState, ImageLayerConfig, ViewportSize, InteractionMode } from 
 
 export { useViewState, ViewStateContext } from "./hooks";
 
+export { REPOSITORY_URL } from "./utils";
 export { createLogger, setLogger } from "./logger";
 export type { Logger, LogFunction } from "./logger";
