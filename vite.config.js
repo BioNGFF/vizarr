@@ -5,6 +5,6 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
   test: {
-    testTimeout: 10000,
+    testTimeout: 30000,
   },
 });

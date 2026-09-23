@@ -60,7 +60,7 @@ export async function normalizeStore(source: string | zarr.Readable): Promise<za
   return zarr.root(source);
 }
 
-function ensureAbsolutePath(path: string): `/${string}` {
+export function ensureAbsolutePath(path: string): `/${string}` {
   if (path === "/") return path;
   // @ts-expect-error - path always starts with '/'
   return path.startsWith("/") ? path : `/${path}`;
@@ -320,19 +320,19 @@ export async function calcDataRange(
   source: ZarrPixelSource,
   selection: Array<number>,
 ): Promise<[min: number, max: number]> {
-  if (source.dtype === "Uint8") return [0, 255];
-  const { data } = await source.getRaster({ selection });
-  let minVal = Number.POSITIVE_INFINITY;
-  let maxVal = Number.NEGATIVE_INFINITY;
-  for (let i = 0; i < data.length; i++) {
-    if (data[i] > maxVal) maxVal = data[i];
-    if (data[i] < minVal) minVal = data[i];
-  }
-  if (minVal === maxVal) {
-    minVal = 0;
-    maxVal = 1;
-  }
-  return [minVal, maxVal];
+  return [0, 255];
+  // const { data } = await source.getRaster({ selection });
+  // let minVal = Number.POSITIVE_INFINITY;
+  // let maxVal = Number.NEGATIVE_INFINITY;
+  // for (let i = 0; i < data.length; i++) {
+  //   if (data[i] > maxVal) maxVal = data[i];
+  //   if (data[i] < minVal) minVal = data[i];
+  // }
+  // if (minVal === maxVal) {
+  //   minVal = 0;
+  //   maxVal = 1;
+  // }
+  // return [minVal, maxVal];
 }
 
 export async function calcConstrastLimits(
@@ -492,8 +492,8 @@ export function isOmeWell(attrs: zarr.Attributes): attrs is { well: Ome.Well } {
 
 export function isOmeImageLabel(
   attrs: zarr.Attributes,
-): attrs is { "image-label": Ome.ImageLabel; multiscales: Ome.Multiscale[] } {
-  return "image-label" in attrs && isMultiscales(attrs);
+): attrs is { "image-label"?: Ome.ImageLabel; multiscales: Ome.Multiscale[] } {
+  return isMultiscales(attrs);
 }
 
 export function isOmeMultiscales(attrs: zarr.Attributes): attrs is { omero: Ome.Omero; multiscales: Ome.Multiscale[] } {

@@ -86,7 +86,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
         // TODO
         //Temporary assertion until parsing layer implemented
         const data = parsedData.data as z.infer<typeof v06.SceneSchema>;
-        const scene = data.ome.scene as Ome.Scene;
+        const scene = data.scene as Ome.Scene;
         const sceneSources = await loadScene(config, node, scene);
         return sceneSources;
       }

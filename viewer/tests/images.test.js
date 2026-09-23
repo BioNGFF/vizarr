@@ -14,10 +14,11 @@ files.map(async (file) => {
   const description = yaml.parse(fs.readFileSync(filePath, "utf8"));
 
   if (description.testable) {
-    test(`Can read ${description.name} without error`, async () => {
-      await createSourceData({
+    test(`Can read ${description.source} without error`, async () => {
+      const sourceData = await createSourceData({
         source: description.source,
       });
+      console.log(sourceData[0]);
       await writeImageYaml(description.source, file, imagesPath);
     }, 20000);
   }

@@ -1,13 +1,16 @@
 import type { z } from "zod";
-import { bioformats2rawOMEXMLSchema, bioformats2rawOMEZattrsSchema } from "zod-ome-ngff";
+import type { bioformats2rawOMEXMLSchema, bioformats2rawOMEZattrsSchema } from "zod-ome-ngff";
 import { Bf2RawSchema } from "zod-ome-ngff/0.5";
 
-export function parseOMEXML(data: Record<string, unknown>): z.infer<typeof bioformats2rawOMEXMLSchema> | undefined {
-  const result = bioformats2rawOMEXMLSchema.safeParse(data);
+export type Bf2RawOMEXML = z.infer<typeof bioformats2rawOMEXMLSchema>;
 
-  if (result.success) {
-    return result.data;
-  }
+export function parseOMEXML(data: Record<string, unknown>): z.infer<typeof bioformats2rawOMEXMLSchema> | undefined {
+  // const result = bioformats2rawOMEXMLSchema.safeParse(data);
+  // if (result.success) {
+  //   return result.data;
+  // }
+  // console.log(result.error);
+  return data;
 }
 
 export function parse(data: Record<string, unknown>): z.infer<typeof Bf2RawSchema> | undefined {

@@ -1,9 +1,11 @@
+import type { z } from "zod";
 import { createSourceData } from "../io";
 import * as bf2raw from "../parsers/bioformats2raw";
 import type { ImageLayerConfig, SourceData } from "../state";
 
 import * as xml2js from "xml-js";
 import * as zarr from "zarrita";
+import { bioformats2rawOMEXMLSchema } from "zod-ome-ngff";
 
 const XML_METADATA_LOCATION = "OME";
 const XML_METADATA_FILE_NAME = "METADATA.ome.xml";
@@ -84,8 +86,33 @@ function OMEXMLToObject(xmlString: string): xml2js.ElementCompact {
   return unpackedText;
 }
 
-function getDefaultSeries(length: number) {
+function getDefaultSeries(length?: number) {
+  if (!length) {
+    return [];
+  }
   return Array.from({ length: length }, (_, i) => i.toString());
+}
+
+export async function getBf2RawImagePaths(grp: zarr.Group<zarr.Readable>, parsedData): Promise<string[]> {
+  let series: string[] | undefined;
+  try {
+    const OMENode = await zarr.open(grp.resolve("OME"), { kind: "group" });
+    const OMEZattrs = bf2raw.parseOMEZattrs(OMENode.attrs);
+    series = OMEZattrs?.series;
+  } catch (error) {
+  } finally {
+    series = getDefaultSeries(parsedData?.OME.Image.length);
+  }
+  return series;
+}
+
+export async function getBf2rawOMEXML(source: string) {
+  const url = `${source}/${XML_METADATA_LOCATION}/${XML_METADATA_FILE_NAME}`.replace(/([^:]\/)\/+/g, "$1");
+  const xml = await fetch(url);
+
+  const xmlString = await xml.text();
+  const xmlAsObject = OMEXMLToObject(xmlString);
+  return bf2raw.parseOMEXML(xmlAsObject);
 }
 
 export async function loadBf2Raw(
@@ -96,14 +123,14 @@ export async function loadBf2Raw(
   if ("plate" in metadata) {
     return createSourceData(config);
   }
-  const xml = await fetch(`${config.source}/${XML_METADATA_LOCATION}/${XML_METADATA_FILE_NAME}`);
+  const url = `${config.source}/${XML_METADATA_LOCATION}/${XML_METADATA_FILE_NAME}`.replace(/([^:]\/)\/+/g, "$1");
+
+  const xml = await fetch(url);
 
   const xmlString = await xml.text();
   const xmlAsObject = OMEXMLToObject(xmlString);
   const parsedData = bf2raw.parseOMEXML(xmlAsObject);
-  if (!parsedData?.OME.Image) {
-    throw new Error();
-  }
+
   let series: string[] | undefined;
   try {
     const OMENode = await zarr.open(grp.resolve("OME"), { kind: "group" });
@@ -115,7 +142,8 @@ export async function loadBf2Raw(
   }
   const results = await Promise.all(
     series.flatMap((imagePath) => {
-      return createSourceData({ source: `${config.source}/${imagePath}`, label: config.label });
+      const url = `${config.source}/${imagePath}`.replace(/([^:]\/)\/+/g, "$1");
+      return createSourceData({ source: url, label: config.label });
     }),
   );
   return results.flat();

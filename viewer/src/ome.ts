@@ -7,6 +7,8 @@ import { ZarrPixelSource } from "./ZarrPixelSource";
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
 import { createSourceData } from "./io";
 import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
+import { getLabelSchemas, parse } from "./parsers/parse";
+import { getBf2rawOMEXML, getBf2RawImagePaths } from "./providers/bioformats2raw";
 
 export async function loadScene(
   config: ImageLayerConfig,
@@ -18,6 +20,7 @@ export async function loadScene(
   const results = await Promise.all(
     scene.coordinateTransformations.map(async (transformation: Ome.SceneTransformationMetadata) => {
       const path = transformation.input.path;
+      console.log(`Creating source data for scene image ${path}`);
       const sourceDatas = await createSourceData({
         source: `${config.source}/${path}`,
         coordinateSystem: transformation.input.name,
@@ -381,8 +384,6 @@ export async function loadOmeMultiscales(
   console.log("Loading image: ", config.source);
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
-  const axes = utils.getNgffAxes(attrs.multiscales);
-  const axis_labels = utils.getNgffAxisLabels(axes);
   const tileSize = utils.guessTileSize(data[0]);
   const coordinateSystems = attrs.multiscales[0].coordinateSystems
     ? attrs.multiscales[0].coordinateSystems
@@ -392,6 +393,9 @@ export async function loadOmeMultiscales(
       return coordinateSystem.name === config.coordinateSystem;
     })[0]
     : coordinateSystems[0];
+  const axes = selectedCoordinateSystem.axes;
+
+  const axis_labels = utils.getNgffAxisLabels(axes);
   let meta: Meta;
   if (utils.isOmeMultiscales(attrs)) {
     meta = parseOmeroMeta(attrs.omero, axes);
@@ -401,6 +405,7 @@ export async function loadOmeMultiscales(
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
     meta = await defaultMeta(lowresSource, axis_labels);
   }
+
   const originalSizeZ = data[0].shape[axis_labels.indexOf("z")];
   const zDownsampled = isDownsampledZ(data, axis_labels.indexOf("z"), originalSizeZ);
   const physicalSizes = getPhysicalSizes(axes, getHighestResolutionTransformations(attrs.multiscales));
@@ -414,7 +419,25 @@ export async function loadOmeMultiscales(
       }),
   );
 
-  const labels = await resolveOmeLabelsFromMultiscales(grp);
+  let labelGroup = grp;
+  let labelPath = "labels";
+  let labels: string[] = [];
+
+  //Non-embedded label image
+  if (config.label) {
+    const labelStore = await utils.normalizeStore(config.label);
+    labelGroup = await zarr.open(labelStore, { kind: "group" });
+    labelPath = "";
+    const labelAttrs = parse(labelGroup.attrs);
+    if (labelAttrs.type === "Bf2RawSchema") {
+      const b2frawAttrs = await getBf2rawOMEXML(config.label);
+      labels = await getBf2RawImagePaths(labelGroup, b2frawAttrs);
+    } else {
+      labels = [""];
+    }
+  } else {
+    labels = await resolveOmeLabelsFromMultiscales(labelGroup, labelPath);
+  }
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
   const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);
   return {
@@ -429,70 +452,50 @@ export async function loadOmeMultiscales(
     ...meta,
     name: meta.name ?? name,
     labels: await Promise.all(
-      labels.map((name) => loadOmeImageLabel(grp.resolve("labels"), name, selectedCoordinateSystem.name)),
+      labels.map((name) => loadOmeImageLabel(labelGroup.resolve(labelPath).resolve(name), name)),
     ),
   };
 }
 
-async function loadOmeImageLabel(
-  root: zarr.Location<zarr.Readable>,
-  name: string,
-  coordinateSystemName: string,
-): Promise<ImageLabels[number]> {
-  const grp = await zarr.open(root.resolve(name), { kind: "group" });
-  const attrs = utils.resolveAttrs(grp.attrs);
-  utils.assert(utils.isOmeImageLabel(attrs), "No 'image-label' metadata.");
-  const data = await utils.loadMultiscales(grp, attrs.multiscales);
-  const baseResolution = data.at(0);
-  utils.assert(baseResolution, "No base resolution found for multiscale labels.");
-  const tileSize = utils.guessTileSize(baseResolution);
-  const coordinateSystems = attrs.multiscales[0].coordinateSystems
-    ? attrs.multiscales[0].coordinateSystems
-    : getDefaultCoordinateSystem(attrs.multiscales);
-  const selectedCoordinateSystem = coordinateSystems.filter((coordinateSystem) => {
-    return coordinateSystem.name === coordinateSystemName;
-  })[0];
-  const coordinateSystem = selectedCoordinateSystem ? selectedCoordinateSystem : coordinateSystems[0];
+async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: string): Promise<ImageLabels[number]> {
+  const url = new URL(
+    root.path.replace(/^\/+/, ""),
+    root.store.url.endsWith("/") ? root.store.url : root.store.url + "/",
+  ).href;
+  const sourceData = await createSourceData({ source: url });
+  const node = await utils.open(url);
+  const parsedAttrs = parse(node.attrs);
+  const attrs = parsedAttrs.data;
+  const colors = (attrs["image-label"]?.colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));
 
-  const labels = utils.getNgffAxisLabels(coordinateSystem.axes);
-  const colors = (attrs["image-label"].colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));
-  return {
+  const labelSource = {
     name,
-    modelMatrix: coordinateTransformationsToMatrix(
-      getOrderedTransformations(attrs.multiscales, coordinateSystem),
-      coordinateSystem.axes,
-    ),
-    loader: data.map((arr) => new ZarrPixelSource(arr, { labels, tileSize })),
+    modelMatrix: sourceData[0].model_matrix,
+    loader: sourceData[0].loader,
     colors: colors.length > 0 ? colors : undefined,
   };
+  return labelSource;
 }
 
-const LabelSchema = z.object({
-  labels: z.array(z.string()),
-});
-const OmeLabelSchema = z.object({
-  ome: z.object({
-    labels: z.array(z.string()),
-  }),
-});
-
 function resolveLabelAttrs(attrs: unknown): string[] {
-  const schemas = [LabelSchema, OmeLabelSchema];
-
-  for (const schema of schemas) {
-    const parseResult = schema.safeParse(attrs);
-    if (parseResult.success) {
-      return parseResult.data.ome.labels;
-    }
-    console.log("Error reading labels: ", parseResult.error);
+  const parsedResult = parse(attrs, getLabelSchemas());
+  if (parsedResult.success) {
+    return parsedResult.data.labels;
   }
-
   return [];
 }
 
-async function resolveOmeLabelsFromMultiscales(grp: zarr.Group<zarr.Readable>): Promise<Array<string>> {
-  const labelGroup = await zarr.open(grp.resolve("labels"), { kind: "group" });
-  return (resolveLabelAttrs(labelGroup.attrs) ?? []) as Array<string>;
+async function resolveOmeLabelsFromMultiscales(
+  grp: zarr.Group<zarr.Readable>,
+  labelPath: string,
+): Promise<Array<string>> {
+  try {
+    const labelGroup = await zarr.open(grp.resolve(labelPath), { kind: "group" });
+    return (resolveLabelAttrs(labelGroup.attrs) ?? []) as Array<string>;
+  } catch (e) {
+    utils.rethrowUnless(e, zarr.NodeNotFoundError);
+    return [];
+  }
 }
 
 type Meta = {
