@@ -1,6 +1,5 @@
 import pMap from "p-map";
 import * as zarr from "zarrita";
-import { z } from "zod";
 import * as utils from "./utils";
 
 import { ZarrPixelSource } from "./ZarrPixelSource";
@@ -9,6 +8,7 @@ import { createSourceData } from "./io";
 import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
 import { getLabelSchemas, parse } from "./parsers/parse";
 import { getBf2rawOMEXML, getBf2RawImagePaths } from "./providers/bioformats2raw";
+import { openZarrRoot } from "./services/http";
 
 export async function loadScene(
   config: ImageLayerConfig,
@@ -463,7 +463,7 @@ async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: strin
     root.store.url.endsWith("/") ? root.store.url : root.store.url + "/",
   ).href;
   const sourceData = await createSourceData({ source: url });
-  const node = await utils.open(url);
+  const node = await openZarrRoot(url);
   const parsedAttrs = parse(node.attrs);
   const attrs = parsedAttrs.data;
   const colors = (attrs["image-label"]?.colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));

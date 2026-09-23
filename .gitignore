@@ -9,7 +9,6 @@ build/
 # OS / IDE files
 .DS_Store
 Thumbs.db
-.vscode/
 .idea/
 
 # TypeScript

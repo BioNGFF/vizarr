@@ -81,6 +81,7 @@ export function parse(data: unknown, schemas: Schema[] = allSchemas) {
       success: true,
     };
   }
+
   return {
     data: data,
     version: "unknown",

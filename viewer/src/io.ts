@@ -11,6 +11,8 @@ import type { BaseLayerProps } from "./layers/viv-layers";
 import { loadBf2Raw } from "./providers/bioformats2raw";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 
+import { openZarrRoot } from "./services/http";
+
 async function loadSingleChannel(config: SingleChannelConfig, data: Array<ZarrPixelSource>): Promise<SourceData> {
   const { color, contrast_limits, visibility, name, colormap = "", opacity = 1 } = config;
   const lowres = data[data.length - 1];
@@ -76,7 +78,8 @@ async function loadMultiChannel(
 }
 
 export async function createSourceData(config: ImageLayerConfig): Promise<SourceData[]> {
-  const node = await utils.open(config.source);
+  const node = await openZarrRoot(config.source);
+
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
@@ -272,7 +275,9 @@ function getSourceSelectionTransform(
   );
   utils.assert(
     labels.labels.every((label) => source.labels.includes(label)),
-    `Label axes MUST be a subset of source. Source: ${JSON.stringify(source.labels)} Labels: ${JSON.stringify(labels.labels)}`,
+    `Label axes MUST be a subset of source. Source: ${JSON.stringify(source.labels)} Labels: ${JSON.stringify(
+      labels.labels,
+    )}`,
   );
   // Identify labels that should always map to 0, regardless of the source selection.
   const excludeFromTransformedSelection = new Set(

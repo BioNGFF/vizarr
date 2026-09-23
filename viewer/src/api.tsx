@@ -21,6 +21,15 @@ import {
 import theme from "./theme";
 import { defer, typedEmitter } from "./utils";
 
+export type LogFunction = (message: string) => void;
+
+export interface Logger {
+  debug: LogFunction;
+  info: LogFunction;
+  warn: LogFunction;
+  error: LogFunction;
+}
+
 type Events = {
   viewStateChange: ViewState;
 };
