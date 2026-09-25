@@ -538,7 +538,11 @@ export function rethrowUnless<E extends ReadonlyArray<new (...args: any[]) => Er
   ...ErrorClasses: E
   // biome-ignore lint/suspicious/noExplicitAny: Ok to use any for generic constraint
 ): asserts error is E[number] extends new (...args: any[]) => infer R ? R : never {
-  if (!ErrorClasses.some((ErrorClass) => error instanceof ErrorClass)) {
+  if (
+    !ErrorClasses.some((ErrorClass) => {
+      return error instanceof ErrorClass;
+    })
+  ) {
     throw error;
   }
 }

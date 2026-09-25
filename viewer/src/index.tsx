@@ -7,6 +7,8 @@ export type { VizarrViewerProps, ViewerInfo } from "./components/VizarrViewer";
 export { createViewer } from "./api";
 export type { VizarrViewer } from "./api";
 
+export type { OmeColor } from "./layers/label-layer";
+
 export type { ViewState, ImageLayerConfig, ViewportSize } from "./state";
 
 export { useViewState, ViewStateContext } from "./hooks";

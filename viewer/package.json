@@ -31,6 +31,7 @@
     "@deck.gl/geo-layers": "~9.0.0",
     "@deck.gl/layers": "~9.0.0",
     "@hms-dbmi/viv": "~0.17.2",
+    "@vivjs/loaders": "0.17.2",
     "@vivjs/types": "~0.17.0",
     "@zarrita/storage": "0.1.4",
     "add": "^2.0.6",
@@ -44,7 +45,7 @@
     "react-is": "18.3.1",
     "xml-js": "1.6.11",
     "yaml": "^2.8.2",
-    "zarrita": "0.5.0",
+    "zarrita": "0.6.2",
     "zod-ome-ngff": "github:biongff/zod-ome-ngff#dev"
   },
   "peerDependencies": {
@@ -65,8 +66,5 @@
     "vite": "^6.2.7",
     "vite-plugin-dts": "^4.5.4",
     "zod": "3.21.0"
-  },
-  "overrides": {
-    "react-is": "^18.3.1"
   }
 }

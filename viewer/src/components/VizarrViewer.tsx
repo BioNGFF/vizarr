@@ -1,7 +1,7 @@
 import { Box, Link, ThemeProvider, Typography } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
-import { type SnackbarKey, SnackbarProvider, closeSnackbar, enqueueSnackbar } from "notistack";
 import React from "react";
 import type { Logger } from "../api";
 import {
@@ -12,24 +12,28 @@ import {
   writeUserErrorMessage,
 } from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
-import { createSourceData } from "../io";
+import { loadSources } from "../io";
+import type { OmeColor } from "../layers/label-layer";
 import {
-  type ImageLayerConfig,
   type ViewState,
   type ViewportSize,
+  addSourceWarningAtom,
   currentImageBoundsAtom,
   currentTInfoAtom,
   currentZInfoAtom,
   redirectObjAtom,
+  setLabelColorsAtom,
   setTSliceAtom,
   setZSliceAtom,
   sourceErrorAtom,
   sourceInfoAtom,
+  sourceWarningAtom,
   viewStateAtom,
   viewportAtom,
 } from "../state";
-import theme from "../theme";
+import defaultTheme from "../theme";
 import Menu from "./Menu";
+import { InfoSnackbar, SnackbarHost } from "./Snackbar";
 import Viewer from "./Viewer";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
@@ -53,12 +57,23 @@ export interface VizarrViewerProps {
   /** Callback to execute side effects when view state changes */
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
+  /** Label colours per source, indexed in parallel with `sources`. */
+  labelColours?: ReadonlyArray<ReadonlyArray<OmeColor>>;
   additionalLayers?: Layer[];
   pluginCursor?: string;
   onPluginClick?: (coordinate: [number, number]) => boolean;
   onPluginHover?: (coordinate: [number, number] | null) => void;
   children?: React.ReactNode;
   logger?: Logger;
+  /**
+   * Theme for the viewer and anything rendered inside it, defaulting to vizarr's own.
+   *
+   * Pass `null` when the host application already has a ThemeProvider: the viewer then
+   * inherits it instead of nesting a second provider. Nesting one silently overrides the
+   * host's styling for this subtree, so sibling UI outside the viewer resolves a
+   * different theme and the two stop matching.
+   */
+  theme?: Theme | null;
 }
 
 /**
@@ -90,16 +105,8 @@ function ViewerBridge({
   const tInfo = useAtomValue(currentTInfoAtom);
   const viewport = useAtomValue(viewportAtom);
   const [, setViewState] = useViewState();
-
   const setZSlice = useSetAtom(setZSliceAtom);
   const setTSlice = useSetAtom(setTSliceAtom);
-
-  const stableSetViewState = React.useCallback(
-    (vs: ViewState) => {
-      setViewState(vs);
-    },
-    [setViewState],
-  );
 
   // Notify host application when viewer state changes
   React.useEffect(() => {
@@ -109,11 +116,11 @@ function ViewerBridge({
       zInfo,
       tInfo,
       viewport,
-      setViewState: stableSetViewState,
+      setViewState,
       setZSlice,
       setTSlice,
     });
-  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, stableSetViewState, setZSlice, setTSlice, onViewerStateChange]);
+  }, [sourceUrls, imageBounds, zInfo, tInfo, viewport, setViewState, setZSlice, setTSlice, onViewerStateChange]);
 
   return (
     <>
@@ -135,6 +142,7 @@ function VizarrViewerComponent({
   viewState: initialViewState,
   onViewStateChange,
   onViewerStateChange,
+  labelColours,
   additionalLayers,
   pluginCursor,
   onPluginClick,
@@ -147,7 +155,10 @@ function VizarrViewerComponent({
   const sourceError = useAtomValue(sourceErrorAtom);
   const redirectObj = useAtomValue(redirectObjAtom);
   const setSourceError = useSetAtom(sourceErrorAtom);
-  const [snackbarId, setSnackbarId] = React.useState<number | string | undefined>();
+  const sourceWarning = useAtomValue(sourceWarningAtom);
+  const sourceInfo = useAtomValue(sourceInfoAtom);
+  const setLabelColors = useSetAtom(setLabelColorsAtom);
+  const addSourceWarning = useSetAtom(addSourceWarningAtom);
 
   React.useEffect(() => {
     if (initialViewState) {
@@ -155,102 +166,91 @@ function VizarrViewerComponent({
     }
   }, [initialViewState, setViewStateAtom]);
 
-  const viewStateAtomWithEffect: PrimitiveAtom<ViewState | null> = atom(
-    (get) => get(viewStateAtom),
-    (get, set, update) => {
-      const viewState = typeof update === "function" ? update(get(viewStateAtom)) : update;
-      if (viewState) {
-        onViewStateChange?.({
-          target: viewState.target,
-          zoom: viewState.zoom,
-        });
-        set(viewStateAtom, update);
-      }
-    },
-  );
+  // Kept in a ref so the atom below never has to be rebuilt: a new atom identity on every
+  // render invalidates every useViewState() consumer and re-fires onViewerStateChange,
+  // which drives the host into a render loop.
+  // Assigned in a layout effect so the ref is current before the browser paints, closing
+  // the window in which a view state write would otherwise see the previous callback.
+  const onViewStateChangeRef = React.useRef(onViewStateChange);
+  React.useLayoutEffect(() => {
+    onViewStateChangeRef.current = onViewStateChange;
+  }, [onViewStateChange]);
 
-  const [configs] = React.useState(
-    sources.map((source, index) => {
-      const config: ImageLayerConfig = {
-        source: source,
-        label: labels[index],
-      };
-      return config;
-    }),
+  // useState rather than useMemo: React treats a useMemo cache as a hint it may discard,
+  // whereas a useState initialiser is guaranteed to run exactly once. A stable atom
+  // identity is the whole point here, so it needs the guarantee and not the hint.
+  const [viewStateAtomWithEffect] = React.useState<PrimitiveAtom<ViewState | null>>(() =>
+    atom(
+      (get) => get(viewStateAtom),
+      (get, set, update) => {
+        const viewState = typeof update === "function" ? update(get(viewStateAtom)) : update;
+        if (viewState) {
+          onViewStateChangeRef.current?.({
+            target: viewState.target,
+            zoom: viewState.zoom,
+          });
+          set(viewStateAtom, update);
+        }
+      },
+    ),
   );
   React.useEffect(() => {
-    async function loadSources() {
-      logger.debug("Loading sources");
-      const results = await Promise.allSettled(
-        configs.map(async (config, index) => {
-          const sourceData = await createSourceData(config);
-          return sourceData.flatMap((source) => {
-            const id = Math.random().toString(36).slice(2);
-            if (!source.name) {
-              source.name = `image_${index}`;
-            }
-            return { id, ...source };
-          });
-        }),
-      );
-      let sourceDatas = [];
-      if (!sourceDataValid(results)) {
-        const error = getSourceDataError(results);
-        setSourceError(writeUserErrorMessage(error));
-        handleError(error, logger);
-      }
-
-      for (const res of results) {
-        if (res.status === "fulfilled") {
-          sourceDatas.push(res.value);
-        } else {
-          console.error(res.reason);
+    let cancelled = false;
+    let reportedError = false;
+    logger.debug("Loading sources");
+    loadSources(sources, labels)
+      .then((results) => {
+        if (cancelled) {
+          return;
         }
-      }
-      sourceDatas = sourceDatas.filter((s) => s !== null);
-      sourceDatas = sourceDatas.flat();
+        if (!sourceDataValid(results)) {
+          const error = getSourceDataError(results);
+          setSourceError(writeUserErrorMessage(error));
+          reportedError = true;
+          // Logs and rethrows, which the .catch below handles; nothing after this runs.
+          handleError(error, logger);
+        }
+        // One source url can yield several images (a v0.6 scene), so results are flattened.
+        const sourceDatas = [];
+        for (const res of results) {
+          if (res.status === "fulfilled") {
+            sourceDatas.push(...res.value);
+          } else {
+            logger.error(String(res.reason));
+          }
+        }
+        const loaded = sourceDatas.filter((s) => s !== null);
+        for (const sourceData of loaded) {
+          for (const warning of getSourceDataWarnings(sourceData)) {
+            addSourceWarning(warning);
+          }
+        }
+        setSourceInfo(loaded);
+      })
+      .catch((err: unknown) => {
+        if (cancelled || reportedError) {
+          return;
+        }
+        const error = err instanceof Error ? err : Error(String(err));
+        setSourceError(writeUserErrorMessage(error));
+        logger.error(error.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sources, labels, setSourceInfo, setSourceError, addSourceWarning, logger]);
 
-      for (const sourceData of sourceDatas) {
-        const warnings = getSourceDataWarnings(sourceData);
-        warnings.map((warning: string) => {
-          handleWarning(warning);
-        });
-      }
-
-      setSourceInfo(sourceDatas);
+  // Recolouring is applied to the loaded layer state, so it must also run once the
+  // sources themselves arrive (colours can be selected before the image has loaded).
+  React.useEffect(() => {
+    if (!sourceInfo.length) {
+      return;
     }
-
-    loadSources();
-  }, [configs, setSourceInfo, setSourceError, logger]);
-
-  const hideSnackbar = (snackbarId: SnackbarKey) => (
-    <>
-      <button
-        type={"button"}
-        onClick={() => {
-          closeSnackbar(snackbarId);
-        }}
-      >
-        Dismiss
-      </button>
-    </>
-  );
-
-  function handleWarning(warning: string): void {
-    logger.warn(warning);
-    setSnackbarId(enqueueSnackbar(warning, { variant: "warning", action: hideSnackbar }));
-  }
+    setLabelColors(labelColours);
+  }, [labelColours, sourceInfo, setLabelColors]);
 
   return (
     <>
-      <div>
-        <SnackbarProvider
-          anchorOrigin={{ horizontal: "right", vertical: "top" }}
-          autoHideDuration={null}
-          variant={"warning"}
-          preventDuplicate={true}
-        />
-      </div>
       {redirectObj === null && (
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
           <ViewerBridge
@@ -290,6 +290,10 @@ function VizarrViewerComponent({
           </p>
         </Box>
       )}
+      <SnackbarHost />
+      {sourceWarning.map((warning) => (
+        <InfoSnackbar message={warning} key={warning} />
+      ))}
       {redirectObj !== null && (
         <Box
           sx={{
@@ -319,12 +323,12 @@ function VizarrViewerComponent({
 /**
  *Component to render source images
  */
-export default function VizarrViewer({ children, ...props }: VizarrViewerProps) {
-  return (
-    <ThemeProvider theme={theme}>
-      <Provider>
-        <VizarrViewerComponent {...props}>{children}</VizarrViewerComponent>
-      </Provider>
-    </ThemeProvider>
+export default function VizarrViewer({ children, theme = defaultTheme, ...props }: VizarrViewerProps) {
+  const viewer = (
+    <Provider>
+      <VizarrViewerComponent {...props}>{children}</VizarrViewerComponent>
+    </Provider>
   );
+  // No provider when the host supplies the theme, so that one theme governs the whole page.
+  return theme ? <ThemeProvider theme={theme}>{viewer}</ThemeProvider> : viewer;
 }
