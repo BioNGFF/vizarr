@@ -1,10 +1,12 @@
-import { Pause, PlayArrow, SkipPrevious } from "@mui/icons-material";
-import { Button, Divider, Grid, IconButton, MenuItem, Select, TextField, Typography } from "@mui/material";
+import { PauseCircle, PlayCircle, Replay } from "@mui/icons-material";
+import { Button, Divider, Grid, IconButton, MenuItem, Select, Tooltip, Typography } from "@mui/material";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import { setTSliceAtom } from "../../state";
 import { MAX_BYTES, decodeAll, levelBytes, preload, timelapseFamily, timelapseModeAtom } from "../../timelapse";
+
+const FPS = [0.5, 1, 2, 5, 10, 24];
 
 function TimeLapse() {
   const mode = useAtomValue(timelapseModeAtom);
@@ -103,27 +105,31 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
           </Typography>
         )}
         {ready && (
-          <Grid container spacing={0.5} alignItems="center">
-            <IconButton size="small" aria-label="restart" title="restart" onClick={() => setT(0)}>
-              <SkipPrevious fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              aria-label={playing ? "pause" : "play"}
-              title={playing ? "pause" : "play"}
-              onClick={onPlay}
-            >
-              {playing ? <Pause fontSize="small" /> : <PlayArrow fontSize="small" />}
-            </IconButton>
-            <TextField
+          <Grid container alignItems="center" justifyContent="space-between">
+            <Tooltip title="restart from t=0">
+              <IconButton size="small" aria-label="restart" onClick={() => setT(0)}>
+                <Replay fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={playing ? "pause" : "play"}>
+              <IconButton aria-label={playing ? "pause" : "play"} onClick={onPlay} sx={{ p: 0.25 }}>
+                {playing ? <PauseCircle sx={{ fontSize: 36 }} /> : <PlayCircle sx={{ fontSize: 36 }} />}
+              </IconButton>
+            </Tooltip>
+            <Select
               size="small"
               variant="standard"
-              type="number"
-              label="fps"
               value={fps}
-              onChange={(e) => setFps(Math.min(60, Math.max(0.1, Number(e.target.value) || 2)))}
-              sx={{ width: 50 }}
-            />
+              onChange={(e) => setFps(Number(e.target.value))}
+              renderValue={(v) => <Typography variant="caption">{v} fps</Typography>}
+              aria-label="frames per second"
+            >
+              {FPS.map((f) => (
+                <MenuItem key={f} value={f}>
+                  <Typography variant="caption">{f} fps</Typography>
+                </MenuItem>
+              ))}
+            </Select>
           </Grid>
         )}
       </Grid>
