@@ -24,7 +24,7 @@ import {
   timelapseModeAtom,
 } from "../../timelapse";
 
-const FPS = [1, 2, 5, 10, 24, 30, 60];
+const FPS = [1, 2, 5, 10, 24, 60];
 const mb = (n: number) => (n / 1024 ** 2).toFixed(1);
 
 function TimeLapse() {
