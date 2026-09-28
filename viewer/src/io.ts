@@ -318,7 +318,7 @@ export function applyLabelColors<T extends LayerState>(layerState: T, colors: Re
  * array. `sourceIndex` records which entry of `sources` an image came from, which callers
  * need because that mapping is no longer positional once the results are flattened.
  */
-export async function loadSources(sources: string[], labels: string[]) {
+export async function loadSources(sources: string[], labels: string[] = []) {
   return await Promise.allSettled(
     sources.map(async (source, index) => {
       const sourceData = await createSourceData({ source: source, label: labels[index] });

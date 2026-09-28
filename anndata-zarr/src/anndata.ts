@@ -9,15 +9,14 @@ const CATEGORY_NAMES_PATH = "categories";
 const CATEGORY_DATA_PATH = "codes";
 const DEFAULT_INDEX_NAME = "_index";
 
-const ZarrAttrsSchema = z.object({
-  "encoding-type": z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]),
-  "encoding-version": z.string(),
-});
+//const ZarrAttrsSchema = z.object({
+//  "encoding-type": z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]),
+//  "encoding-version": z.string(),
+//});
 
-const ZarrObservationAttrsSchema = ZarrAttrsSchema.extend({
-  "column-order": z.array(z.string()),
-  _index: z.string().optional(),
-});
+const ZarrAttrsSchema = z.any();
+
+const ZarrObservationAttrsSchema = z.any();
 
 const AnndataCategoriesSchema = z.array(z.string());
 
@@ -63,10 +62,24 @@ export const fetchDataFromZarr = async (
   path: string,
   slice: (number | null)[] | undefined,
 ): Promise<{ data: number[]; categories?: string[] }> => {
+  console.log(`Fetching data from ${path}, slice ${slice}`);
   const root = await fetchZarrGroup(url);
+
+  console.log(`Opening group at ${root.resolve(path).path}`);
   const dataNodeOrGroup = await open(root.resolve(path));
+
   const attrs = parseZarrAttrs(dataNodeOrGroup.attrs);
-  const dataPath = `${path}/${getDataPath(attrs["encoding-type"])}`;
+
+  let encoding_type: string;
+
+  if (attrs["encoding_type"]) {
+    encoding_type = attrs["encoding_type"];
+  } else {
+    encoding_type = "array";
+  }
+
+  const dataPath = `${path}/${getDataPath(encoding_type)}`;
+
   const { data, dtype } = await getData(root, dataPath, slice);
   if (dtype === "bool") {
     const parsedData = parseBooleanArray(data);
@@ -75,7 +88,7 @@ export const fetchDataFromZarr = async (
       categories: ["false", "true"],
     };
   }
-  if (attrs["encoding-type"] === "categorical") {
+  if (encoding_type === "categorical") {
     const parsedData = parseIntegerArray(data);
     const categoryNamesPath = `${path}/${CATEGORY_NAMES_PATH}`;
     const categories = await getData(root, categoryNamesPath);
@@ -86,7 +99,7 @@ export const fetchDataFromZarr = async (
       categories: categoryNames,
     };
   }
-  if (attrs["encoding-type"] === "array") {
+  if (encoding_type === "array") {
     const parsedData = parseFloatArray(data);
     return {
       data: parsedData,
@@ -109,9 +122,7 @@ async function getVarNames(root: Group<Readable>, namesCol?: string): Promise<st
   const node = await open(root.resolve(FEATURE_NAMES_PATH));
   const parsedAttrs = ZarrObservationAttrsSchema.parse(node.attrs);
   const path = `${FEATURE_NAMES_PATH}/${namesCol ?? parsedAttrs._index ?? DEFAULT_INDEX_NAME}`;
-  console.log(`Getting data at ${path}`);
   const { data } = await getData(root, path);
-  console.log(`Received data at ${path}: ${data}`);
   return parseStringArray(data);
 }
 
