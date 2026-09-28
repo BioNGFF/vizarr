@@ -8,6 +8,7 @@ import AxisSliders from "./AxisSliders";
 import ChannelController from "./ChannelController";
 import Labels from "./Labels";
 import OpacitySlider from "./OpacitySlider";
+import TimeLapse from "./TimeLapse";
 
 import { useLayerState } from "../../hooks";
 import { range } from "../../utils";
@@ -36,6 +37,7 @@ function Content() {
           </Grid>
         </Grid>
         <AxisSliders />
+        <TimeLapse />
         <Grid container justifyContent="space-between">
           <Grid size={{ xs: 3 }}>
             <Typography variant="caption">channels:</Typography>
