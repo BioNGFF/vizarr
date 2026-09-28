@@ -30,6 +30,7 @@
 - Play/Pause with an fps control, default 2 fps.
 - Play stops at the last t; pressing Play at the end restarts from 0.
 - Scrubbing the T slider updates the view live.
+- Elapsed time since t=0 (t × time-axis scale from the OME-Zarr metadata) is shown top-right as HH:MM:SS.s; unknown units show as "value unit".
 
 ## Learnings
 - Tiled rendering mixes tiles from different t/levels during playback; un-tiled frames avoid this.

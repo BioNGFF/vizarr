@@ -25,6 +25,7 @@ import theme from "../theme";
 import { timelapseModeAtom } from "../timelapse";
 import Menu from "./Menu";
 import { InfoSnackbar } from "./Snackbar";
+import TimeStamp from "./TimeStamp";
 import Viewer from "./Viewer";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
@@ -119,6 +120,7 @@ function ViewerBridge({
         onPluginClick={onPluginClick}
         onPluginHover={onPluginHover}
       />
+      <TimeStamp />
       {children}
     </>
   );
