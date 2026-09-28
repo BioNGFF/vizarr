@@ -12,7 +12,7 @@ function format(value: number, unit: string) {
   const hh = String(Math.floor(s / 3600)).padStart(2, "0");
   const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
   const ss = (s % 60).toFixed(1).padStart(4, "0");
-  return `${hh}:${mm}:${ss}`;
+  return `${hh}:${mm}:${ss} (${+value.toFixed(1)} ${unit}s)`; // e.g. "00:03:53.7 (233.7 seconds)"
 }
 
 /** Time-lapse mode: elapsed time since t=0, from the OME-Zarr time axis scale. */
