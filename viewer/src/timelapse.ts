@@ -35,6 +35,7 @@ export function levelBytes(source: ZarrPixelSource) {
   return source.shape.reduce((a, b) => a * b, bytes);
 }
 
+type V2Meta = { zarr_format?: number; shape: number[]; chunks: number[]; dimension_separator?: string };
 type V3Meta = {
   zarr_format?: number;
   shape: number[];
@@ -44,7 +45,7 @@ type V3Meta = {
 
 /**
  * Download every stored object (shard, or chunk if unsharded) of one level into memory.
- * Afterwards all reads of that level are served locally. Needs Zarr v3 (OME-Zarr >= 0.5).
+ * Afterwards all reads of that level are served locally. Zarr v2 and v3 (OME-Zarr 0.4 and >= 0.5).
  */
 export async function preload(
   source: ZarrPixelSource,
@@ -53,19 +54,37 @@ export async function preload(
   signal: AbortSignal,
 ) {
   const arr = source.array;
-  const raw = await Promise.resolve(arr.store.get(arr.resolve("zarr.json").path)).catch(() => undefined);
-  const meta: V3Meta | undefined = raw && JSON.parse(new TextDecoder().decode(raw));
-  if (meta?.zarr_format !== 3) throw new Error("time-lapse needs OME-Zarr >= 0.5");
-  const grid = meta.chunk_grid.configuration.chunk_shape;
-  const { name, configuration } = meta.chunk_key_encoding;
-  const sep = configuration?.separator ?? (name === "v2" ? "." : "/");
+  const readJson = async (name: string) => {
+    const raw = await Promise.resolve(arr.store.get(arr.resolve(name).path)).catch(() => undefined);
+    return raw && JSON.parse(new TextDecoder().decode(raw));
+  };
+  // Zarr v3 (OME-Zarr >= 0.5): outer grid is the shard shape if sharded; keys "c/i/j/..."
+  // Zarr v2 (OME-Zarr 0.4): outer grid is the chunk shape; keys "i.j..." (or dimension_separator)
+  let shape: number[];
+  let grid: number[];
+  let encode: (c: number[]) => string;
+  const v3: V3Meta | undefined = await readJson("zarr.json");
+  if (v3?.zarr_format === 3) {
+    ({ shape } = v3);
+    grid = v3.chunk_grid.configuration.chunk_shape;
+    const { name, configuration } = v3.chunk_key_encoding;
+    const sep = configuration?.separator ?? (name === "v2" ? "." : "/");
+    encode = (c) => (name === "v2" ? c.join(sep) || "0" : ["c", ...c].join(sep));
+  } else {
+    const v2: V2Meta | undefined = await readJson(".zarray");
+    if (v2?.zarr_format !== 2) throw new Error("time-lapse: could not read zarr.json or .zarray");
+    ({ shape } = v2);
+    grid = v2.chunks;
+    const sep = v2.dimension_separator ?? ".";
+    encode = (c) => c.join(sep) || "0";
+  }
   // every grid coordinate, e.g. [[0,0,0,0,0], [0,0,0,0,1], ...]
   let coords: number[][] = [[]];
-  meta.shape.forEach((n, i) => {
+  shape.forEach((n, i) => {
     const len = Math.ceil(n / grid[i]);
     coords = coords.flatMap((c) => Array.from({ length: len }, (_, j) => [...c, j]));
   });
-  const keys = coords.map((c) => arr.resolve(name === "v2" ? c.join(sep) || "0" : ["c", ...c].join(sep)).path);
+  const keys = coords.map((c) => arr.resolve(encode(c)).path);
   localObjects.clear(); // one level in memory at a time
   onTotal(keys.length);
   await pMap(
