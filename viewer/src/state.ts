@@ -24,6 +24,7 @@ import {
   MultiscaleImageLayer,
   type MultiscaleImageLayerProps,
 } from "./layers/viv-layers";
+import { type TimelapseState, frameSource, levelMatrix, timelapseFamily, timelapseModeAtom } from "./timelapse";
 
 export interface ViewState {
   /**Level of zoom */
@@ -293,11 +294,29 @@ const LayerConstructors = {
   grid: GridLayer,
 } as const;
 
+/** In time-lapse mode, once a level is pre-loaded, always draw that level un-tiled. */
+function pinnedTimelapseLayer(props: MultiscaleImageLayerProps, tl: TimelapseState) {
+  if (tl.level === null || tl.phase !== "ready") return null;
+  const full = props.loader[0];
+  const level = props.loader[tl.level];
+  return new ImageLayer({
+    ...props,
+    id: `${props.id}-timelapse`,
+    loader: frameSource(level),
+    modelMatrix: levelMatrix(props.modelMatrix, full, level),
+    pickable: props.pickable ?? false,
+  }) as VizarrLayer;
+}
+
 const layerInstanceFamily = atomFamily((a: Atom<LayerState>) =>
   atom((get) => {
-    const { on, layerProps, kind } = get(a);
+    const { on, layerProps, kind, id } = get(a) as WithId<LayerState>;
     if (!on) {
       return null;
+    }
+    if (kind === "multiscale" && get(timelapseModeAtom)) {
+      const pinned = pinnedTimelapseLayer(layerProps as MultiscaleImageLayerProps, get(timelapseFamily(id)));
+      if (pinned) return pinned;
     }
     const Layer = LayerConstructors[kind];
     // @ts-expect-error - TS can't resolve that Layer & layerProps bound together
