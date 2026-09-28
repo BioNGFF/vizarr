@@ -52,6 +52,7 @@ export async function preload(
   onTotal: (n: number) => void,
   onObject: () => void,
   signal: AbortSignal,
+  progress: DownloadProgress = { received: 0, expected: 0, started: 0 },
 ) {
   const arr = source.array;
   const readJson = async (name: string) => {
@@ -91,13 +92,53 @@ export async function preload(
     keys,
     async (key) => {
       // ponytail: one retry, then fail the whole pre-load loudly
-      const get = () => Promise.resolve(arr.store.get(key, { signal }));
+      const url = (arr.store as { url?: string | URL }).url;
+      const get = () => (url ? streamGet(url, key, signal, progress) : Promise.resolve(arr.store.get(key, { signal })));
       const bytes = await get().catch(() => get());
       localObjects.set(key, bytes); // undefined = empty shard, zarrita fills with fill_value
       onObject();
     },
     { concurrency: CONCURRENCY, signal },
   );
+}
+
+/** Byte counters updated while shards stream in; the panel polls them (no re-render per chunk). */
+export type DownloadProgress = { received: number; expected: number; started: number };
+
+/** Fetch one object from a FetchStore URL, counting bytes as they arrive. 404 = empty shard. */
+async function streamGet(root: string | URL, key: string, signal: AbortSignal, progress: DownloadProgress) {
+  const base = new URL(root);
+  if (!base.pathname.endsWith("/")) base.pathname += "/";
+  const href = new URL(key.slice(1), base);
+  href.search = base.search; // same resolution as zarrita's FetchStore
+  const response = await fetch(href, { signal });
+  if (response.status === 404) return undefined;
+  if (!response.ok || !response.body) throw new Error(`${response.status} ${response.statusText} for ${key}`);
+  const length = Number(response.headers.get("content-length")) || 0;
+  progress.expected += length;
+  progress.started += 1;
+  const parts: Uint8Array[] = [];
+  let got = 0;
+  try {
+    const reader = response.body.getReader();
+    for (let r = await reader.read(); !r.done; r = await reader.read()) {
+      parts.push(r.value);
+      got += r.value.length;
+      progress.received += r.value.length;
+    }
+  } catch (err) {
+    progress.received -= got; // a retry counts again from zero
+    progress.expected -= length;
+    progress.started -= 1;
+    throw err;
+  }
+  const bytes = new Uint8Array(got);
+  let offset = 0;
+  for (const p of parts) {
+    bytes.set(p, offset);
+    offset += p.length;
+  }
+  return bytes;
 }
 
 /** Decoded planes per level, keyed by full-resolution selection ("t,c,z,..."). */

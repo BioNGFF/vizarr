@@ -15,7 +15,7 @@
 
 ## Pre-load
 - Downloads every stored object of the level (every shard; every chunk if unsharded) into memory.
-- Progress is counted in shards.
+- Progress is live: bytes are counted as shards stream in (polled 4×/s, not re-rendered per chunk), shown as shards · MB/estimated MB · MB/s · time left, with a progress bar. Estimate = average Content-Length so far × shard count.
 - 4 downloads at a time, leaving browser connections free for the rest of the viewer.
 - A failed shard is retried once; if it still fails, pre-load stops and the panel shows the error.
 - Only one level is held in memory at a time; pre-loading another level replaces it.

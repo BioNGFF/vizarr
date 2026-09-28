@@ -1,12 +1,31 @@
 import { PauseCircle, PlayCircle, Replay } from "@mui/icons-material";
-import { Button, Divider, Grid, IconButton, MenuItem, Select, Tooltip, Typography } from "@mui/material";
+import {
+  Button,
+  Divider,
+  Grid,
+  IconButton,
+  LinearProgress,
+  MenuItem,
+  Select,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import { setTSliceAtom } from "../../state";
-import { MAX_BYTES, decodeAll, levelBytes, preload, timelapseFamily, timelapseModeAtom } from "../../timelapse";
+import {
+  type DownloadProgress,
+  MAX_BYTES,
+  decodeAll,
+  levelBytes,
+  preload,
+  timelapseFamily,
+  timelapseModeAtom,
+} from "../../timelapse";
 
 const FPS = [0.5, 1, 2, 5, 10, 24];
+const mb = (n: number) => (n / 1024 ** 2).toFixed(1);
 
 function TimeLapse() {
   const mode = useAtomValue(timelapseModeAtom);
@@ -30,6 +49,24 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
   const levels = loader.map((source, i) => ({ i, bytes: levelBytes(source) })).filter((l) => l.bytes <= MAX_BYTES);
   const [level, setLevel] = React.useState(loader.length - 1); // lowest resolution
 
+  // Live download numbers: preload mutates `progress`; poll it a few times a second instead of
+  // re-rendering on every network chunk.
+  const progressRef = React.useRef<{ start: number; progress: DownloadProgress } | null>(null);
+  const [bytes, setBytes] = React.useState({ received: 0, estimate: 0, rate: 0 });
+  React.useEffect(() => {
+    if (tl.phase !== "downloading") return;
+    const id = setInterval(() => {
+      const p = progressRef.current;
+      if (!p) return;
+      const { received, expected, started } = p.progress;
+      const seconds = (performance.now() - p.start) / 1000;
+      // content-length of shards seen so far, extrapolated to all shards
+      const estimate = started ? Math.max(received, (expected / started) * tl.total) : 0;
+      setBytes({ received, estimate, rate: received / Math.max(seconds, 0.001) });
+    }, 250);
+    return () => clearInterval(id);
+  }, [tl.phase, tl.total]);
+
   const onPreload = async () => {
     tl.controller?.abort();
     const controller = new AbortController();
@@ -41,8 +78,10 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
     const tick = () => update((prev) => ({ loaded: prev.loaded + 1 }));
     setPlaying(false);
     setTl({ level, phase: "downloading", loaded: 0, total: 0, controller });
+    const progress = { received: 0, expected: 0, started: 0 };
+    progressRef.current = { ...progress, start: performance.now(), progress };
     try {
-      await preload(loader[level], (total) => update({ total }), tick, signal);
+      await preload(loader[level], (total) => update({ total }), tick, signal, progress);
       update({ phase: "decoding", loaded: 0, total: nT });
       await decodeAll(loader[level], selections, tAxis, nT, tick, signal);
       update({ phase: "ready" });
@@ -75,7 +114,14 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
 
   const status = {
     idle: "",
-    downloading: `downloading ${tl.loaded}/${tl.total} shards`,
+    downloading: [
+      `${tl.loaded}/${tl.total} shards`,
+      `${mb(bytes.received)}${bytes.estimate ? `/${mb(bytes.estimate)}` : ""} MB`,
+      `${mb(bytes.rate)} MB/s`,
+      bytes.rate && bytes.estimate ? `~${Math.ceil((bytes.estimate - bytes.received) / bytes.rate)} s left` : "",
+    ]
+      .filter(Boolean)
+      .join(" · "),
     decoding: `decoding ${tl.loaded}/${tl.total} frames`,
     ready: `ready: ${nT} frames`,
     error: tl.error,
@@ -103,6 +149,18 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
           <Typography variant="caption">
             level {tl.level}: {status}
           </Typography>
+        )}
+        {(tl.phase === "downloading" || tl.phase === "decoding") && (
+          <LinearProgress
+            variant="determinate"
+            value={
+              tl.phase === "downloading"
+                ? bytes.estimate
+                  ? (100 * bytes.received) / bytes.estimate
+                  : 0
+                : (100 * tl.loaded) / Math.max(tl.total, 1)
+            }
+          />
         )}
         {ready && (
           <Grid container alignItems="center" justifyContent="space-between">
