@@ -302,7 +302,7 @@ function pinnedTimelapseLayer(props: MultiscaleImageLayerProps, tl: TimelapseSta
   return new ImageLayer({
     ...props,
     id: `${props.id}-timelapse`,
-    loader: frameSource(level),
+    loader: frameSource(level, full),
     modelMatrix: levelMatrix(props.modelMatrix, full, level),
     pickable: props.pickable ?? false,
   }) as VizarrLayer;

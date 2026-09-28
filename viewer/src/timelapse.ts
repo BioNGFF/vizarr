@@ -130,7 +130,7 @@ const frameSources = new WeakMap<ZarrPixelSource, ZarrPixelSource>();
  * Pixel source for Viv's un-tiled ImageLayer, pinned to one downloaded level. Serves decoded
  * frames from memory; a response for an older selection never resolves, so Viv never draws it.
  */
-export function frameSource(source: ZarrPixelSource) {
+export function frameSource(source: ZarrPixelSource, full: ZarrPixelSource) {
   const cached = frameSources.get(source); // stable identity, so Viv refetches only on selection change
   if (cached) return cached;
   let latest: AbortSignal | undefined;
@@ -138,7 +138,7 @@ export function frameSource(source: ZarrPixelSource) {
     labels: source.labels,
     tileSize: source.tileSize,
     dtype: source.dtype,
-    meta: source.meta,
+    meta: levelMeta(full, source), // keeps the scale bar: physical sizes per pixel of this level
     shape: source.shape,
     getRaster: async ({ selection, signal }: { selection: number[]; signal?: AbortSignal }) => {
       latest = signal;
@@ -150,6 +150,18 @@ export function frameSource(source: ZarrPixelSource) {
   } as unknown as ZarrPixelSource;
   frameSources.set(source, wrapped);
   return wrapped;
+}
+
+/** Full-resolution physical sizes, rescaled to one pixel of `level` (only x/y change with level). */
+function levelMeta(full: ZarrPixelSource, level: ZarrPixelSource) {
+  const sizes = full.meta?.physicalSizes;
+  if (!sizes) return level.meta;
+  const ratio = (axis: string) => full.shape[full.labels.indexOf(axis)] / level.shape[level.labels.indexOf(axis)];
+  const physicalSizes = { ...sizes };
+  for (const axis of ["x", "y"] as const) {
+    if (sizes[axis]) physicalSizes[axis] = { ...sizes[axis], size: sizes[axis].size * ratio(axis) };
+  }
+  return { ...level.meta, physicalSizes };
 }
 
 /** Scale the base model matrix so a lower-resolution level covers the full-resolution extent. */
