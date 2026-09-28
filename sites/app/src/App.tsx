@@ -30,13 +30,14 @@ export default function App() {
     }
   }, []);
 
-  const { sources, viewState, enableRoi } = React.useMemo(() => {
+  const { sources, viewState, enableRoi, timelapse } = React.useMemo(() => {
     const url = new URL(urlString);
     const { searchParams } = url;
     return {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
+      timelapse: searchParams.get("timelapse") === "1",
     };
   }, [urlString]);
 
@@ -88,6 +89,7 @@ export default function App() {
         pluginCursor={enableRoi ? cursor : undefined}
         onPluginClick={enableRoi ? onClick : undefined}
         onPluginHover={enableRoi ? onHover : undefined}
+        timelapse={timelapse}
       >
         {enableRoi && viewerInfo && (
           <RoiSelector
