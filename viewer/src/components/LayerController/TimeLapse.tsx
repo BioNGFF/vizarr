@@ -24,7 +24,7 @@ import {
   timelapseModeAtom,
 } from "../../timelapse";
 
-const FPS = [0.5, 1, 2, 5, 10, 24];
+const FPS = [1, 2, 5, 10, 24, 30, 60];
 const mb = (n: number) => (n / 1024 ** 2).toFixed(1);
 
 function TimeLapse() {
@@ -92,7 +92,7 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
 
   // Play: one interval per play session; t is read from a ref so re-renders never reset the timer.
   const [playing, setPlaying] = React.useState(false);
-  const [fps, setFps] = React.useState(2);
+  const [fps, setFps] = React.useState(5);
   const ready = tl.phase === "ready";
   const tRef = React.useRef(t);
   tRef.current = t;
