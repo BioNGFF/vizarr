@@ -1,4 +1,5 @@
-import { Button, Divider, Grid, MenuItem, Select, TextField, Typography } from "@mui/material";
+import { Pause, PlayArrow, SkipPrevious } from "@mui/icons-material";
+import { Button, Divider, Grid, IconButton, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
@@ -103,9 +104,17 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
         )}
         {ready && (
           <Grid container spacing={0.5} alignItems="center">
-            <Button size="small" variant="outlined" onClick={onPlay}>
-              {playing ? "pause" : "play"}
-            </Button>
+            <IconButton size="small" aria-label="restart" title="restart" onClick={() => setT(0)}>
+              <SkipPrevious fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              aria-label={playing ? "pause" : "play"}
+              title={playing ? "pause" : "play"}
+              onClick={onPlay}
+            >
+              {playing ? <Pause fontSize="small" /> : <PlayArrow fontSize="small" />}
+            </IconButton>
             <TextField
               size="small"
               variant="standard"

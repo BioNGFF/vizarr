@@ -3,7 +3,7 @@
 ## Scope
 - Separate opt-in mode: `?timelapse=1`. Without it, vizarr behaves exactly as before.
 - Multiscale images only (no plates).
-- Requires OME-Zarr >= 0.5 (Zarr v3); older data shows an error in the panel.
+- OME-Zarr 0.4 (Zarr v2, whole chunks) and >= 0.5 (Zarr v3, whole shards). 0.4 not yet verified in a browser.
 
 ## User path
 - Pick level → pre-load → navigate / play.
@@ -27,7 +27,7 @@
 - Late responses for an older t are dropped, so the view always matches the slider.
 
 ## Playback
-- Play/Pause with an fps control, default 2 fps.
+- Play/Pause toggle and a restart (to t=0) button; fps control, default 2 fps.
 - Play stops at the last t; pressing Play at the end restarts from 0.
 - Scrubbing the T slider updates the view live.
 - Elapsed time since t=0 (t × time-axis scale from the OME-Zarr metadata) is shown top-right as HH:MM:SS.s; unknown units show as "value unit".
