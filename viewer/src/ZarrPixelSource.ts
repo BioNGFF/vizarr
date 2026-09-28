@@ -97,6 +97,11 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     return this.#arr.shape;
   }
 
+  /** The underlying zarr array (time-lapse pre-load reads its store directly). */
+  get array() {
+    return this.#arr;
+  }
+
   async getRaster(options: {
     selection: viv.PixelSourceSelection<Array<string>> | Array<number>;
     signal?: AbortSignal;
