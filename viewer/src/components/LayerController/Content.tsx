@@ -1,4 +1,4 @@
-import { AccordionDetails, Divider, Grid, Typography } from "@mui/material";
+import { AccordionDetails, Grid, Typography } from "@mui/material";
 import React from "react";
 
 import AcquisitionController from "./AcquisitionController";
@@ -10,7 +10,7 @@ import OpacitySlider from "./OpacitySlider";
 
 import { useLayerState } from "../../hooks";
 import { range } from "../../utils";
-import { sectionLabelSx } from "./controls";
+import { SectionHeading, sectionLabelSx } from "./controls";
 
 function Content() {
   const [layer] = useLayerState();
@@ -32,17 +32,7 @@ function Content() {
           </Grid>
         </Grid>
         <AxisSliders />
-        <Grid container justifyContent="space-between">
-          <Grid size={{ xs: 3 }}>
-            <Typography variant="caption" sx={sectionLabelSx}>
-              channels
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 1 }}>
-            <AddChannelButton />
-          </Grid>
-        </Grid>
-        <Divider />
+        <SectionHeading action={<AddChannelButton />}>channels</SectionHeading>
         <Grid>
           {range(nChannels).map((i) => (
             <ChannelController channelIndex={i} key={i} />
@@ -50,12 +40,7 @@ function Content() {
         </Grid>
         {layer.labels?.length && (
           <>
-            <Grid container justifyContent="space-between">
-              <Typography variant="caption" sx={sectionLabelSx}>
-                labels
-              </Typography>
-            </Grid>
-            <Divider />
+            <SectionHeading>labels</SectionHeading>
             <Grid>
               {layer.labels.map((label, i) => (
                 <Labels labelIndex={i} key={label.layerProps.id} />

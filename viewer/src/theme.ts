@@ -6,6 +6,9 @@ import { createTheme } from "@mui/material/styles";
  * toolbar rail are defined once rather than repeated as literals at each use site.
  * Plugins should style their own panels from these so they match the viewer's chrome.
  */
+/** The opaque dark shared by the toolbar rail and by anything laid over the image. */
+const SOLID_DARK = "#151515";
+
 export const tokens = {
   /** Width of the collapsible controls panel. */
   layout: {
@@ -18,9 +21,17 @@ export const tokens = {
     inset: "rgba(255, 255, 255, 0.18)",
     radius: 8,
   },
+  /**
+   * Menus, popovers and dialogs. Opaque, unlike the panel: the panel is deliberately
+   * translucent so the image reads through it, but content has to be legible against
+   * whatever it happens to cover.
+   */
+  overlay: {
+    background: SOLID_DARK,
+  },
   /** Toolbar rail buttons, which sit directly on the image and need more contrast. */
   rail: {
-    background: "#151515",
+    background: SOLID_DARK,
     border: "#2a2a2a",
     hover: "#232323",
     active: "#2f2f2f",
@@ -86,8 +97,10 @@ export default createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          // Matches tokens.panel.background: popovers and panels are the same surface.
-          backgroundColor: tokens.panel.background,
+          // Paper is only used here for overlays — menus, popovers, dialogs and the
+          // error card. The controls panel is a Box and sets its own translucent
+          // background, so this does not need to match it.
+          backgroundColor: tokens.overlay.background,
         },
       },
     },

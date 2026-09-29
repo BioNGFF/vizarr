@@ -1,4 +1,4 @@
-import { Divider, Grid } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import DimensionOptions from "./AxisOptions";
@@ -49,11 +49,15 @@ function AxisSlider({ axisIndex, max }: Props) {
         <Grid container justifyContent="space-between">
           <Grid size={{ xs: 10 }}>
             <ControlLabel>
-              {axisLabel}: {value}/{max}
+              {axisLabel} ({value}/{max})
             </ControlLabel>
           </Grid>
           <Grid size={{ xs: 1 }}>
-            <DimensionOptions axisIndex={axisIndex} max={max} />
+            {/* Right aligned so it lines up with the channel rows' overflow buttons,
+                which sit at the panel edge rather than at the start of their cell. */}
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+              <DimensionOptions axisIndex={axisIndex} max={max} />
+            </Box>
           </Grid>
         </Grid>
         <Grid container justifyContent="space-between">
@@ -69,7 +73,6 @@ function AxisSlider({ axisIndex, max }: Props) {
           </Grid>
         </Grid>
       </Grid>
-      <Divider />
     </>
   );
 }
