@@ -1,6 +1,8 @@
 import type { Attributes } from "zarrita";
 import type { z } from "zod";
 import * as omeNgffSchemas from "zod-ome-ngff";
+import { log } from "../logger";
+import { MetadataError } from "../services/http";
 
 const imageTypes = ["ImageSchema", "WellSchema", "PlateSchema"] as const;
 const versions = ["v01", "v02", "v03", "v04", "v05", "v06"] as const;
@@ -28,7 +30,16 @@ export function parse(data: Attributes) {
     return schema.schema.safeParse(data).success;
   });
 
-  const parser = validParsers[validParsers.length - 1];
+  // Indexing the last match directly used to throw an internal TypeError when nothing
+  // matched, which reached the user as "Cannot read properties of undefined".
+  const parser = validParsers.at(-1);
+  if (!parser) {
+    throw new MetadataError(
+      "The metadata at this source does not match any supported OME-NGFF version.",
+      "No OME-NGFF schema matched the group attributes.",
+    );
+  }
+  log.debug("Parsed OME-NGFF metadata", { type: parser.type, version: parser.version });
   return {
     data: parser.schema.parse(data),
     version: parser.version,

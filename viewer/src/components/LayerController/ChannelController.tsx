@@ -1,7 +1,8 @@
-import { Checkbox, Grid } from "@mui/material";
+import { Box, Checkbox, Grid } from "@mui/material";
 import React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import ChannelOptions from "./ChannelOptions";
+import RemoveChannelButton from "./RemoveChannelButton";
 import { ControlLabel, DenseSlider, inlineIconButtonSx } from "./controls";
 
 function ChannelController({ channelIndex }: { channelIndex: number }) {
@@ -38,11 +39,14 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
   return (
     <>
       <Grid container justifyContent="space-between" wrap="nowrap">
-        <Grid size={{ xs: 10 }}>
+        <Grid size={{ xs: 8 }}>
           <ControlLabel>{label}</ControlLabel>
         </Grid>
-        <Grid size={{ xs: 1 }}>
-          <ChannelOptions channelIndex={channelIndex} />
+        <Grid size={{ xs: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <RemoveChannelButton channelIndex={channelIndex} name={label} />
+            <ChannelOptions channelIndex={channelIndex} />
+          </Box>
         </Grid>
       </Grid>
       <Grid container justifyContent="space-between">

@@ -1,11 +1,11 @@
 import { Add } from "@mui/icons-material";
-import { Divider, IconButton, NativeSelect, Paper, Popover, Typography } from "@mui/material";
-import React, { useState } from "react";
-import type { ChangeEvent, MouseEvent } from "react";
+import { Button, Menu, MenuItem } from "@mui/material";
+import type { MouseEvent } from "react";
+import { useState } from "react";
 
 import { useLayerState, useSourceData } from "../../hooks";
 import { MAX_CHANNELS, calcDataRange, hexToRGB, resolveLoaderFromLayerProps } from "../../utils";
-import { denseSelectSx, popoverPaperSx } from "./controls";
+import { menuPaperSx } from "./controls";
 
 function AddChannelButton() {
   const [source, setSource] = useSourceData();
@@ -20,9 +20,8 @@ function AddChannelButton() {
     setAnchorEl(null);
   };
 
-  const handleChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+  const handleSelect = async (channelIndex: number) => {
     handleClose();
-    const channelIndex = +event.target.value;
     const channelSelection = [...source.defaults.selection];
     if (source.channel_axis != null) {
       channelSelection[source.channel_axis] = channelIndex;
@@ -68,48 +67,32 @@ function AddChannelButton() {
   const id = open ? `layer-${source.id}-add-channel` : undefined;
   return (
     <>
-      <IconButton
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<Add />}
         onClick={handleClick}
         aria-describedby={id}
-        style={{
-          backgroundColor: "transparent",
-          padding: 0,
-          zIndex: 2,
-          cursor: "pointer",
-        }}
+        sx={{ fontSize: "0.7rem", py: 0, px: 1, "& .MuiButton-startIcon": { mr: 0.5 } }}
         disabled={layer.layerProps.selections.length === MAX_CHANNELS}
       >
-        <Add />
-      </IconButton>
-      <Popover
+        ADD
+      </Button>
+      <Menu
         id={id}
-        open={open}
         anchorEl={anchorEl}
+        open={open}
         onClose={handleClose}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "left",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "left",
-        }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        slotProps={{ paper: { sx: menuPaperSx } }}
       >
-        <Paper sx={{ ...popoverPaperSx, width: "8em" }}>
-          <Typography variant="caption">selection: </Typography>
-          <Divider />
-          <NativeSelect fullWidth sx={denseSelectSx} id={`layer-${source.id}-channel-select`} onChange={handleChange}>
-            <option aria-label="None" value="">
-              None
-            </option>
-            {names.map((name, i) => (
-              <option value={i} key={name}>
-                {name}
-              </option>
-            ))}
-          </NativeSelect>
-        </Paper>
-      </Popover>
+        {names.map((name, i) => (
+          <MenuItem key={name} dense onClick={() => handleSelect(i)}>
+            {name}
+          </MenuItem>
+        ))}
+      </Menu>
     </>
   );
 }

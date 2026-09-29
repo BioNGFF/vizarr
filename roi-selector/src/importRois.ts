@@ -1,4 +1,5 @@
 import * as zarr from "zarrita";
+import { log } from "./logger";
 import type { ImageBounds, RoiCorner, SavedRoi } from "./state";
 import { nextAvailableColor } from "./state";
 
@@ -74,7 +75,7 @@ export async function discoverRoiTables(sourceUrl: string): Promise<RoiTableInfo
     const tableNames: string[] = (tablesAttrs.tables as string[] | undefined) ?? [];
 
     if (tableNames.length === 0) {
-      console.warn("[ROI Import] No tables listed in /tables group attributes");
+      log.warn("No tables listed in /tables group attributes");
       return [];
     }
 
@@ -97,20 +98,20 @@ export async function discoverRoiTables(sourceUrl: string): Promise<RoiTableInfo
             const xArr = await zarr.open(tablesLocation.resolve(`${name}/X`), { kind: "array" });
             roiCount = xArr.shape[0];
           } catch {
-            console.warn(`[ROI Import] Could not determine ROI count for table "${name}"`);
+            log.warn(`Could not determine ROI count for table "${name}"`);
           }
         }
 
-        console.log(`[ROI Import] Table "${name}" has type: "${type}"`);
+        log.debug(`Table "${name}" has type: "${type}"`);
         tables.push({ name, roiCount, type });
       } catch (err) {
-        console.warn(`[ROI Import] Failed to read table "${name}":`, err);
+        log.warn(`Failed to read table "${name}":`, err);
       }
     }
 
     return tables.filter((t) => t.type === "roi_table" || t.type === "masking_roi_table");
   } catch (err) {
-    console.warn("[ROI Import] Failed to open /tables group:", err);
+    log.warn("Failed to open /tables group:", err);
     return [];
   }
 }
@@ -130,7 +131,7 @@ async function readRoiTable(tablesLocation: zarr.Location<zarr.Readable>, tableN
     const indexData = await zarr.get(obsIndex);
     roiNames = Array.from(indexData.data as Iterable<string>);
   } catch {
-    console.warn(`[ROI Import] Could not read obs index for table "${tableName}", will generate names`);
+    log.warn(`Could not read obs index for table "${tableName}", will generate names`);
   }
 
   // Read column names from var index column (same AnnData convention as obs).
@@ -145,7 +146,7 @@ async function readRoiTable(tablesLocation: zarr.Location<zarr.Readable>, tableN
     const varData = await zarr.get(varIndex);
     columnNames = Array.from(varData.data as Iterable<string>);
   } catch {
-    console.warn(`[ROI Import] Could not read var index for table "${tableName}"`);
+    log.warn(`Could not read var index for table "${tableName}"`);
     return [];
   }
 
@@ -158,7 +159,7 @@ async function readRoiTable(tablesLocation: zarr.Location<zarr.Readable>, tableN
     xShape = xData.shape;
     xFlat = xData.data as ArrayLike<number>;
   } catch {
-    console.warn(`[ROI Import] Could not read X matrix for table "${tableName}"`);
+    log.warn(`Could not read X matrix for table "${tableName}"`);
     return [];
   }
 
@@ -169,8 +170,8 @@ async function readRoiTable(tablesLocation: zarr.Location<zarr.Readable>, tableN
   const lyIdx = findColumnIndex(columnNames, LENGTH_Y_PATTERNS);
 
   if (oxIdx < 0 || oyIdx < 0 || lxIdx < 0 || lyIdx < 0) {
-    console.warn(
-      `[ROI Import] Table "${tableName}" missing required columns. Found: [${columnNames.join(", ")}]. Need origin (x, y) and length (x, y) columns.`,
+    log.warn(
+      `Table "${tableName}" missing required columns. Found: [${columnNames.join(", ")}]. Need origin (x, y) and length (x, y) columns.`,
     );
     return [];
   }
@@ -248,8 +249,8 @@ export async function importRoisFromZarr(
 
         // Warn about out-of-bounds
         if (x1 < imageBounds.xMin || y1 < imageBounds.yMin || x2 > imageBounds.xMax || y2 > imageBounds.yMax) {
-          console.warn(
-            `[ROI Import] "${tableName}/${pRoi.name}" extends outside image bounds ` +
+          log.warn(
+            `"${tableName}/${pRoi.name}" extends outside image bounds ` +
               `(${x1},${y1})→(${x2},${y2}), ` +
               `image: (${imageBounds.xMin},${imageBounds.yMin})→(${imageBounds.xMax},${imageBounds.yMax}). Clamping.`,
           );
@@ -273,9 +274,7 @@ export async function importRoisFromZarr(
           corner1.z = clamp(z1, 0, zMax ?? z1);
           corner2.z = clamp(z2, 0, zMax ?? z2);
           if (zMax != null && (z1 > zMax || z2 > zMax)) {
-            console.warn(
-              `[ROI Import] "${tableName}/${pRoi.name}" Z range (${z1}–${z2}) exceeds zMax (${zMax}). Clamping.`,
-            );
+            log.warn(`"${tableName}/${pRoi.name}" Z range (${z1}–${z2}) exceeds zMax (${zMax}). Clamping.`);
           }
         }
 
@@ -286,15 +285,13 @@ export async function importRoisFromZarr(
           corner1.t = clamp(t1, 0, tMax ?? t1);
           corner2.t = clamp(t2, 0, tMax ?? t2);
           if (tMax != null && (t1 > tMax || t2 > tMax)) {
-            console.warn(
-              `[ROI Import] "${tableName}/${pRoi.name}" T range (${t1}–${t2}) exceeds tMax (${tMax}). Clamping.`,
-            );
+            log.warn(`"${tableName}/${pRoi.name}" T range (${t1}–${t2}) exceeds tMax (${tMax}). Clamping.`);
           }
         }
 
         // Skip degenerate ROIs
         if (corner1.x === corner2.x && corner1.y === corner2.y) {
-          console.warn(`[ROI Import] "${tableName}/${pRoi.name}" has zero area, skipping.`);
+          log.warn(`"${tableName}/${pRoi.name}" has zero area, skipping.`);
           continue;
         }
 
@@ -311,7 +308,7 @@ export async function importRoisFromZarr(
         allRois = [...allRois, savedRoi];
       }
     } catch (err) {
-      console.error(`[ROI Import] Failed to import table "${tableName}":`, err);
+      log.error(`Failed to import table "${tableName}":`, err);
     }
   }
 

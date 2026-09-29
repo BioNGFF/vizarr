@@ -1,21 +1,17 @@
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, Link, Paper, ThemeProvider, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React from "react";
-import type { Logger } from "../api";
-import {
-  getSourceDataError,
-  getSourceDataWarnings,
-  handleError,
-  sourceDataValid,
-  writeUserErrorMessage,
-} from "../error";
+import { getSourceDataError, getSourceDataWarnings, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
 import { loadSources } from "../io";
 import type { OmeColor } from "../layers/label-layer";
+import type { Logger } from "../logger";
+import { log, setLogger } from "../logger";
 import {
   type InteractionMode,
   type ViewState,
@@ -36,6 +32,7 @@ import {
   viewportAtom,
 } from "../state";
 import defaultTheme from "../theme";
+import { REPOSITORY_URL } from "../utils";
 import Menu from "./Menu";
 import { InfoSnackbar, SnackbarHost } from "./Snackbar";
 import Viewer from "./Viewer";
@@ -123,6 +120,10 @@ function ViewerBridge({
   const setTSlice = useSetAtom(setTSliceAtom);
   const interactionMode = useAtomValue(interactionModeAtom);
   const setInteractionMode = useSetAtom(interactionModeAtom);
+  const sourceError = useAtomValue(sourceErrorAtom);
+  // Both overlays imply nothing is on screen: an error is only set when every source
+  // failed, and no urls means nothing was asked for.
+  const nothingToShow = sourceUrls.length === 0 || sourceError !== null;
 
   // Notify host application when viewer state changes
   React.useEffect(() => {
@@ -154,7 +155,7 @@ function ViewerBridge({
 
   return (
     <>
-      <Menu enableSelectTool={enableSelectTool} />
+      {!nothingToShow && <Menu enableSelectTool={enableSelectTool} />}
       <Viewer
         additionalLayers={additionalLayers}
         pluginCursor={pluginCursor}
@@ -178,7 +179,7 @@ function VizarrViewerComponent({
   onPluginHover,
   enableSelectTool,
   children,
-  logger = console,
+  logger,
 }: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
@@ -189,6 +190,11 @@ function VizarrViewerComponent({
   const sourceInfo = useAtomValue(sourceInfoAtom);
   const setLabelColors = useSetAtom(setLabelColorsAtom);
   const addSourceWarning = useSetAtom(addSourceWarningAtom);
+
+  React.useEffect(() => {
+    setLogger(logger);
+    return () => setLogger(undefined);
+  }, [logger]);
 
   React.useEffect(() => {
     if (initialViewState) {
@@ -225,9 +231,12 @@ function VizarrViewerComponent({
     ),
   );
   React.useEffect(() => {
+    if (sources.length === 0) {
+      log.debug("No sources provided, nothing to load");
+      return;
+    }
     let cancelled = false;
-    let reportedError = false;
-    logger.debug("Loading sources");
+    log.debug("Loading sources", { sources });
     loadSources(sources)
       .then((results) => {
         if (cancelled) {
@@ -235,10 +244,9 @@ function VizarrViewerComponent({
         }
         if (!sourceDataValid(results)) {
           const error = getSourceDataError(results);
+          log.error("Failed to load any source", error);
           setSourceError(writeUserErrorMessage(error));
-          reportedError = true;
-          // Logs and rethrows, which the .catch below handles; nothing after this runs.
-          handleError(error, logger);
+          return;
         }
         // One source url can yield several images (a v0.6 scene), so results are flattened.
         const sourceDatas = [];
@@ -246,29 +254,32 @@ function VizarrViewerComponent({
           if (res.status === "fulfilled") {
             sourceDatas.push(...res.value);
           } else {
-            logger.error(String(res.reason));
+            log.error("Source failed to load", res.reason);
           }
         }
         const loaded = sourceDatas.filter((s) => s !== null);
         for (const sourceData of loaded) {
           for (const warning of getSourceDataWarnings(sourceData)) {
+            // Shown and logged together: a warning the user sees should always be
+            // recoverable from the console too.
+            log.warn(warning);
             addSourceWarning(warning);
           }
         }
         setSourceInfo(loaded);
       })
       .catch((err: unknown) => {
-        if (cancelled || reportedError) {
+        if (cancelled) {
           return;
         }
         const error = err instanceof Error ? err : Error(String(err));
+        log.error("Failed to load sources", error);
         setSourceError(writeUserErrorMessage(error));
-        logger.error(error.message);
       });
     return () => {
       cancelled = true;
     };
-  }, [sources, setSourceInfo, setSourceError, addSourceWarning, logger]);
+  }, [sources, setSourceInfo, setSourceError, addSourceWarning]);
 
   // Recolouring is applied to the loaded layer state, so it must also run once the
   // sources themselves arrive (colours can be selected before the image has loaded).
@@ -296,6 +307,55 @@ function VizarrViewerComponent({
             {children}
           </ViewerBridge>
         </ViewStateContext.Provider>
+      )}
+      {sources.length === 0 && sourceError === null && redirectObj === null && (
+        <Box
+          sx={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 3,
+            pointerEvents: "none",
+          }}
+        >
+          <Paper
+            elevation={4}
+            sx={{
+              maxWidth: 480,
+              width: "100%",
+              p: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              textAlign: "center",
+              borderTop: "3px solid",
+              borderColor: "divider",
+              pointerEvents: "auto",
+            }}
+          >
+            <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.secondary" }} />
+            <Typography variant="h6" fontWeight={600}>
+              No image to display
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              No data source was provided. Add a <code>source</code> parameter pointing at an OME-Zarr image to view it.
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              endIcon={<OpenInNewIcon />}
+              href={REPOSITORY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              component="a"
+            >
+              Read the documentation
+            </Button>
+          </Paper>
+        </Box>
       )}
       {sourceError !== null && (
         <Box
@@ -346,7 +406,7 @@ function VizarrViewerComponent({
               variant="outlined"
               size="small"
               endIcon={<OpenInNewIcon />}
-              href="https://github.com/BioNGFF/vizarr/issues"
+              href={`${REPOSITORY_URL}/issues`}
               target="_blank"
               rel="noopener noreferrer"
               component="a"

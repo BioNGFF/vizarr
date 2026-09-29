@@ -10,6 +10,7 @@ import RoiDrawControls from "./components/RoiDrawControls";
 import SavedRoiList from "./components/SavedRoiList";
 import { useRoiFields } from "./hooks/useRoiFields";
 import { importRoisFromZarr } from "./importRois";
+import { log } from "./logger";
 import {
   type ImageBounds,
   type PendingRoi,
@@ -158,7 +159,7 @@ function RoiSelector({
   // ---- Import ROIs from zarr tables ----
   const handleImport = async (selectedTables: string[]) => {
     if (!sourceUrl || !imageBounds) {
-      console.warn("[ROI Import] No source URL or image bounds available");
+      log.warn("No source URL or image bounds available");
       return;
     }
     try {
@@ -172,12 +173,12 @@ function RoiSelector({
       );
       if (imported.length > 0) {
         handleImportRois(imported);
-        console.log(`[ROI Import] Imported ${imported.length} ROI(s)`);
+        log.debug(`Imported ${imported.length} ROI(s)`);
       } else {
-        console.warn("[ROI Import] No ROIs were imported from the selected tables");
+        log.warn("No ROIs were imported from the selected tables");
       }
     } catch (err) {
-      console.error("[ROI Import] Import failed:", err);
+      log.error("Import failed:", err);
     }
   };
 

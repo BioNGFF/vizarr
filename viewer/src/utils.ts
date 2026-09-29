@@ -10,6 +10,7 @@ import { lru } from "./lru-store";
 import type { ViewState, VizarrLayer } from "./state";
 
 import { Matrix4 } from "math.gl";
+import { log } from "./logger";
 
 export const MAX_CHANNELS = 6;
 
@@ -41,18 +42,21 @@ export async function normalizeStore(source: string | zarr.Readable): Promise<za
         fetch(source).then((res) => res.json()),
       ]);
       store = ReferenceStore.fromSpec(json);
+      log.debug("Store resolved", { source, store: "ReferenceStore" });
     } else {
       // try ZipFileStore first, fallback to FetchStore
       try {
         const zipStore = ZipFileStore.fromUrl(source);
         await zipStore.has("/"); // will throw an error for non-zipped
         store = zipStore;
+        log.debug("Store resolved", { source, store: "ZipFileStore" });
       } catch {
         const url = new URL(source);
         // grab the path and then set the URL to the root
         path = ensureAbsolutePath(url.pathname);
         url.pathname = "/";
         store = new zarr.FetchStore(url.href);
+        log.debug("Store resolved", { source, store: "FetchStore" });
       }
     }
 
@@ -309,8 +313,7 @@ export function parseMatrix(model_matrix?: string | number[]): Matrix4 {
     assert(isArray16(arr), "Invalid modelMatrix size. Must be 16.");
     matrix.setRowMajor(...arr);
   } catch {
-    const msg = `Failed to parse modelMatrix. Got ${JSON.stringify(model_matrix)}, using identity.`;
-    console.warn(msg);
+    log.warn("Failed to parse modelMatrix, using identity.", { model_matrix });
   }
   return matrix;
 }

@@ -1,4 +1,4 @@
-import { MoreHoriz } from "@mui/icons-material";
+import { MoreVert } from "@mui/icons-material";
 import { Divider, IconButton, Paper, Popover, Typography } from "@mui/material";
 import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
@@ -58,7 +58,7 @@ function AxisOptions({ axisIndex, max }: Props) {
           cursor: "pointer",
         }}
       >
-        <MoreHoriz />
+        <MoreVert />
       </IconButton>
       <Popover
         id={id}

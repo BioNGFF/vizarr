@@ -1,7 +1,7 @@
-import { Divider, Grid } from "@mui/material";
-import React from "react";
+import { Grid } from "@mui/material";
 import { useSourceData } from "../../hooks";
 import AxisSlider from "./AxisSlider";
+import { SectionHeading } from "./controls";
 
 function AxisSliders() {
   const [sourceData] = useSourceData();
@@ -20,8 +20,8 @@ function AxisSliders() {
   if (sliders.length === 0) return null;
   return (
     <>
+      <SectionHeading>axes</SectionHeading>
       <Grid>{sliders}</Grid>
-      <Divider />
     </>
   );
 }

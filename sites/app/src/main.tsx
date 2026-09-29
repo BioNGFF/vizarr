@@ -1,4 +1,4 @@
-import { version } from "@biongff/vizarr";
+import { REPOSITORY_URL, version } from "@biongff/vizarr";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -7,7 +7,8 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-console.log(`vizarr v${version}: https://github.com/BioNGFF/vizarr`);
+// Deliberately a direct console.log rather than the logger
+console.log(`[vizarr] v${version} ${REPOSITORY_URL}`);
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

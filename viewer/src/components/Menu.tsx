@@ -1,23 +1,16 @@
-import {
-  Add,
-  ChevronLeft,
-  ChevronRight,
-  Fullscreen,
-  GitHub,
-  HighlightAlt,
-  InfoOutlined,
-  PanTool,
-  Remove,
-} from "@mui/icons-material";
-import { Box, Dialog, DialogContent, DialogTitle, Divider, IconButton, Tooltip, Typography } from "@mui/material";
+import { Add, ChevronLeft, ChevronRight, Fullscreen, GitHub, HighlightAlt, PanTool, Remove } from "@mui/icons-material";
+import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
 import { useAtom, useAtomValue } from "jotai";
-import { useMemo, useReducer, useState } from "react";
+
+import { useReducer } from "react";
+import { version } from "../../../package.json";
 
 import { SourceDataContext, useViewState } from "../hooks";
 import { firstLayerFitAtom, interactionModeAtom, sourceInfoAtom, sourceInfoAtomAtoms } from "../state";
 import { tokens } from "../theme";
 import { REPOSITORY_URL } from "../utils";
 import LayerController from "./LayerController";
+import VizarrLogo from "./VizarrLogo";
 
 /** Zoom applied per press of the zoom in/out buttons. */
 const ZOOM_STEP = 0.5;
@@ -26,23 +19,12 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
   const sourceInfo = useAtomValue(sourceInfoAtom);
   const sourceAtoms = useAtomValue(sourceInfoAtomAtoms);
   const [hidden, toggle] = useReducer((v) => !v, !(open ?? true));
-  const [metadataOpen, setMetadataOpen] = useState(false);
   const [interactionMode, setInteractionMode] = useAtom(interactionModeAtom);
   const [, setViewState] = useViewState();
   const fitViewState = useAtomValue(firstLayerFitAtom);
-  const activeSource = sourceInfo[0];
 
   const zoomBy = (delta: number) =>
     setViewState((current) => (current ? { ...current, zoom: current.zoom + delta } : current));
-
-  const sourceDescription = useMemo(() => {
-    if (!activeSource) {
-      return "Load an image source to inspect and interact with spatial controls.";
-    }
-    const channels = activeSource.names.length;
-    const dimensions = activeSource.loader[0]?.shape?.join(" x ") ?? "unknown shape";
-    return `${channels} channel${channels === 1 ? "" : "s"} available. Base array shape: ${dimensions}.`;
-  }, [activeSource]);
 
   const railButtonSx = {
     color: "common.white",
@@ -83,7 +65,7 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
       <Box
         sx={{
           pointerEvents: "auto",
-          width: hidden ? 0 : { xs: 280, sm: 340 },
+          width: hidden ? 0 : tokens.layout.panelWidth,
           transition: "width 220ms ease",
           overflow: "hidden",
           height: "100%",
@@ -94,16 +76,22 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
             display: "flex",
             flexDirection: "column",
             height: "100%",
-            width: { xs: 280, sm: 340 },
+            width: tokens.layout.panelWidth,
             backgroundColor: tokens.panel.background,
             borderRight: `2px solid ${tokens.panel.border}`,
             boxShadow: `inset -1px 0 0 ${tokens.panel.inset}`,
           }}
           aria-hidden={hidden}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, px: 1, py: 0.5 }}>
-            <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700, letterSpacing: "0.08em" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, px: 1, py: 0.5 }}>
+            <VizarrLogo size={20} />
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, letterSpacing: "0.08em" }}>
               VIZARR
+            </Typography>
+            {/* flex sits here rather than on the wordmark, so the version stays next to
+                it and the spare width still pushes the actions to the right. */}
+            <Typography variant="caption" sx={{ flex: 1, color: "text.secondary" }}>
+              v{version}
             </Typography>
             <Tooltip title="View on GitHub">
               <IconButton
@@ -114,11 +102,6 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
                 aria-label="View vizarr on GitHub"
               >
                 <GitHub />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="More info">
-              <IconButton onClick={() => setMetadataOpen(true)} aria-label="More information about this image">
-                <InfoOutlined />
               </IconButton>
             </Tooltip>
           </Box>
@@ -233,12 +216,6 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
           </Tooltip>
         </Box>
       </Box>
-      <Dialog open={metadataOpen} onClose={() => setMetadataOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{activeSource?.name ?? "No image loaded"}</DialogTitle>
-        <DialogContent dividers>
-          <Typography variant="body2">{sourceDescription}</Typography>
-        </DialogContent>
-      </Dialog>
     </Box>
   );
 }

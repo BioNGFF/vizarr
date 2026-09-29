@@ -1,10 +1,10 @@
-import { MoreHoriz, Remove } from "@mui/icons-material";
-import { Box, Divider, IconButton, NativeSelect, Paper, Popover, Typography } from "@mui/material";
-import React, { useState } from "react";
+import { MoreVert } from "@mui/icons-material";
+import { Box, IconButton, NativeSelect, Paper, Popover, Stack, Typography } from "@mui/material";
 import type { ChangeEvent, MouseEvent } from "react";
+import { useState } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import ColorPalette from "./ColorPalette";
-import { DenseInput, denseSelectSx, popoverPaperSx } from "./controls";
+import { DenseInput, SectionHeading, denseSelectSx, popoverPaperSx } from "./controls";
 
 interface Props {
   channelIndex: number;
@@ -64,33 +64,6 @@ function ChannelOptions({ channelIndex }: Props) {
     });
   };
 
-  const handleRemove = () => {
-    setLayer((prev) => {
-      const { layerProps } = prev;
-      const colors = [...layerProps.colors];
-      const contrastLimits = [...layerProps.contrastLimits];
-      const contrastLimitsRange = [...layerProps.contrastLimitsRange];
-      const selections = [...layerProps.selections];
-      const channelsVisible = [...layerProps.channelsVisible];
-      colors.splice(channelIndex, 1);
-      contrastLimits.splice(channelIndex, 1);
-      contrastLimitsRange.splice(channelIndex, 1);
-      selections.splice(channelIndex, 1);
-      channelsVisible.splice(channelIndex, 1);
-      return {
-        ...prev,
-        layerProps: {
-          ...layerProps,
-          colors,
-          selections,
-          channelsVisible,
-          contrastLimits,
-          contrastLimitsRange,
-        },
-      };
-    });
-  };
-
   const handleSelectionChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setLayer((prev) => {
       const selections = [...prev.layerProps.selections];
@@ -119,7 +92,7 @@ function ChannelOptions({ channelIndex }: Props) {
           cursor: "pointer",
         }}
       >
-        <MoreHoriz />
+        <MoreVert />
       </IconButton>
       <Popover
         id={id}
@@ -135,40 +108,60 @@ function ChannelOptions({ channelIndex }: Props) {
           horizontal: "left",
         }}
       >
-        <Paper sx={popoverPaperSx}>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography variant="caption">remove:</Typography>
-            <IconButton onClick={handleRemove}>
-              <Remove />
-            </IconButton>
-          </Box>
-          <Divider />
-          <Typography variant="caption">selection:</Typography>
-          <Divider />
-          <NativeSelect
-            fullWidth
-            sx={denseSelectSx}
-            id={`layer-${sourceData.name}-channel-select`}
-            onChange={handleSelectionChange}
-            value={layer.layerProps.selections[channelIndex][channel_axis as number]}
-          >
-            {names.map((name, i) => (
-              <option value={i} key={name}>
-                ({i}) {name}
-              </option>
-            ))}
-          </NativeSelect>
-          <Divider />
-          <Typography variant="caption">contrast limits:</Typography>
-          <Divider />
-          <DenseInput value={min} onChange={handleContrastLimitChange} type="number" id="min" fullWidth={false} />
-          <DenseInput value={max} onChange={handleContrastLimitChange} type="number" id="max" fullWidth={false} />
-          <Divider />
-          <Typography variant="caption">color:</Typography>
-          <Divider />
-          <Box sx={{ display: "flex", justifyContent: "center" }}>
-            <ColorPalette handleChange={handleColorChange} />
-          </Box>
+        <Paper sx={{ ...popoverPaperSx, width: 240 }}>
+          <Stack spacing={1.5}>
+            <Box>
+              <SectionHeading>selection</SectionHeading>
+              <NativeSelect
+                fullWidth
+                sx={denseSelectSx}
+                id={`layer-${sourceData.name}-channel-select`}
+                onChange={handleSelectionChange}
+                value={layer.layerProps.selections[channelIndex][channel_axis as number]}
+              >
+                {names.map((name, i) => (
+                  <option value={i} key={name}>
+                    ({i}) {name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </Box>
+
+            <Box>
+              <SectionHeading>contrast limits</SectionHeading>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+                    min
+                  </Typography>
+                  <DenseInput
+                    value={min}
+                    onChange={handleContrastLimitChange}
+                    type="number"
+                    id="min"
+                    sx={{ width: "100%" }}
+                  />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+                    max
+                  </Typography>
+                  <DenseInput
+                    value={max}
+                    onChange={handleContrastLimitChange}
+                    type="number"
+                    id="max"
+                    sx={{ width: "100%" }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            <Box>
+              <SectionHeading>colour</SectionHeading>
+              <ColorPalette handleChange={handleColorChange} />
+            </Box>
+          </Stack>
         </Paper>
       </Popover>
     </>
