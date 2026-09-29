@@ -1,4 +1,4 @@
-import { PauseCircle, PlayCircle, Replay } from "@mui/icons-material";
+import { HelpOutline, PauseCircle, PlayCircle, Replay } from "@mui/icons-material";
 import {
   Button,
   Divider,
@@ -6,6 +6,7 @@ import {
   IconButton,
   LinearProgress,
   MenuItem,
+  Popover,
   Select,
   Tooltip,
   Typography,
@@ -127,21 +128,34 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
   return (
     <>
       <Grid container direction="column" spacing={0.5} sx={{ py: 0.5 }}>
-        <Typography variant="caption">time-lapse:</Typography>
-        <Grid container spacing={0.5} alignItems="center">
-          <Select size="small" variant="standard" value={level} onChange={(e) => setLevel(Number(e.target.value))}>
-            {levels.map(({ i, bytes }) => (
-              <MenuItem key={i} value={i}>
-                <Typography variant="caption">
-                  level {i} (≤ {Math.ceil(bytes / 1024 ** 2)} MB)
-                </Typography>
-              </MenuItem>
-            ))}
-          </Select>
-          <Button size="small" onClick={onPreload} disabled={!levels.some((l) => l.i === level)}>
-            pre-load
-          </Button>
+        <Grid container alignItems="center" justifyContent="space-between">
+          <Typography variant="caption">time-lapse:</Typography>
+          <Help />
         </Grid>
+        <Select
+          fullWidth
+          size="small"
+          variant="standard"
+          value={level}
+          onChange={(e) => setLevel(Number(e.target.value))}
+        >
+          {levels.map(({ i, bytes }) => (
+            <MenuItem key={i} value={i}>
+              <Typography variant="caption">
+                level {i} (≤ {Math.ceil(bytes / 1024 ** 2)} MB)
+              </Typography>
+            </MenuItem>
+          ))}
+        </Select>
+        <Button
+          fullWidth
+          size="small"
+          variant="outlined"
+          onClick={onPreload}
+          disabled={!levels.some((l) => l.i === level)}
+        >
+          load time-lapse
+        </Button>
         {tl.level !== null && (
           <Typography variant="caption">
             level {tl.level}: {status}
@@ -189,6 +203,34 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
         )}
       </Grid>
       <Divider />
+    </>
+  );
+}
+
+/** (?) icon explaining the mode; the load button alone didn't make it obvious. */
+function Help() {
+  const [anchor, setAnchor] = React.useState<HTMLElement | null>(null);
+  return (
+    <>
+      <IconButton size="small" aria-label="about time-lapse mode" onClick={(e) => setAnchor(e.currentTarget)}>
+        <HelpOutline fontSize="inherit" />
+      </IconButton>
+      <Popover
+        open={anchor !== null}
+        anchorEl={anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Typography variant="caption" component="div" sx={{ p: 1.5, maxWidth: 260, lineHeight: 1.6 }}>
+          Plays the image over time, smoothly.
+          <br />
+          1. Pick a resolution level (lower = faster, less memory).
+          <br />
+          2. Load it: the whole level is downloaded into memory once.
+          <br />
+          3. Then scrub T or press play; nothing is fetched while playing.
+        </Typography>
+      </Popover>
     </>
   );
 }
