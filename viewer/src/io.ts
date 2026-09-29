@@ -320,7 +320,7 @@ export async function loadSources(sources: string[]) {
     sources.map(async (source, index) => {
       const sourceData = await createSourceData({ source: source });
       return sourceData.map((data, subIndex) => {
-        const id = Math.random().toString(36).slice(2);
+        const id = utils.sourceId(source, index, subIndex);
         if (!data.name) {
           data.name = sourceData.length > 1 ? `image_${index}_${subIndex}` : `image_${index}`;
         }
