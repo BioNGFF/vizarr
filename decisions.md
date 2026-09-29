@@ -8,7 +8,7 @@
 ## User path
 - In time-lapse mode the time-lapse block comes first in the sidebar (above axis sliders and opacity); a (?) popover explains the mode. Playback controls are always visible but greyed out until pre-load, with the hover hint "pre-load needed for time-lapse" (feedback: "pre-load" alone didn't read as time-lapse).
 - Pick level → pre-load → navigate / play.
-- The T slider and Play appear only after pre-load has finished.
+- The T slider works from the start, as in normal vizarr (tiled, updates on release). After pre-load it scrubs live from memory; playback controls are enabled only then.
 
 ## Level picker
 - Shows each level's full uncompressed size (all t/z/c) as "≤ N MB".

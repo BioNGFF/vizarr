@@ -3,7 +3,7 @@ import { styled } from "@mui/material/styles";
 import { useAtomValue } from "jotai";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
-import { timelapseModeAtom } from "../../timelapse";
+import { timelapseFamily, timelapseModeAtom } from "../../timelapse";
 import DimensionOptions from "./AxisOptions";
 
 const DenseSlider = styled(Slider)`
@@ -28,7 +28,9 @@ function AxisSlider({ axisIndex, max }: Props) {
   }
   // state of the slider to update UI while dragging
   const [value, setValue] = React.useState(0);
-  const liveScrub = useAtomValue(timelapseModeAtom);
+  // time-lapse mode, once a level is loaded: frames are in memory, so follow the slider while dragging
+  const loaded = useAtomValue(timelapseFamily(sourceData.id)).phase === "ready";
+  const liveScrub = useAtomValue(timelapseModeAtom) && loaded;
 
   // If axis index change externally, need to update state
   React.useEffect(() => {
