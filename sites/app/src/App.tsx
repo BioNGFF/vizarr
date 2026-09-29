@@ -1,8 +1,8 @@
 import { type ViewState, type ViewerInfo, Vizarr, theme } from "@biongff/vizarr";
 
 import { AnndataController, AnndataProvider, type labelColor } from "@biongff/anndata-zarr";
-import { RoiSelector, useRoiDeckExtension } from "@biongff/roi-selector";
 import type { PendingRoi, RoiDrawState, SavedRoi } from "@biongff/roi-selector";
+import { RoiSelector, useRoiDeckExtension } from "@biongff/roi-selector";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import debounce from "just-debounce-it";
@@ -28,8 +28,6 @@ function parseViewStateFromUrl(): ViewState | undefined {
 }
 
 export default function App() {
-  const urlString = window.location.href;
-
   React.useEffect(() => {
     const url = new URL(window.location.href);
     if (!url.searchParams.has("roi")) {
@@ -38,16 +36,17 @@ export default function App() {
     }
   }, []);
 
+  // Read once on mount. These are inputs; the URL writes below are outputs, kept so a
+  // view can be shared by link.
   const { sources, viewState, enableRoi, tableURLs } = React.useMemo(() => {
-    const url = new URL(urlString);
-    const { searchParams } = url;
+    const { searchParams } = new URL(window.location.href);
     return {
       sources: searchParams.getAll("source"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
       tableURLs: searchParams.getAll("anndata"),
     };
-  }, [urlString]);
+  }, []);
 
   // Keyed by source index rather than a fixed-length array, so it stays correct if the
   // number of sources in the URL changes.

@@ -181,6 +181,14 @@ function VizarrViewerComponent({
   children,
   logger,
 }: VizarrViewerProps) {
+  // Compared by value: a host rebuilding the array each render would otherwise reload
+  // every source, which resets all layer state.
+  const sourcesRef = React.useRef(sources);
+  if (sourcesRef.current.join("\u0000") !== sources.join("\u0000")) {
+    sourcesRef.current = sources;
+  }
+  const stableSources = sourcesRef.current;
+
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
@@ -231,13 +239,13 @@ function VizarrViewerComponent({
     ),
   );
   React.useEffect(() => {
-    if (sources.length === 0) {
+    if (stableSources.length === 0) {
       log.debug("No sources provided, nothing to load");
       return;
     }
     let cancelled = false;
-    log.debug("Loading sources", { sources });
-    loadSources(sources)
+    log.debug("Loading sources", { sources: stableSources });
+    loadSources(stableSources)
       .then((results) => {
         if (cancelled) {
           return;
@@ -279,7 +287,7 @@ function VizarrViewerComponent({
     return () => {
       cancelled = true;
     };
-  }, [sources, setSourceInfo, setSourceError, addSourceWarning]);
+  }, [stableSources, setSourceInfo, setSourceError, addSourceWarning]);
 
   // Recolouring is applied to the loaded layer state, so it must also run once the
   // sources themselves arrive (colours can be selected before the image has loaded).
@@ -295,7 +303,7 @@ function VizarrViewerComponent({
       {redirectObj === null && (
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
           <ViewerBridge
-            sourceUrls={sources}
+            sourceUrls={stableSources}
             onViewStateChange={onViewStateChange}
             onViewerStateChange={onViewerStateChange}
             additionalLayers={additionalLayers}
