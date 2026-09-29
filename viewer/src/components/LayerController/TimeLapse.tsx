@@ -99,17 +99,14 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
   React.useEffect(() => {
     if (!playing || !ready) return;
     const id = setInterval(() => {
-      const next = tRef.current + 1;
-      if (next >= nT) return setPlaying(false); // stop at the end
+      const next = (tRef.current + 1) % nT; // loop: after the last t, back to 0
       tRef.current = next;
       setT(next);
     }, 1000 / fps);
     return () => clearInterval(id);
   }, [playing, ready, fps, nT, setT]);
   const onPlay = () => {
-    if (playing) return setPlaying(false);
-    if (t + 1 >= nT) setT(0); // at the end: restart from the start
-    setPlaying(true);
+    setPlaying(!playing);
   };
 
   const status = {

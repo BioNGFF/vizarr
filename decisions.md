@@ -28,7 +28,7 @@
 
 ## Playback
 - Play/Pause toggle and a restart (to t=0) button; fps presets 1–60, default 5 fps.
-- Play stops at the last t; pressing Play at the end restarts from 0.
+- Play loops: after the last t it continues from 0 (no toggle).
 - Scrubbing the T slider updates the view live.
 - Elapsed time since t=0 (t × time-axis scale from the OME-Zarr metadata) is shown top-right as HH:MM:SS.s; unknown units show as "value unit".
 
