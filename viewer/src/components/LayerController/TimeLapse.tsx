@@ -132,30 +132,26 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
           <Typography variant="caption">time-lapse:</Typography>
           <Help />
         </Grid>
-        <Select
-          fullWidth
-          size="small"
-          variant="standard"
-          value={level}
-          onChange={(e) => setLevel(Number(e.target.value))}
-        >
-          {levels.map(({ i, bytes }) => (
-            <MenuItem key={i} value={i}>
-              <Typography variant="caption">
-                level {i} (≤ {Math.ceil(bytes / 1024 ** 2)} MB)
-              </Typography>
-            </MenuItem>
-          ))}
-        </Select>
-        <Button
-          fullWidth
-          size="small"
-          variant="outlined"
-          onClick={onPreload}
-          disabled={!levels.some((l) => l.i === level)}
-        >
-          load time-lapse
-        </Button>
+        <Grid container spacing={0.5} alignItems="center" wrap="nowrap">
+          <Select
+            size="small"
+            variant="standard"
+            value={level}
+            onChange={(e) => setLevel(Number(e.target.value))}
+            sx={{ flex: 1, minWidth: 0 }}
+          >
+            {levels.map(({ i, bytes }) => (
+              <MenuItem key={i} value={i}>
+                <Typography variant="caption">
+                  level {i} (≤ {Math.ceil(bytes / 1024 ** 2)} MB)
+                </Typography>
+              </MenuItem>
+            ))}
+          </Select>
+          <Button size="small" onClick={onPreload} disabled={!levels.some((l) => l.i === level)}>
+            pre-load
+          </Button>
+        </Grid>
         {tl.level !== null && (
           <Typography variant="caption">
             level {tl.level}: {status}
@@ -173,15 +169,16 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
             }
           />
         )}
-        {ready && (
-          <Grid container alignItems="center" justifyContent="space-between">
-            <Tooltip title="restart from t=0">
-              <IconButton size="small" aria-label="restart" onClick={() => setT(0)}>
+        {/* always visible so the mode is discoverable; disabled (greyed) until a level is loaded */}
+        <Tooltip title={ready ? "" : "pre-load needed for time-lapse"} followCursor>
+          <Grid container alignItems="center" justifyContent="space-between" sx={{ opacity: ready ? 1 : 0.4 }}>
+            <Tooltip title={ready ? "restart from t=0" : ""}>
+              <IconButton size="small" aria-label="restart" onClick={() => setT(0)} disabled={!ready}>
                 <Replay fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={playing ? "pause" : "play"}>
-              <IconButton aria-label={playing ? "pause" : "play"} onClick={onPlay} sx={{ p: 0.25 }}>
+            <Tooltip title={ready ? (playing ? "pause" : "play") : ""}>
+              <IconButton aria-label={playing ? "pause" : "play"} onClick={onPlay} sx={{ p: 0.25 }} disabled={!ready}>
                 {playing ? <PauseCircle sx={{ fontSize: 36 }} /> : <PlayCircle sx={{ fontSize: 36 }} />}
               </IconButton>
             </Tooltip>
@@ -192,6 +189,7 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
               onChange={(e) => setFps(Number(e.target.value))}
               renderValue={(v) => <Typography variant="caption">{v} fps</Typography>}
               aria-label="frames per second"
+              disabled={!ready}
             >
               {FPS.map((f) => (
                 <MenuItem key={f} value={f}>
@@ -200,7 +198,7 @@ function Panel({ tAxis, nT }: { tAxis: number; nT: number }) {
               ))}
             </Select>
           </Grid>
-        )}
+        </Tooltip>
       </Grid>
       <Divider />
     </>

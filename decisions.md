@@ -6,7 +6,7 @@
 - OME-Zarr 0.4 (Zarr v2, whole chunks) and >= 0.5 (Zarr v3, whole shards). 0.4 not yet verified in a browser.
 
 ## User path
-- In time-lapse mode the time-lapse block comes first in the sidebar (above axis sliders and opacity); a (?) popover explains the mode, and the button reads "load time-lapse" (feedback: "pre-load" didn't read as time-lapse).
+- In time-lapse mode the time-lapse block comes first in the sidebar (above axis sliders and opacity); a (?) popover explains the mode. Playback controls are always visible but greyed out until pre-load, with the hover hint "pre-load needed for time-lapse" (feedback: "pre-load" alone didn't read as time-lapse).
 - Pick level → pre-load → navigate / play.
 - The T slider and Play appear only after pre-load has finished.
 
