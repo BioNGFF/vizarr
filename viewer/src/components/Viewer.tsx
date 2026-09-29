@@ -69,8 +69,10 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
       return layers;
     }
     const loader = resolveLoaderFromLayerProps(firstLayer.props);
-    if (Array.isArray(loader) && loader?.[0]?.meta?.physicalSizes?.x) {
-      const { size, unit } = loader[0].meta.physicalSizes.x;
+    // multiscale: first level; time-lapse pins a single (un-tiled) level whose meta is rescaled to match
+    const base = Array.isArray(loader) ? loader[0] : loader;
+    if (base?.meta?.physicalSizes?.x) {
+      const { size, unit } = base.meta.physicalSizes.x;
       const scalebar = new ScaleBarLayer({
         id: "scalebar",
         size: size / firstLayer.props.modelMatrix[0],

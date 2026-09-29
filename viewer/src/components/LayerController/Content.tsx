@@ -1,5 +1,6 @@
 import { AccordionDetails, Divider, Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useAtomValue } from "jotai";
 import React from "react";
 
 import AcquisitionController from "./AcquisitionController";
@@ -8,8 +9,10 @@ import AxisSliders from "./AxisSliders";
 import ChannelController from "./ChannelController";
 import Labels from "./Labels";
 import OpacitySlider from "./OpacitySlider";
+import TimeLapse from "./TimeLapse";
 
 import { useLayerState } from "../../hooks";
+import { timelapseModeAtom } from "../../timelapse";
 import { range } from "../../utils";
 
 const Details = styled(AccordionDetails)`
@@ -21,21 +24,35 @@ const Details = styled(AccordionDetails)`
 function Content() {
   const [layer] = useLayerState();
   const nChannels = layer.layerProps.selections.length;
+  const timelapse = useAtomValue(timelapseModeAtom); // time-lapse mode: its block goes first
+  const opacity = (
+    <Grid>
+      <Grid container justifyContent="space-between">
+        <Grid size={{ xs: 3 }}>
+          <Typography variant="caption">opacity:</Typography>
+        </Grid>
+        <Grid size={{ xs: 8 }}>
+          <OpacitySlider />
+        </Grid>
+      </Grid>
+    </Grid>
+  );
   return (
     <Details>
       <Grid container direction="column">
         <AcquisitionController />
-        <Grid>
-          <Grid container justifyContent="space-between">
-            <Grid size={{ xs: 3 }}>
-              <Typography variant="caption">opacity:</Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <OpacitySlider />
-            </Grid>
-          </Grid>
-        </Grid>
-        <AxisSliders />
+        {timelapse ? (
+          <>
+            <TimeLapse />
+            <AxisSliders />
+            {opacity}
+          </>
+        ) : (
+          <>
+            {opacity}
+            <AxisSliders />
+          </>
+        )}
         <Grid container justifyContent="space-between">
           <Grid size={{ xs: 3 }}>
             <Typography variant="caption">channels:</Typography>

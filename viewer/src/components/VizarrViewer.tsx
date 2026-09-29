@@ -22,8 +22,10 @@ import {
   viewportAtom,
 } from "../state";
 import theme from "../theme";
+import { timelapseModeAtom } from "../timelapse";
 import Menu from "./Menu";
 import { InfoSnackbar } from "./Snackbar";
+import TimeStamp from "./TimeStamp";
 import Viewer from "./Viewer";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
@@ -50,6 +52,8 @@ export interface VizarrViewerProps {
   pluginCursor?: string;
   onPluginClick?: (coordinate: [number, number]) => boolean;
   onPluginHover?: (coordinate: [number, number] | null) => void;
+  /** Enable time-lapse mode (pre-load + playback panel). */
+  timelapse?: boolean;
   children?: React.ReactNode;
 }
 
@@ -116,6 +120,7 @@ function ViewerBridge({
         onPluginClick={onPluginClick}
         onPluginHover={onPluginHover}
       />
+      <TimeStamp />
       {children}
     </>
   );
@@ -130,6 +135,7 @@ function VizarrViewerComponent({
   pluginCursor,
   onPluginClick,
   onPluginHover,
+  timelapse = false,
   children,
 }: VizarrViewerProps) {
   const setSourceInfo = useSetAtom(sourceInfoAtom);
@@ -138,6 +144,8 @@ function VizarrViewerComponent({
   const redirectObj = useAtomValue(redirectObjAtom);
   const setSourceError = useSetAtom(sourceErrorAtom);
   const sourceWarning = useAtomValue(sourceWarningAtom);
+  const setTimelapseMode = useSetAtom(timelapseModeAtom);
+  React.useEffect(() => setTimelapseMode(timelapse), [timelapse, setTimelapseMode]);
   React.useEffect(() => {
     if (initialViewState) {
       setViewStateAtom(initialViewState);

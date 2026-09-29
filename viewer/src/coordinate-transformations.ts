@@ -160,6 +160,14 @@ export function getPhysicalSizes(axes: Ome.Axis[], transformations: Ome.Coordina
       acc[name] = { size: ct[matrixIndices[name as keyof typeof matrixIndices]], unit: unit ?? "" };
       return acc;
     }, {});
-  // @TODO: get t size from multiscales.coordinateTransformations if axis is present
+  // time step: product of the "scale" entries at the time axis (dataset-level transformations only)
+  const tIndex = axes.findIndex((a) => a.type === "time");
+  if (tIndex !== -1) {
+    const size = transformations.reduce(
+      (acc, tr) => (tr.type === "scale" && "scale" in tr && Array.isArray(tr.scale) ? acc * tr.scale[tIndex] : acc),
+      1,
+    );
+    physicalSizes.t = { size, unit: axes[tIndex].unit ?? "" };
+  }
   return physicalSizes;
 }
