@@ -1,5 +1,4 @@
 import { Box, IconButton, Tooltip } from "@mui/material";
-import React from "react";
 import { COLORS, hexToRGB } from "../../utils";
 
 const RGB_COLORS: [string, [number, number, number]][] = Object.entries(COLORS).map(([name, hex]) => [
@@ -9,11 +8,6 @@ const RGB_COLORS: [string, [number, number, number]][] = Object.entries(COLORS).
 
 const SWATCH = 18;
 
-/**
- * Swatches laid out with a flex row and a gap. This previously used MUI's `Container`,
- * which is meant for page-level gutters and brought its own responsive max-width and
- * padding to a row of six 16px buttons.
- */
 function ColorPalette({
   handleChange,
 }: {

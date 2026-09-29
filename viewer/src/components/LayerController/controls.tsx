@@ -5,12 +5,6 @@ import type React from "react";
 
 import { tokens } from "../../theme";
 
-/**
- * Shared styling for the controls panel's rows, so the sections inside it read as one
- * set of controls. Several of these were previously duplicated verbatim across files,
- * or written as inline styles that bypassed the theme.
- */
-
 /** Group heading, matching the "Spatial Controls" label on the panel itself. */
 export const sectionLabelSx: SxProps<Theme> = {
   color: "text.secondary",

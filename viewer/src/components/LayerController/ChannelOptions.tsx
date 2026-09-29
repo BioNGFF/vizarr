@@ -1,7 +1,7 @@
 import { MoreVert } from "@mui/icons-material";
 import { Box, IconButton, NativeSelect, Paper, Popover, Stack, Typography } from "@mui/material";
-import React, { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
+import { useState } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import ColorPalette from "./ColorPalette";
 import { DenseInput, SectionHeading, denseSelectSx, popoverPaperSx } from "./controls";
@@ -129,8 +129,6 @@ function ChannelOptions({ channelIndex }: Props) {
 
             <Box>
               <SectionHeading>contrast limits</SectionHeading>
-              {/* Labelled: two bare number fields side by side gave no clue which was
-                  which. */}
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>

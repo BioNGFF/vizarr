@@ -1,10 +1,9 @@
 /**
- * The vizarr mark, inlined rather than imported from assets/.
+ * The vizarr mark, inlined rather than imported from assets.
  *
  * The viewer is published as a library, so it cannot reference a file outside its own
  * package, and inlining also spares consumers from needing an SVG loader in their
- * bundler. It is the mark only: the wordmark variant would duplicate the adjacent
- * "VIZARR" text.
+ * bundler.
  */
 
 // Intrinsic ratio of the artwork, so a caller only has to choose a height.

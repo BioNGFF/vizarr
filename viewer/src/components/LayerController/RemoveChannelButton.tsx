@@ -2,10 +2,6 @@ import { Delete } from "@mui/icons-material";
 import { IconButton, Tooltip } from "@mui/material";
 import { useLayerState } from "../../hooks";
 
-/**
- * Removing a channel was previously only reachable through the overflow menu, which is
- * a lot of clicks for one of the two things you can do to a channel.
- */
 function RemoveChannelButton({ channelIndex, name }: { channelIndex: number; name: string }) {
   const [, setLayer] = useLayerState();
 

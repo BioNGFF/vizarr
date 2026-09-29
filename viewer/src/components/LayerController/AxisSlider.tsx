@@ -53,8 +53,6 @@ function AxisSlider({ axisIndex, max }: Props) {
             </ControlLabel>
           </Grid>
           <Grid size={{ xs: 1 }}>
-            {/* Right aligned so it lines up with the channel rows' overflow buttons,
-                which sit at the panel edge rather than at the start of their cell. */}
             <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
               <DimensionOptions axisIndex={axisIndex} max={max} />
             </Box>

@@ -1,5 +1,4 @@
 import { Grid } from "@mui/material";
-import React from "react";
 import { useSourceData } from "../../hooks";
 import AxisSlider from "./AxisSlider";
 import { SectionHeading } from "./controls";
@@ -18,8 +17,6 @@ function AxisSliders() {
     })
     .map(([name, i, size]) => <AxisSlider key={name} axisIndex={i} max={size - 1} />);
 
-  // The heading lives here rather than in Content so that it disappears along with the
-  // sliders when every non-YX axis has size 1, instead of labelling nothing.
   if (sliders.length === 0) return null;
   return (
     <>

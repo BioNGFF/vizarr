@@ -1,6 +1,5 @@
 import { ExpandMore } from "@mui/icons-material";
 import { AccordionSummary, Box, Typography } from "@mui/material";
-import React from "react";
 import { useSourceData } from "../../hooks";
 import { tokens } from "../../theme";
 import LayerFitToViewportButton from "./LayerFitToViewportButton";
@@ -27,7 +26,7 @@ function Header({ name }: { name: string }) {
         "&:hover": { backgroundColor: tokens.rail.active },
         borderBottom: `1px solid ${tokens.rail.border}`,
         "&.Mui-expanded": { minHeight: ROW_HEIGHT },
-        // Puts the caret before the content instead of after it, so the disclosure sits
+        // Caret before the content, so the disclosure sits
         // at the start of the row and the layer's own actions stay grouped at the end.
         flexDirection: "row-reverse",
         gap: 0.5,
