@@ -18,7 +18,6 @@ files.map(async (file) => {
       const sourceData = await createSourceData({
         source: description.source,
       });
-      console.log(sourceData[0]);
       await writeImageYaml(description.source, file, imagesPath);
     }, 20000);
   }

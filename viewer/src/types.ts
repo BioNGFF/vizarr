@@ -139,6 +139,15 @@ declare namespace Ome {
     };
   }
 
+  interface ImageLabelsList {
+    labels: string[];
+  }
+
+  interface LabelImage {
+    multiscales: Multiscale[];
+    "image-label": ImageLabel;
+  }
+
   type Attrs =
     | { multiscales: Multiscale[] }
     | { omero: Omero; multiscales: Multiscale[] }

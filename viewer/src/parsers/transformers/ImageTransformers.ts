@@ -1,37 +1,32 @@
-export const imageTransformers = [
-  { version: "v01", transformer: transformImagev01 },
-  { version: "v02", transformer: transformImagev02 },
-  { version: "v03", transformer: transformImagev03 },
-  { version: "v04", transformer: transformImagev04 },
-  { version: "v05", transformer: transformImagev05 },
-  { version: "v06", transformer: transformImagev06 },
-];
+/**
+ *@module
+ *Metadata transformations applied to all OME-NGFF zarr metadata
+ */
 
-export function transformImagev01(image) {
+export function transformImagev01(image: unknown) {
   return image;
 }
 
-export function transformImagev02(image) {
+export function transformImagev02(image: unknown) {
   return image;
 }
 
-export function transformImagev03(image) {
+export function transformImagev03(image: unknown) {
   return image;
 }
 
-export function transformImagev04(image) {
+export function transformImagev04(image: unknown) {
   return image;
 }
 
-export function transformImagev05(image) {
+export function transformImagev05<T extends object>(image: { ome: T }): T {
   return removeOmeAttribute(image);
 }
 
-export function transformImagev06(image) {
+export function transformImagev06<T extends object>(image: { ome: T }): T {
   return removeOmeAttribute(image);
 }
 
-export function removeOmeAttribute(attrs) {
-  console.log("REMOVING OME ATTRIBUTE");
+export function removeOmeAttribute<T extends object>(attrs: { ome: T }): T {
   return { ...attrs.ome };
 }

@@ -1,7 +1,6 @@
 import { test } from "vitest";
 import { open } from "zarrita";
 import { createSourceData } from "../src/io";
-import { loadBf2Raw } from "../src/providers/bioformats2raw";
 import * as utils from "../src/utils";
 
 const sources = [

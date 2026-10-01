@@ -319,7 +319,7 @@ importers:
         version: 0.6.2
       zod-ome-ngff:
         specifier: github:biongff/zod-ome-ngff#dev
-        version: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/445ae2f715e49f493bc4263c87d416aaf96fad9b(zod@3.21.0)
+        version: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db(zod@3.21.0)
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
@@ -3891,8 +3891,8 @@ packages:
   zarrita@0.6.2:
     resolution: {integrity: sha512-8IV+2bWt5yiHNVK9GVEVK1tscpqDcJj8iz5cIKFOiWiWYUsK4V5njgMtnpkvKu6L7K+Og6zUShd8f+dwb6LvTA==}
 
-  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/445ae2f715e49f493bc4263c87d416aaf96fad9b:
-    resolution: {tarball: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/445ae2f715e49f493bc4263c87d416aaf96fad9b}
+  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db:
+    resolution: {tarball: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db}
     version: 0.3.0
     engines: {pnpm: ^9.0.0}
     peerDependencies:
@@ -7586,7 +7586,7 @@ snapshots:
       '@zarrita/storage': 0.1.4
       numcodecs: 0.3.2
 
-  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/445ae2f715e49f493bc4263c87d416aaf96fad9b(zod@3.21.0):
+  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db(zod@3.21.0):
     dependencies:
       zod: 3.21.0
 

@@ -93,7 +93,10 @@ function getDefaultSeries(length?: number) {
   return Array.from({ length: length }, (_, i) => i.toString());
 }
 
-export async function getBf2RawImagePaths(grp: zarr.Group<zarr.Readable>, parsedData): Promise<string[]> {
+export async function getBf2RawImagePaths(
+  grp: zarr.Group<zarr.Readable>,
+  parsedData: bf2raw.Bf2RawOMEXML,
+): Promise<string[]> {
   let series: string[] | undefined;
   try {
     const OMENode = await zarr.open(grp.resolve("OME"), { kind: "group" });
@@ -129,7 +132,9 @@ export async function loadBf2Raw(
 
   const xmlString = await xml.text();
   const xmlAsObject = OMEXMLToObject(xmlString);
-  const parsedData = bf2raw.parseOMEXML(xmlAsObject);
+
+  //@to-do temporary assertion until trasnformer layer fully implemented
+  const parsedData = bf2raw.parseOMEXML(xmlAsObject) as bf2raw.Bf2RawOMEXML;
 
   let series: string[] | undefined;
   try {

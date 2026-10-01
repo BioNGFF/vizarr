@@ -5,10 +5,11 @@ import * as utils from "./utils";
 import { ZarrPixelSource } from "./ZarrPixelSource";
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
 import { createSourceData } from "./io";
-import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
-import { getLabelSchemas, parse } from "./parsers/parse";
-import { getBf2rawOMEXML, getBf2RawImagePaths } from "./providers/bioformats2raw";
+import { parse } from "./parsers/parse";
+import { getBf2RawImagePaths, getBf2rawOMEXML } from "./providers/bioformats2raw";
 import { openZarrRoot } from "./services/http";
+import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
+import type { Bf2RawOMEXML } from "./parsers/bioformats2raw";
 
 export async function loadScene(
   config: ImageLayerConfig,
@@ -218,10 +219,8 @@ export async function loadPlate(
 
   // Create loader for every Well. Some loaders may be undefined if Wells are missing.
   const mapper = async ([key, path]: string[]) => {
-    // @ts-expect-error - we don't need the meta for these arrays
     let arr: zarr.Array<zarr.DataType, zarr.Readable> = await zarr.open(grp.resolve(path), {
       kind: "array",
-      attrs: false,
     });
     return [key, arr] as const;
   };
@@ -429,8 +428,9 @@ export async function loadOmeMultiscales(
     labelGroup = await zarr.open(labelStore, { kind: "group" });
     labelPath = "";
     const labelAttrs = parse(labelGroup.attrs);
-    if (labelAttrs.type === "Bf2RawSchema") {
-      const b2frawAttrs = await getBf2rawOMEXML(config.label);
+    if (labelAttrs?.type === "bf2Raw") {
+      //@to-do temporary until transformer layer fully implemented
+      const b2frawAttrs = (await getBf2rawOMEXML(config.label)) as Bf2RawOMEXML;
       labels = await getBf2RawImagePaths(labelGroup, b2frawAttrs);
     } else {
       labels = [""];
@@ -458,16 +458,15 @@ export async function loadOmeMultiscales(
 }
 
 async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: string): Promise<ImageLabels[number]> {
-  const url = new URL(
-    root.path.replace(/^\/+/, ""),
-    root.store.url.endsWith("/") ? root.store.url : root.store.url + "/",
-  ).href;
+  const store = root.store as zarr.FetchStore;
+  const url = new URL(root.path.replace(/^\/+/, ""), store.url).href;
   const sourceData = await createSourceData({ source: url });
   const node = await openZarrRoot(url);
   const parsedAttrs = parse(node.attrs);
-  const attrs = parsedAttrs.data;
-  const colors = (attrs["image-label"]?.colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));
 
+  //@to-do temporary until transformation layer implemented
+  const attrs = parsedAttrs?.data as Ome.LabelImage;
+  const colors = (attrs["image-label"]?.colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));
   const labelSource = {
     name,
     modelMatrix: sourceData[0].model_matrix,
@@ -477,10 +476,12 @@ async function loadOmeImageLabel(root: zarr.Location<zarr.Readable>, name: strin
   return labelSource;
 }
 
-function resolveLabelAttrs(attrs: unknown): string[] {
-  const parsedResult = parse(attrs, getLabelSchemas());
-  if (parsedResult.success) {
-    return parsedResult.data.labels;
+function resolveLabelAttrs(attrs: object): string[] {
+  const parsedResult = parse(attrs);
+  if (parsedResult?.success) {
+    //*to-do temporary until transformation layer fully implemented
+    const data = parsedResult.data as Ome.ImageLabelsList;
+    return data.labels;
   }
   return [];
 }

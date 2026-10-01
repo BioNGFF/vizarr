@@ -84,12 +84,14 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
     const parsedData = parse(node.attrs);
-    if (parsedData.version === "v06") {
-      if (parsedData.type === "SceneSchema") {
+
+    //@to-do should only depend on image type, e.g. scene, well, multiscale, rather than version.
+    //Transformer layer will fix this be normalizing all versions
+    if (parsedData?.version === "0.6.dev3" || parsedData?.version === "0.6") {
+      if (parsedData?.type === "scene") {
         // TODO
         //Temporary assertion until parsing layer implemented
-        const data = parsedData.data as z.infer<typeof v06.SceneSchema>;
-        const scene = data.scene as Ome.Scene;
+        const scene = parsedData.data?.scene as Ome.Scene;
         const sceneSources = await loadScene(config, node, scene);
         return sceneSources;
       }
@@ -116,8 +118,7 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
         return [await loadPlate(config, parent, parentAttrs.plate)];
       }
     }
-
-    if (parsedData.type === "Bf2RawSchema") {
+    if (parsedData?.type === "bf2Raw") {
       const sources = await loadBf2Raw(config, node, parsedData.data as Ome.Bioformats2rawlayout);
       return sources;
     }
