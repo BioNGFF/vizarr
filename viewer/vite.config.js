@@ -12,6 +12,7 @@ export default defineConfig({
     // default on a loaded CI runner. Set here rather than in the root config: a project
     // does not inherit test options from the config that lists it.
     testTimeout: 30000,
+    environment: "happy-dom",
   },
   build: {
     lib: {

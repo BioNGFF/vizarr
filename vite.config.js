@@ -6,5 +6,6 @@ export default defineConfig({
   plugins: [react()],
   test: {
     testTimeout: 30000,
+    environment: "happy-dom",
   },
 });

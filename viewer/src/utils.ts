@@ -316,19 +316,18 @@ export async function calcDataRange(
   source: ZarrPixelSource,
   selection: Array<number>,
 ): Promise<[min: number, max: number]> {
-  return [0, 255];
-  // const { data } = await source.getRaster({ selection });
-  // let minVal = Number.POSITIVE_INFINITY;
-  // let maxVal = Number.NEGATIVE_INFINITY;
-  // for (let i = 0; i < data.length; i++) {
-  //   if (data[i] > maxVal) maxVal = data[i];
-  //   if (data[i] < minVal) minVal = data[i];
-  // }
-  // if (minVal === maxVal) {
-  //   minVal = 0;
-  //   maxVal = 1;
-  // }
-  // return [minVal, maxVal];
+  const { data } = await source.getRaster({ selection });
+  let minVal = Number.POSITIVE_INFINITY;
+  let maxVal = Number.NEGATIVE_INFINITY;
+  for (let i = 0; i < data.length; i++) {
+    if (data[i] > maxVal) maxVal = data[i];
+    if (data[i] < minVal) minVal = data[i];
+  }
+  if (minVal === maxVal) {
+    minVal = 0;
+    maxVal = 1;
+  }
+  return [minVal, maxVal];
 }
 
 export async function calcConstrastLimits(

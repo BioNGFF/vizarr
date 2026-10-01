@@ -5,11 +5,11 @@ import * as utils from "./utils";
 import { ZarrPixelSource } from "./ZarrPixelSource";
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
 import { createSourceData } from "./io";
+import type { Bf2RawOMEXML } from "./parsers/bioformats2raw";
 import { parse } from "./parsers/parse";
 import { getBf2RawImagePaths, getBf2rawOMEXML } from "./providers/bioformats2raw";
 import { openZarrRoot } from "./services/http";
 import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
-import type { Bf2RawOMEXML } from "./parsers/bioformats2raw";
 
 export async function loadScene(
   config: ImageLayerConfig,
@@ -389,8 +389,8 @@ export async function loadOmeMultiscales(
     : getDefaultCoordinateSystem(attrs.multiscales);
   const selectedCoordinateSystem = config.coordinateSystem
     ? coordinateSystems.filter((coordinateSystem) => {
-      return coordinateSystem.name === config.coordinateSystem;
-    })[0]
+        return coordinateSystem.name === config.coordinateSystem;
+      })[0]
     : coordinateSystems[0];
   const axes = selectedCoordinateSystem.axes;
 

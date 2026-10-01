@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { v01, v02, v03, v04, v05, v06 } from "zod-ome-ngff";
+import { narrowVersionAndType } from "./shallow-parse";
 import {
   transformImagev01,
   transformImagev02,
@@ -9,7 +10,6 @@ import {
   transformImagev05,
   transformImagev06,
 } from "./transformers/ImageTransformers";
-import { narrowVersionAndType } from "./shallow-parse";
 
 export type Versions = "0.1" | "0.2" | "0.3" | "0.4" | "0.5" | "0.6" | "0.6" | "0.6.dev3";
 export type ImageTypes = "image" | "well" | "plate" | "labels" | "label" | "scene" | "bf2Raw";
@@ -86,11 +86,11 @@ function findEntry<V extends SchemaEntry["version"], K extends SchemaEntry["type
 }
 type ParseResult<E extends SchemaEntry = SchemaEntry> = E extends unknown
   ? {
-    version: E["version"];
-    type: E["type"];
-    data: ReturnType<E["transformer"]>;
-    success: true;
-  }
+      version: E["version"];
+      type: E["type"];
+      data: ReturnType<E["transformer"]>;
+      success: true;
+    }
   : never;
 
 //TO-DO Raise more user-friendly error messages - use zod-validation-error?

@@ -2,9 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect, test } from "vitest";
 import yaml from "yaml";
-import { getYamlFileNames } from "./metadata";
-import { openZarrRoot } from "../src/services/http";
 import { narrowVersionAndType } from "../src/parsers/shallow-parse";
+import { openZarrRoot } from "../src/services/http";
+import { getYamlFileNames } from "./metadata";
 
 const imagesPath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "generic"));
 
