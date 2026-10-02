@@ -193,7 +193,16 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>) {
   );
 
   React.useEffect(() => {
+    const nonTextInputTypes = new Set(["range", "checkbox", "radio", "button", "submit", "reset", "color", "file"]);
+    const isEditableTarget = (target: EventTarget | null) =>
+      (target instanceof HTMLInputElement && !nonTextInputTypes.has(target.type)) ||
+      target instanceof HTMLTextAreaElement ||
+      (target instanceof HTMLElement && target.isContentEditable);
+
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) {
+        return;
+      }
       const lower = event.key.toLowerCase();
       if (lower === "z" || lower === "t") {
         event.preventDefault();
@@ -227,8 +236,10 @@ export function useAxisNavigation(deckRef: React.RefObject<DeckGLRef>) {
     const handleKeyUp = (event: KeyboardEvent) => {
       const lower = event.key.toLowerCase();
       if (lower === "z" || lower === "t") {
-        event.preventDefault();
-        event.stopPropagation();
+        if (!isEditableTarget(event.target)) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
         if (axisScrollKeyRef.current === lower) {
           updateAxisScrollKey(null);
         }

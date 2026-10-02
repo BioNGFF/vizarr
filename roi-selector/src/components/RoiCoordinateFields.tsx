@@ -16,7 +16,9 @@ interface RoiCoordinateFieldsProps {
   imageBounds: ImageBounds | null;
 }
 
-const fieldSx = { color: "#fff", fontSize: 12 };
+// Font size is set on the inner <input> only: setting it on the root shrinks the outline notch below the label width.
+const fieldSx = { color: "#fff", "& .MuiInputBase-input": { fontSize: 12 } };
+const captionSx = { color: "grey.400", display: "block", mb: 1 };
 
 /** Format a physical coordinate for display in labels (up to 2 dp). */
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
@@ -52,12 +54,12 @@ export default function RoiCoordinateFields({
         onChange={(e) => onRoiNameChange(e.target.value)}
         fullWidth
         placeholder="roi_0"
-        slotProps={{ input: { sx: { color: "#fff", fontSize: 12 } } }}
+        slotProps={{ input: { sx: fieldSx } }}
         sx={{ mb: 1 }}
       />
 
       {/* ---- Top-left ---- */}
-      <Typography variant="caption" sx={{ color: "grey.400" }}>
+      <Typography variant="caption" sx={captionSx}>
         Top-left (x₁, y₁)
       </Typography>
       <Grid container spacing={1} sx={{ mb: 1 }}>
@@ -65,13 +67,12 @@ export default function RoiCoordinateFields({
           <TextField
             label={imageBounds ? `x₁ (${fmt(imageBounds.xMin)}–${fmt(imageBounds.xMax)})` : "x₁"}
             size="small"
-            type="number"
             value={coords.x1}
             onChange={(e) => onCoordChange("x1", e.target.value)}
             fullWidth
             slotProps={{
               input: { sx: fieldSx },
-              htmlInput: { min: imageBounds?.xMin, max: imageBounds?.xMax, step: "any" },
+              htmlInput: { inputMode: "decimal" },
             }}
           />
         </Grid>
@@ -79,20 +80,19 @@ export default function RoiCoordinateFields({
           <TextField
             label={imageBounds ? `y₁ (${fmt(imageBounds.yMin)}–${fmt(imageBounds.yMax)})` : "y₁"}
             size="small"
-            type="number"
             value={coords.y1}
             onChange={(e) => onCoordChange("y1", e.target.value)}
             fullWidth
             slotProps={{
               input: { sx: fieldSx },
-              htmlInput: { min: imageBounds?.yMin, max: imageBounds?.yMax, step: "any" },
+              htmlInput: { inputMode: "decimal" },
             }}
           />
         </Grid>
       </Grid>
 
       {/* ---- Bottom-right ---- */}
-      <Typography variant="caption" sx={{ color: "grey.400" }}>
+      <Typography variant="caption" sx={captionSx}>
         Bottom-right (x₂, y₂)
       </Typography>
       <Grid container spacing={1} sx={{ mb: 1 }}>
@@ -100,13 +100,12 @@ export default function RoiCoordinateFields({
           <TextField
             label={imageBounds ? `x₂ (${fmt(imageBounds.xMin)}–${fmt(imageBounds.xMax)})` : "x₂"}
             size="small"
-            type="number"
             value={coords.x2}
             onChange={(e) => onCoordChange("x2", e.target.value)}
             fullWidth
             slotProps={{
               input: { sx: fieldSx },
-              htmlInput: { min: imageBounds?.xMin, max: imageBounds?.xMax, step: "any" },
+              htmlInput: { inputMode: "decimal" },
             }}
           />
         </Grid>
@@ -114,13 +113,12 @@ export default function RoiCoordinateFields({
           <TextField
             label={imageBounds ? `y₂ (${fmt(imageBounds.yMin)}–${fmt(imageBounds.yMax)})` : "y₂"}
             size="small"
-            type="number"
             value={coords.y2}
             onChange={(e) => onCoordChange("y2", e.target.value)}
             fullWidth
             slotProps={{
               input: { sx: fieldSx },
-              htmlInput: { min: imageBounds?.yMin, max: imageBounds?.yMax, step: "any" },
+              htmlInput: { inputMode: "decimal" },
             }}
           />
         </Grid>
@@ -129,7 +127,7 @@ export default function RoiCoordinateFields({
       {/* ---- Z range (only when data has a Z axis) ---- */}
       {hasZAxis && zInfo && (
         <>
-          <Typography variant="caption" sx={{ color: "grey.400" }}>
+          <Typography variant="caption" sx={captionSx}>
             Z range (slice)
           </Typography>
           <Grid container spacing={1} sx={{ mb: 1 }}>
@@ -137,13 +135,12 @@ export default function RoiCoordinateFields({
               <TextField
                 label={`z₁ (0–${zInfo.zMax})`}
                 size="small"
-                type="number"
                 value={coords.z1}
                 onChange={(e) => onCoordChange("z1", e.target.value)}
                 fullWidth
                 slotProps={{
                   input: { sx: fieldSx },
-                  htmlInput: { min: 0, max: zInfo.zMax },
+                  htmlInput: { inputMode: "numeric" },
                 }}
               />
             </Grid>
@@ -151,13 +148,12 @@ export default function RoiCoordinateFields({
               <TextField
                 label={`z₂ (0–${zInfo.zMax})`}
                 size="small"
-                type="number"
                 value={coords.z2}
                 onChange={(e) => onCoordChange("z2", e.target.value)}
                 fullWidth
                 slotProps={{
                   input: { sx: fieldSx },
-                  htmlInput: { min: 0, max: zInfo.zMax },
+                  htmlInput: { inputMode: "numeric" },
                 }}
               />
             </Grid>
@@ -168,7 +164,7 @@ export default function RoiCoordinateFields({
       {/* ---- T range (only when data has a T axis) ---- */}
       {hasTAxis && tInfo && (
         <>
-          <Typography variant="caption" sx={{ color: "grey.400" }}>
+          <Typography variant="caption" sx={captionSx}>
             T range (frame)
           </Typography>
           <Grid container spacing={1} sx={{ mb: 1 }}>
@@ -176,13 +172,12 @@ export default function RoiCoordinateFields({
               <TextField
                 label={`t₁ (0–${tInfo.tMax})`}
                 size="small"
-                type="number"
                 value={coords.t1}
                 onChange={(e) => onCoordChange("t1", e.target.value)}
                 fullWidth
                 slotProps={{
                   input: { sx: fieldSx },
-                  htmlInput: { min: 0, max: tInfo.tMax },
+                  htmlInput: { inputMode: "numeric" },
                 }}
               />
             </Grid>
@@ -190,13 +185,12 @@ export default function RoiCoordinateFields({
               <TextField
                 label={`t₂ (0–${tInfo.tMax})`}
                 size="small"
-                type="number"
                 value={coords.t2}
                 onChange={(e) => onCoordChange("t2", e.target.value)}
                 fullWidth
                 slotProps={{
                   input: { sx: fieldSx },
-                  htmlInput: { min: 0, max: tInfo.tMax },
+                  htmlInput: { inputMode: "numeric" },
                 }}
               />
             </Grid>
