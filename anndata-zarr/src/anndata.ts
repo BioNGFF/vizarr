@@ -9,15 +9,9 @@ const CATEGORY_NAMES_PATH = "categories";
 const CATEGORY_DATA_PATH = "codes";
 const DEFAULT_INDEX_NAME = "_index";
 
-const ZarrAttrsSchema = z.object({
-  "encoding-type": z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]),
-  "encoding-version": z.string(),
-});
+const ZarrAttrsSchema = z.any();
 
-const ZarrObservationAttrsSchema = ZarrAttrsSchema.extend({
-  "column-order": z.array(z.string()),
-  _index: z.string().optional(),
-});
+const ZarrObservationAttrsSchema = z.any();
 
 const AnndataCategoriesSchema = z.array(z.string());
 
@@ -64,9 +58,20 @@ export const fetchDataFromZarr = async (
   slice: (number | null)[] | undefined,
 ): Promise<{ data: number[]; categories?: string[] }> => {
   const root = await fetchZarrGroup(url);
+
   const dataNodeOrGroup = await open(root.resolve(path));
+
   const attrs = parseZarrAttrs(dataNodeOrGroup.attrs);
-  const dataPath = `${path}/${getDataPath(attrs["encoding-type"])}`;
+
+  let encoding_type: string;
+  if (attrs["encoding-type"]) {
+    encoding_type = attrs["encoding-type"];
+  } else {
+    encoding_type = "array";
+  }
+
+  const dataPath = `${path}/${getDataPath(encoding_type)}`;
+
   const { data, dtype } = await getData(root, dataPath, slice);
   if (dtype === "bool") {
     const parsedData = parseBooleanArray(data);
@@ -75,7 +80,7 @@ export const fetchDataFromZarr = async (
       categories: ["false", "true"],
     };
   }
-  if (attrs["encoding-type"] === "categorical") {
+  if (encoding_type === "categorical") {
     const parsedData = parseIntegerArray(data);
     const categoryNamesPath = `${path}/${CATEGORY_NAMES_PATH}`;
     const categories = await getData(root, categoryNamesPath);
@@ -86,7 +91,7 @@ export const fetchDataFromZarr = async (
       categories: categoryNames,
     };
   }
-  if (attrs["encoding-type"] === "array") {
+  if (encoding_type === "array") {
     const parsedData = parseFloatArray(data);
     return {
       data: parsedData,
@@ -145,7 +150,7 @@ export const getObservationNames = async (url: URL): Promise<Array<ObservationMe
     const attrs = parseZarrObservationAttrs(node.attrs);
     const cols = attrs["column-order"];
     const obs = await Promise.all(
-      cols.map(async (col) => {
+      cols.map(async (col: string) => {
         const dataNodeOrGroup = await open(root.resolve(`${OBSERVATION_NAMES_PATH}/${col}`));
         const parsedAttrs = ZarrAttrsSchema.parse(dataNodeOrGroup.attrs);
         const dataPath = `${OBSERVATION_NAMES_PATH}/${col}/${getObservationNamesPath(parsedAttrs["encoding-type"])}`;

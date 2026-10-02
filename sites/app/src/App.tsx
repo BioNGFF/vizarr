@@ -38,10 +38,11 @@ export default function App() {
 
   // Read once on mount. These are inputs; the URL writes below are outputs, kept so a
   // view can be shared by link.
-  const { sources, viewState, enableRoi, tableURLs } = React.useMemo(() => {
+  const { sources, labels, viewState, enableRoi, tableURLs } = React.useMemo(() => {
     const { searchParams } = new URL(window.location.href);
     return {
       sources: searchParams.getAll("source"),
+      labels: searchParams.getAll("label"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
       tableURLs: searchParams.getAll("anndata"),
@@ -135,6 +136,7 @@ export default function App() {
             // The ThemeProvider above already covers the viewer and the plugin panels.
             theme={null}
             sources={sources}
+            labels={labels}
             viewState={viewState}
             onViewerStateChange={setViewerInfo}
             onViewStateChange={handleViewStateChange}

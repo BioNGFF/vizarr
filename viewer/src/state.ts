@@ -36,6 +36,7 @@ export interface ViewState {
 
 interface BaseConfig {
   source: string | zarr.Readable;
+  label?: string;
   axis_labels?: string[];
   name?: string;
   colormap?: string;

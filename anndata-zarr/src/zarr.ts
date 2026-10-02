@@ -15,7 +15,10 @@ export async function getData(
   path: string,
   slice?: (number | null)[],
 ): Promise<{ data: unknown[]; dtype: string }> {
+  console.log("Opening array at path ", root.resolve(path));
   const dataNode = await open(root.resolve(path), { kind: "array" });
+
+  console.log("OPENED array at path ", root.resolve(path));
   const data = await get(dataNode, slice);
   const parsedData = ZarrDataSchema.parse(data);
   try {

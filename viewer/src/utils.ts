@@ -22,13 +22,19 @@ export const MAX_CHANNELS = 6;
  * label settings. Derived from the url and position instead, a reload of the same
  * sources returns the same atoms.
  *
+ * The label url is part of the key because the family hands back a cached atom for a
+ * known id without rebuilding its state: a source whose label changed but whose id did
+ * not would keep layer state describing the label it no longer has.
+ *
  * FNV-1a, base36. Not cryptographic; it only has to separate different urls and stay
  * safe to embed in a DOM id and a deck.gl layer id.
  */
-export function sourceId(source: string, index: number, subIndex: number): string {
+export function sourceId(source: string, index: number, subIndex: number, label = ""): string {
+  // NUL cannot appear in either url, so no pair of inputs shares a key.
+  const key = `${source}\u0000${label}`;
   let hash = 2166136261;
-  for (let i = 0; i < source.length; i++) {
-    hash ^= source.charCodeAt(i);
+  for (let i = 0; i < key.length; i++) {
+    hash ^= key.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
   return `${(hash >>> 0).toString(36)}-${index}-${subIndex}`;
@@ -88,7 +94,7 @@ export async function normalizeStore(source: string | zarr.Readable): Promise<za
   return zarr.root(source);
 }
 
-function ensureAbsolutePath(path: string): `/${string}` {
+export function ensureAbsolutePath(path: string): `/${string}` {
   if (path === "/") return path;
   // @ts-expect-error - path always starts with '/'
   return path.startsWith("/") ? path : `/${path}`;
@@ -342,7 +348,6 @@ export async function calcDataRange(
   source: ZarrPixelSource,
   selection: Array<number>,
 ): Promise<[min: number, max: number]> {
-  if (source.dtype === "Uint8") return [0, 255];
   const { data } = await source.getRaster({ selection });
   let minVal = Number.POSITIVE_INFINITY;
   let maxVal = Number.NEGATIVE_INFINITY;
@@ -514,8 +519,8 @@ export function isOmeWell(attrs: zarr.Attributes): attrs is { well: Ome.Well } {
 
 export function isOmeImageLabel(
   attrs: zarr.Attributes,
-): attrs is { "image-label": Ome.ImageLabel; multiscales: Ome.Multiscale[] } {
-  return "image-label" in attrs && isMultiscales(attrs);
+): attrs is { "image-label"?: Ome.ImageLabel; multiscales: Ome.Multiscale[] } {
+  return isMultiscales(attrs);
 }
 
 export function isOmeMultiscales(attrs: zarr.Attributes): attrs is { omero: Ome.Omero; multiscales: Ome.Multiscale[] } {
@@ -564,7 +569,11 @@ export function rethrowUnless<E extends ReadonlyArray<new (...args: any[]) => Er
   ...ErrorClasses: E
   // biome-ignore lint/suspicious/noExplicitAny: Ok to use any for generic constraint
 ): asserts error is E[number] extends new (...args: any[]) => infer R ? R : never {
-  if (!ErrorClasses.some((ErrorClass) => error instanceof ErrorClass)) {
+  if (
+    !ErrorClasses.some((ErrorClass) => {
+      return error instanceof ErrorClass;
+    })
+  ) {
     throw error;
   }
 }
