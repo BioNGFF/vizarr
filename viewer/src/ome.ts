@@ -5,10 +5,11 @@ import * as utils from "./utils";
 import { ZarrPixelSource } from "./ZarrPixelSource";
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
 import { createSourceData } from "./io";
+import { log } from "./logger";
 import type { Bf2RawOMEXML } from "./parsers/bioformats2raw";
 import { parse } from "./parsers/parse";
 import { getBf2RawImagePaths, getBf2rawOMEXML } from "./providers/bioformats2raw";
-import { openZarrRoot } from "./services/http";
+import { MetadataError, openZarrRoot } from "./services/http";
 import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
 
 export async function loadScene(
@@ -17,11 +18,11 @@ export async function loadScene(
   //No type information for SceneSchema
   scene: Ome.Scene,
 ): Promise<SourceData[]> {
-  console.log("Loading scene: ", config.source);
+  log.debug("Loading scene", { source: config.source });
   const results = await Promise.all(
     scene.coordinateTransformations.map(async (transformation: Ome.SceneTransformationMetadata) => {
       const path = transformation.input.path;
-      console.log(`Creating source data for scene image ${path}`);
+      log.debug("Creating source data for scene image", { path });
       const sourceDatas = await createSourceData({
         source: `${config.source}/${path}`,
         coordinateSystem: transformation.input.name,
@@ -33,7 +34,7 @@ export async function loadScene(
             return transformation.input.path === path;
           },
         );
-        console.log("Applying scene transformations to image: ", config.source);
+        log.debug("Applying scene transformations", { source: config.source });
 
         // @TODO For now we are assuming there is only a single coordinateSystem defined at the scene level
         // Provision is made in the specification for multiple
@@ -380,7 +381,7 @@ export async function loadOmeMultiscales(
   grp: zarr.Group<zarr.Readable>,
   attrs: { multiscales: Ome.Multiscale[] },
 ): Promise<SourceData> {
-  console.log("Loading image: ", config.source);
+  log.debug("Loading image", { source: config.source });
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
   const tileSize = utils.guessTileSize(data[0]);
@@ -474,9 +475,18 @@ async function loadOmeImageLabel(
   const url = new URL(root.path.replace(/^\/+/, ""), store.url).href;
   const node = await openZarrRoot(url);
   const parsedAttrs = parse(node.attrs);
+  // Unlike the callers that only probe what a group is, this one cannot proceed without
+  // an answer. Saying so is what stops the unchecked cast below reaching the user as
+  // "Cannot read properties of undefined".
+  if (!parsedAttrs) {
+    throw new MetadataError(
+      `The label image at ${url} does not match any supported OME-NGFF version.`,
+      "No OME-NGFF schema matched the group attributes.",
+    );
+  }
 
   //@to-do temporary until transformation layer implemented
-  const attrs = parsedAttrs?.data as Ome.LabelImage;
+  const attrs = parsedAttrs.data as Ome.LabelImage;
   const coordinateSystems = attrs.multiscales[0].coordinateSystems
     ? attrs.multiscales[0].coordinateSystems
     : getDefaultCoordinateSystem(attrs.multiscales);

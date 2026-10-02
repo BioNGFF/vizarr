@@ -8,6 +8,7 @@ import type { GetPickingInfoParams, Layer, UpdateParameters } from "deck.gl";
 import { Matrix4, clamp } from "math.gl";
 import type * as zarr from "zarrita";
 import type { ZarrPixelSource } from "../ZarrPixelSource";
+import { log } from "../logger";
 import { transformBox } from "../utils";
 
 type Texture = ReturnType<BitmapLayer["context"]["device"]["createTexture"]>;
@@ -238,7 +239,7 @@ export class GrayscaleBitmapLayer extends BitmapLayer<{
     const [left, bottom, right, top] = bounds as number[];
 
     if (right - left === 0 || top - bottom === 0) {
-      console.log("Picking info has zero-sized bounds");
+      log.debug("Picking info has zero-sized bounds");
       return info;
     }
 
@@ -398,7 +399,7 @@ function createColorTexture(options: {
 
   if (width > maxTextureDimension2D || height > maxTextureDimension2D) {
     if (!SEEN_LUTS.has(source)) {
-      console.warn("[vizarr] Skipping color palette from OME-NGFF `image-label` source: max texture dimension limit.");
+      log.warn("Skipping color palette from OME-NGFF `image-label` source: max texture dimension limit.");
       SEEN_LUTS.add(source);
     }
     return fallback;

@@ -1,8 +1,9 @@
-import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
-import { Grid, IconButton, Slider, Typography } from "@mui/material";
+import { Box, Checkbox, Grid } from "@mui/material";
 import React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import ChannelOptions from "./ChannelOptions";
+import RemoveChannelButton from "./RemoveChannelButton";
+import { ControlLabel, DenseSlider, inlineIconButtonSx } from "./controls";
 
 function ChannelController({ channelIndex }: { channelIndex: number }) {
   const [sourceData] = useSourceData();
@@ -38,43 +39,27 @@ function ChannelController({ channelIndex }: { channelIndex: number }) {
   return (
     <>
       <Grid container justifyContent="space-between" wrap="nowrap">
-        <Grid size={{ xs: 10 }}>
-          <div style={{ width: 165, overflow: "hidden", textOverflow: "ellipsis" }}>
-            <Typography variant="caption" noWrap>
-              {label}
-            </Typography>
-          </div>
+        <Grid size={{ xs: 8 }}>
+          <ControlLabel>{label}</ControlLabel>
         </Grid>
-        <Grid size={{ xs: 1 }}>
-          <ChannelOptions channelIndex={channelIndex} />
+        <Grid size={{ xs: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <RemoveChannelButton channelIndex={channelIndex} name={label} />
+            <ChannelOptions channelIndex={channelIndex} />
+          </Box>
         </Grid>
       </Grid>
       <Grid container justifyContent="space-between">
         <Grid size={{ xs: 2 }}>
-          <IconButton
-            style={{
-              color,
-              backgroundColor: "transparent",
-              padding: 0,
-              zIndex: 2,
-            }}
-            onClick={handleVisibilityChange}
-          >
-            {on ? <RadioButtonChecked /> : <RadioButtonUnchecked />}
-          </IconButton>
+          <Checkbox
+            checked={on}
+            onChange={handleVisibilityChange}
+            sx={{ ...inlineIconButtonSx, color, "&.Mui-checked": { color } }}
+            inputProps={{ "aria-label": `Toggle channel ${label}` }}
+          />
         </Grid>
         <Grid size={{ xs: 10 }}>
-          <Slider
-            value={value}
-            onChange={handleContrastChange}
-            min={min}
-            max={max}
-            step={0.01}
-            style={{
-              padding: "10px 0px 5px 0px",
-              color,
-            }}
-          />
+          <DenseSlider value={value} onChange={handleContrastChange} min={min} max={max} step={0.01} sx={{ color }} />
         </Grid>
       </Grid>
     </>

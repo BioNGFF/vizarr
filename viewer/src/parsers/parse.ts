@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { log } from "../logger";
+
 import { v01, v02, v03, v04, v05, v06 } from "zod-ome-ngff";
 import { narrowVersionAndType } from "./shallow-parse";
 import {
@@ -113,9 +115,14 @@ export function parse(data: object, schemas = schemaList): ParseResult | undefin
           type: schema.type,
           success: true,
         } as ParseResult<typeof schema>;
+        log.debug("Parsed OME-NGFF metadata", { type: schema.type, version: schema.version });
         return returnVal;
       }
-      console.log(result.error);
+      log.debug("Metadata did not match its declared version and type", {
+        version: versionAndType.version,
+        type: versionAndType.type,
+        error: result.error,
+      });
     }
   }
 
@@ -132,6 +139,10 @@ function tryBruteForceParse(data: object, schemas = schemaList) {
   if (validSchema) {
     const result = validSchema.schema.parse(data);
     const transform = validSchema.transformer as (input: typeof result) => unknown;
+    log.debug("Parsed OME-NGFF metadata by trying every schema", {
+      type: validSchema.type,
+      version: validSchema.version,
+    });
     return {
       data: transform(result),
       version: validSchema.version,
@@ -139,5 +150,9 @@ function tryBruteForceParse(data: object, schemas = schemaList) {
       success: true,
     };
   }
+  // No match is a normal outcome here: callers use `parse` to ask what a group is, and
+  // several of them have something sensible to do when the answer is "not this".
+  // Whoever cannot proceed without an answer raises the user-facing error.
+  log.debug("No OME-NGFF schema matched the group attributes");
   return { success: false };
 }

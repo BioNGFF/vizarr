@@ -1,8 +1,8 @@
-import { type ViewState, Vizarr, theme } from "@biongff/vizarr";
+import { type ViewState, type ViewerInfo, Vizarr, theme } from "@biongff/vizarr";
 
 import { AnndataController, AnndataProvider, type labelColor } from "@biongff/anndata-zarr";
+import type { PendingRoi, RoiDrawState, SavedRoi } from "@biongff/roi-selector";
 import { RoiSelector, useRoiDeckExtension } from "@biongff/roi-selector";
-import type { PendingRoi, RoiDrawState, SavedRoi, ViewerInfo } from "@biongff/roi-selector";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import debounce from "just-debounce-it";
@@ -28,8 +28,6 @@ function parseViewStateFromUrl(): ViewState | undefined {
 }
 
 export default function App() {
-  const urlString = window.location.href;
-
   React.useEffect(() => {
     const url = new URL(window.location.href);
     if (!url.searchParams.has("roi")) {
@@ -38,18 +36,18 @@ export default function App() {
     }
   }, []);
 
+  // Read once on mount. These are inputs; the URL writes below are outputs, kept so a
+  // view can be shared by link.
   const { sources, labels, viewState, enableRoi, tableURLs } = React.useMemo(() => {
-    const url = new URL(urlString);
-    const { searchParams } = url;
+    const { searchParams } = new URL(window.location.href);
     return {
       sources: searchParams.getAll("source"),
-
       labels: searchParams.getAll("label"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
       tableURLs: searchParams.getAll("anndata"),
     };
-  }, [urlString]);
+  }, []);
 
   // Keyed by source index rather than a fixed-length array, so it stays correct if the
   // number of sources in the URL changes.
@@ -102,6 +100,9 @@ export default function App() {
   const [pendingRoi, setPendingRoi] = React.useState<PendingRoi | null>(null);
 
   // ---- ROI deck.gl integration (layers, click, hover) ----
+  // The viewer's toolbar owns the ROI tool; the panel and pointer handling follow it.
+  const selecting = enableRoi && viewerInfo?.interactionMode === "select";
+
   const { layers, cursor, onClick, onHover } = useRoiDeckExtension({
     roiDrawState,
     setRoiDrawState,
@@ -117,22 +118,8 @@ export default function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AnndataProvider>
-          <div className="container-right">{anndataControllers}</div>
-          <Vizarr
-            // The ThemeProvider above already covers the viewer and the plugin panels.
-            theme={null}
-            sources={sources}
-            labels={labels}
-            viewState={viewState}
-            onViewerStateChange={setViewerInfo}
-            onViewStateChange={handleViewStateChange}
-            additionalLayers={enableRoi ? layers : undefined}
-            pluginCursor={enableRoi ? cursor : undefined}
-            onPluginClick={enableRoi ? onClick : undefined}
-            onPluginHover={enableRoi ? onHover : undefined}
-            labelColours={labelColours}
-          >
-            {enableRoi && viewerInfo && (
+          <div className="container-right">
+            {selecting && viewerInfo && (
               <RoiSelector
                 roiDrawState={roiDrawState}
                 setRoiDrawState={setRoiDrawState}
@@ -143,7 +130,25 @@ export default function App() {
                 viewerInfo={viewerInfo}
               />
             )}
-          </Vizarr>
+            {anndataControllers}
+          </div>
+          <Vizarr
+            // The ThemeProvider above already covers the viewer and the plugin panels.
+            theme={null}
+            sources={sources}
+            labels={labels}
+            viewState={viewState}
+            onViewerStateChange={setViewerInfo}
+            onViewStateChange={handleViewStateChange}
+            additionalLayers={enableRoi ? layers : undefined}
+            pluginCursor={selecting ? cursor : undefined}
+            // Only intercept pointer events while the select tool is active, so panning
+            // stays unaffected; saved ROI layers keep rendering either way.
+            onPluginClick={selecting ? onClick : undefined}
+            onPluginHover={selecting ? onHover : undefined}
+            labelColours={labelColours}
+            enableSelectTool={enableRoi}
+          />
         </AnndataProvider>
       </ThemeProvider>
     </div>
