@@ -389,8 +389,8 @@ export async function loadOmeMultiscales(
     : getDefaultCoordinateSystem(attrs.multiscales);
   const selectedCoordinateSystem = config.coordinateSystem
     ? coordinateSystems.filter((coordinateSystem) => {
-      return coordinateSystem.name === config.coordinateSystem;
-    })[0]
+        return coordinateSystem.name === config.coordinateSystem;
+      })[0]
     : coordinateSystems[0];
   const axes = selectedCoordinateSystem.axes;
 
@@ -482,8 +482,8 @@ async function loadOmeImageLabel(
     : getDefaultCoordinateSystem(attrs.multiscales);
   const selectedCoordinateSystem = coordinateSystem
     ? coordinateSystems.filter((system) => {
-      return system.name === coordinateSystem;
-    })[0]
+        return system.name === coordinateSystem;
+      })[0]
     : coordinateSystems[0];
   const loader = await getImageLoader(attrs.multiscales, node, selectedCoordinateSystem.axes);
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
