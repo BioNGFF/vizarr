@@ -10,6 +10,7 @@ import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinat
 import { createSourceData } from "./io";
 
 import { z } from "zod";
+import { log } from "./logger";
 
 export async function loadScene(
   config: ImageLayerConfig,
@@ -17,7 +18,7 @@ export async function loadScene(
   //No type information for SceneSchema
   scene: Ome.Scene,
 ): Promise<SourceData[]> {
-  console.log("Loading scene: ", config.source);
+  log.debug("Loading scene", { source: config.source });
   const results = await Promise.all(
     scene.coordinateTransformations.map(async (transformation: Ome.SceneTransformationMetadata) => {
       const path = transformation.input.path;
@@ -32,7 +33,7 @@ export async function loadScene(
             return transformation.input.path === path;
           },
         );
-        console.log("Applying scene transformations to image: ", config.source);
+        log.debug("Applying scene transformations", { source: config.source });
 
         // @TODO For now we are assuming there is only a single coordinateSystem defined at the scene level
         // Provision is made in the specification for multiple
@@ -381,7 +382,7 @@ export async function loadOmeMultiscales(
   grp: zarr.Group<zarr.Readable>,
   attrs: { multiscales: Ome.Multiscale[] },
 ): Promise<SourceData> {
-  console.log("Loading image: ", config.source);
+  log.debug("Loading image", { source: config.source });
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
   const axes = utils.getNgffAxes(attrs.multiscales);

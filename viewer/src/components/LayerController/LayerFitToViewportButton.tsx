@@ -1,5 +1,5 @@
 import { ZoomOutMap } from "@mui/icons-material";
-import { IconButton } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import { useAtomValue } from "jotai";
 import type { MouseEvent } from "react";
 import React from "react";
@@ -30,17 +30,19 @@ function LayerFitToViewportButton() {
   };
 
   return (
-    <IconButton
-      component="span"
-      aria-label={`fit-layer-to-viewport-${sourceData.id}`}
-      onClick={fitToViewport}
-      sx={{
-        backgroundColor: "transparent",
-        color: `rgb(255, 255, 255, ${layer.on ? 1 : 0.5})`,
-      }}
-    >
-      <ZoomOutMap />
-    </IconButton>
+    <Tooltip title="Fit image to view">
+      <IconButton
+        component="span"
+        aria-label={`fit-layer-to-viewport-${sourceData.id}`}
+        onClick={fitToViewport}
+        sx={{
+          backgroundColor: "transparent",
+          color: `rgb(255, 255, 255, ${layer.on ? 1 : 0.5})`,
+        }}
+      >
+        <ZoomOutMap />
+      </IconButton>
+    </Tooltip>
   );
 }
 

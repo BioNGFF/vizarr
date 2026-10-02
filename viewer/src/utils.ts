@@ -10,8 +10,32 @@ import { lru } from "./lru-store";
 import type { ViewState, VizarrLayer } from "./state";
 
 import { Matrix4 } from "math.gl";
+import { log } from "./logger";
 
 export const MAX_CHANNELS = 6;
+
+/**
+ * Short, deterministic id for a source, stable across reloads.
+ *
+ * Layer state is held in an atom family keyed by this id, so a random id meant any
+ * reload replaced every layer atom and silently reset the user's channel, contrast and
+ * label settings. Derived from the url and position instead, a reload of the same
+ * sources returns the same atoms.
+ *
+ * FNV-1a, base36. Not cryptographic; it only has to separate different urls and stay
+ * safe to embed in a DOM id and a deck.gl layer id.
+ */
+export function sourceId(source: string, index: number, subIndex: number): string {
+  let hash = 2166136261;
+  for (let i = 0; i < source.length; i++) {
+    hash ^= source.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `${(hash >>> 0).toString(36)}-${index}-${subIndex}`;
+}
+
+/** Project repository, linked from the panel header and the load-error message. */
+export const REPOSITORY_URL = "https://github.com/BioNGFF/vizarr";
 
 export const COLORS = {
   cyan: "#00FFFF",
@@ -38,18 +62,21 @@ export async function normalizeStore(source: string | zarr.Readable): Promise<za
         fetch(source).then((res) => res.json()),
       ]);
       store = ReferenceStore.fromSpec(json);
+      log.debug("Store resolved", { source, store: "ReferenceStore" });
     } else {
       // try ZipFileStore first, fallback to FetchStore
       try {
         const zipStore = ZipFileStore.fromUrl(source);
         await zipStore.has("/"); // will throw an error for non-zipped
         store = zipStore;
+        log.debug("Store resolved", { source, store: "ZipFileStore" });
       } catch {
         const url = new URL(source);
         // grab the path and then set the URL to the root
         path = ensureAbsolutePath(url.pathname);
         url.pathname = "/";
         store = new zarr.FetchStore(url.href);
+        log.debug("Store resolved", { source, store: "FetchStore" });
       }
     }
 
@@ -306,8 +333,7 @@ export function parseMatrix(model_matrix?: string | number[]): Matrix4 {
     assert(isArray16(arr), "Invalid modelMatrix size. Must be 16.");
     matrix.setRowMajor(...arr);
   } catch {
-    const msg = `Failed to parse modelMatrix. Got ${JSON.stringify(model_matrix)}, using identity.`;
-    console.warn(msg);
+    log.warn("Failed to parse modelMatrix, using identity.", { model_matrix });
   }
   return matrix;
 }

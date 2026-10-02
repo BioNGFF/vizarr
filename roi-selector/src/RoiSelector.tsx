@@ -1,5 +1,6 @@
+import { tokens } from "@biongff/vizarr";
 import { CropFree, FileDownload } from "@mui/icons-material";
-import { Box, Button, Collapse, IconButton, Snackbar, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Divider, IconButton, Snackbar, Tooltip, Typography } from "@mui/material";
 import type React from "react";
 import { useState } from "react";
 
@@ -9,6 +10,7 @@ import RoiDrawControls from "./components/RoiDrawControls";
 import SavedRoiList from "./components/SavedRoiList";
 import { useRoiFields } from "./hooks/useRoiFields";
 import { importRoisFromZarr } from "./importRois";
+import { log } from "./logger";
 import {
   type ImageBounds,
   type PendingRoi,
@@ -83,7 +85,6 @@ function RoiSelector({
   });
 
   // ---- Panel toggle state ----
-  const [open, setOpen] = useState(false);
   const [roiMenuOpen, setRoiMenuOpen] = useState(false);
   const [snackOpen, setSnackOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -158,7 +159,7 @@ function RoiSelector({
   // ---- Import ROIs from zarr tables ----
   const handleImport = async (selectedTables: string[]) => {
     if (!sourceUrl || !imageBounds) {
-      console.warn("[ROI Import] No source URL or image bounds available");
+      log.warn("No source URL or image bounds available");
       return;
     }
     try {
@@ -172,12 +173,12 @@ function RoiSelector({
       );
       if (imported.length > 0) {
         handleImportRois(imported);
-        console.log(`[ROI Import] Imported ${imported.length} ROI(s)`);
+        log.debug(`Imported ${imported.length} ROI(s)`);
       } else {
-        console.warn("[ROI Import] No ROIs were imported from the selected tables");
+        log.warn("No ROIs were imported from the selected tables");
       }
     } catch (err) {
-      console.error("[ROI Import] Import failed:", err);
+      log.error("Import failed:", err);
     }
   };
 
@@ -185,29 +186,25 @@ function RoiSelector({
   return (
     <Box
       sx={{
-        zIndex: 1,
-        position: "absolute",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        borderRadius: "5px",
-        right: "5px",
-        top: "5px",
+        backgroundColor: tokens.panel.background,
+        border: `1px solid ${tokens.panel.border}`,
+        borderRadius: `${tokens.panel.radius}px`,
         padding: "4px 8px",
         minWidth: 210,
-        maxHeight: "calc(100vh - 20px)",
         display: "flex",
         flexDirection: "column",
+        minHeight: 0,
       }}
     >
-      <Tooltip title="Select Region of Interest">
-        <IconButton size="small" onClick={() => setOpen((prev) => !prev)} sx={{ color: "#fff" }}>
-          <CropFree fontSize="small" />
-          <Typography variant="caption" sx={{ ml: 0.5, color: "#fff" }}>
-            ROI Selection
-          </Typography>
-        </IconButton>
-      </Tooltip>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, px: 0.5, py: 0.5 }}>
+        <CropFree fontSize="small" />
+        <Typography variant="caption" sx={{ letterSpacing: "0.04em", textTransform: "uppercase" }}>
+          Region of Interest
+        </Typography>
+      </Box>
+      <Divider />
 
-      <Collapse in={open} sx={{ overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <Box sx={{ overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <Box sx={{ mt: 1, overflowY: "auto", minHeight: 0 }}>
           {(pendingRoi || editingRoiId) && (
             <RoiCoordinateFields
@@ -273,7 +270,7 @@ function RoiSelector({
             onDeleteAll={handleDeleteAllRois}
           />
         </Box>
-      </Collapse>
+      </Box>
 
       <Snackbar
         open={snackOpen}

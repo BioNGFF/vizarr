@@ -1,9 +1,9 @@
-import { RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
-import { Grid, IconButton, Slider, Typography } from "@mui/material";
+import { Checkbox, Grid } from "@mui/material";
 import React from "react";
 
 import { useLayerState, useSourceData } from "../../hooks";
 import { assert } from "../../utils";
+import { ControlLabel, DenseSlider, inlineIconButtonSx } from "./controls";
 
 export default function Labels({ labelIndex }: { labelIndex: number }) {
   const [source] = useSourceData();
@@ -31,17 +31,15 @@ export default function Labels({ labelIndex }: { labelIndex: number }) {
   return (
     <>
       <Grid container justifyContent="space-between" wrap="nowrap">
-        <div style={{ width: 165, overflow: "hidden", textOverflow: "ellipsis" }}>
-          <Typography variant="caption" noWrap>
-            {name}
-          </Typography>
-        </div>
+        <ControlLabel>{name}</ControlLabel>
       </Grid>
       <Grid container justifyContent="space-between">
         <Grid size={{ xs: 2 }}>
-          <IconButton
-            style={{ backgroundColor: "transparent", padding: 0, zIndex: 2 }}
-            onClick={() => {
+          <Checkbox
+            checked={label.on}
+            sx={inlineIconButtonSx}
+            inputProps={{ "aria-label": `Toggle label ${name}` }}
+            onChange={() => {
               setLayer((prev) => {
                 assert(prev.kind === "multiscale" && prev.labels, "Missing image labels");
                 return {
@@ -53,19 +51,10 @@ export default function Labels({ labelIndex }: { labelIndex: number }) {
                 };
               });
             }}
-          >
-            {label.on ? <RadioButtonChecked /> : <RadioButtonUnchecked />}
-          </IconButton>
+          />
         </Grid>
         <Grid size={{ xs: 10 }}>
-          <Slider
-            value={label.layerProps.opacity}
-            onChange={handleOpacityChange}
-            min={0}
-            max={1}
-            step={0.01}
-            style={{ padding: "10px 0px 5px 0px" }}
-          />
+          <DenseSlider value={label.layerProps.opacity} onChange={handleOpacityChange} min={0} max={1} step={0.01} />
         </Grid>
       </Grid>
     </>

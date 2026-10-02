@@ -1,6 +1,6 @@
 import { type Atom, atom } from "jotai";
 import { atomFamily, splitAtom, waitForAll } from "jotai/utils";
-import { RedirectError, rethrowUnless } from "./utils";
+import { RedirectError, fitImageToViewport, getLayerSize, rethrowUnless } from "./utils";
 
 import type { Layer } from "deck.gl";
 
@@ -124,6 +124,14 @@ export const viewStateAtom = atom<ViewState | null>(null);
 
 export const sourceErrorAtom = atom<string | null>(null);
 export const sourceWarningAtom = atom<string[]>([]);
+
+/**
+ * Which pointer interaction the toolbar has selected. "pan" is the viewer's own default;
+ * "select" means a host plugin (e.g. the ROI selector) is driving region selection, so
+ * the viewer only reports the mode and leaves the behaviour to that plugin.
+ */
+export type InteractionMode = "pan" | "select";
+export const interactionModeAtom = atom<InteractionMode>("pan");
 
 /**
  * Append a warning, ignoring one that is already displayed, so it is only shown once.
@@ -291,6 +299,33 @@ export const layerFamilyAtom: AtomFamily<WithId<SourceData>, PrimitiveAtom<WithI
   (param: WithId<SourceData>) => atom({ ...initLayerStateFromSource(param), id: param.id }),
   (a, b) => a.id === b.id,
 );
+
+/**
+ * View state that frames the first loaded image in the current viewport, or null when
+ * there is nothing loaded or the viewport size is not known yet.
+ *
+ * Exposed as a value rather than applied directly so that the caller writes it through
+ * ViewStateContext; writing viewStateAtom here would skip the host's onViewStateChange.
+ */
+export const firstLayerFitAtom = atom((get) => {
+  const sources = get(sourceInfoAtom);
+  const viewport = get(viewportAtom);
+  if (sources.length === 0 || !viewport) {
+    return null;
+  }
+  const layerProps = get(layerFamilyAtom(sources[0])).layerProps;
+  return {
+    ...fitImageToViewport({
+      image: getLayerSize({ props: layerProps } as VizarrLayer),
+      viewport,
+      // Matches LayerFitToViewportButton, so per-layer and global fit agree.
+      padding: viewport.width < 400 ? 10 : viewport.width < 600 ? 30 : 50,
+      matrix: layerProps.modelMatrix,
+    }),
+    width: viewport.width,
+    height: viewport.height,
+  };
+});
 
 /**
  * Apply externally-supplied label colours (e.g. from a table plugin) to the already

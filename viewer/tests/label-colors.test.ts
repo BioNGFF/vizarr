@@ -58,3 +58,21 @@ test("Loading a source that does not exist is reported as rejected", async () =>
   const results = await loadSources(["https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/does-not-exist.zarr"]);
   expect(results[0].status).toBe("rejected");
 });
+
+test("Source ids are stable across reloads, so layer state survives one", async () => {
+  // Layer atoms are keyed by id. Random ids meant any reload swapped every atom for a
+  // freshly defaulted one, discarding the user's channel, contrast and label settings.
+  const first = await loadSources([labelImageURL]);
+  const second = await loadSources([labelImageURL]);
+  expect(first[0].status).toBe("fulfilled");
+  expect(second[0].status).toBe("fulfilled");
+  if (first[0].status !== "fulfilled" || second[0].status !== "fulfilled") return;
+  expect(second[0].value.map((s) => s.id)).toEqual(first[0].value.map((s) => s.id));
+});
+
+test("Different sources, and repeats of one source, get distinct ids", async () => {
+  const results = await loadSources([labelImageURL, imageURL, labelImageURL]);
+  const ids = results.flatMap((r) => (r.status === "fulfilled" ? r.value.map((s) => s.id) : []));
+  expect(ids).toHaveLength(3);
+  expect(new Set(ids).size).toBe(3);
+});
