@@ -9,10 +9,7 @@ const CATEGORY_NAMES_PATH = "categories";
 const CATEGORY_DATA_PATH = "codes";
 const DEFAULT_INDEX_NAME = "_index";
 
-const ZarrAttrsSchema = z.object({
-  "encoding-type": z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]),
-  "encoding-version": z.string(),
-});
+const ZarrAttrsSchema = z.any();
 
 const ZarrObservationAttrsSchema = z.any();
 
@@ -68,8 +65,8 @@ export const fetchDataFromZarr = async (
 
   let encoding_type: string;
 
-  if (attrs["encoding-type"]) {
-    encoding_type = attrs["encoding-type"];
+  if (attrs.encoding_type) {
+    encoding_type = attrs.encoding_type;
   } else {
     encoding_type = "array";
   }
