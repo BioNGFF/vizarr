@@ -64,9 +64,8 @@ export const fetchDataFromZarr = async (
   const attrs = parseZarrAttrs(dataNodeOrGroup.attrs);
 
   let encoding_type: string;
-
-  if (attrs.encoding_type) {
-    encoding_type = attrs.encoding_type;
+  if (attrs["encoding-type"]) {
+    encoding_type = attrs["encoding-type"];
   } else {
     encoding_type = "array";
   }
