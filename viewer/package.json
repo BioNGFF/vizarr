@@ -21,7 +21,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run check && vite build",
     "preview": "vite preview",
     "check": "tsc",
     "test": "vitest"
@@ -34,13 +34,11 @@
     "@vivjs/loaders": "0.17.2",
     "@vivjs/types": "~0.17.0",
     "@zarrita/storage": "0.1.4",
-    "add": "^2.0.6",
     "deck.gl": "~9.0.0",
     "jotai": "^1.0.0",
     "math.gl": "^4.1.0",
     "notistack": "^3.0.2",
     "p-map": "^7.0.3",
-    "pnpm": "^11.10.0",
     "quick-lru": "^7.0.0",
     "react-is": "18.3.1",
     "xml-js": "1.6.11",

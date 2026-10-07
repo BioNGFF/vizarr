@@ -10,6 +10,5 @@
     "verbatimModuleSyntax": true,
     "jsx": "preserve",
     "types": ["vite/client"]
-  },
-  "exclude": ["tests"]
+  }
 }
