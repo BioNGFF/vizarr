@@ -77,9 +77,6 @@ importers:
 
   anndata-zarr:
     dependencies:
-      '@biongff/vizarr':
-        specifier: workspace:*
-        version: link:../viewer
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@18.3.18)(react@18.3.1)
