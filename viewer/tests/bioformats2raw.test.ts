@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { open } from "zarrita";
 import { createSourceData } from "../src/io";
 import * as utils from "../src/utils";
@@ -22,10 +22,9 @@ const sources = [
 for (const source of sources) {
   test(`Can successfully parse XML data from bioformats2raw file ${source}`, async () => {
     const location = await utils.normalizeStore(source);
-    const group = await open(location, { kind: "group" });
-
-    const metadata: Ome.Bioformats2rawlayout = group.attrs;
+    await open(location, { kind: "group" });
 
     const data = await createSourceData({ source: source });
+    expect(data.length).toBeGreaterThan(0);
   });
 }
