@@ -1,16 +1,16 @@
 import pMap from "p-map";
 import * as zarr from "zarrita";
-import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
-
-import { ZarrPixelSource } from "./ZarrPixelSource";
 import * as utils from "./utils";
 
+import { ZarrPixelSource } from "./ZarrPixelSource";
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
-
 import { createSourceData } from "./io";
-
-import { z } from "zod";
 import { log } from "./logger";
+import type { Bf2RawOMEXML } from "./parsers/bioformats2raw";
+import { parse } from "./parsers/parse";
+import { getBf2RawImagePaths, getBf2rawOMEXML } from "./providers/bioformats2raw";
+import { MetadataError, openZarrRoot } from "./services/http";
+import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
 
 export async function loadScene(
   config: ImageLayerConfig,
@@ -22,6 +22,7 @@ export async function loadScene(
   const results = await Promise.all(
     scene.coordinateTransformations.map(async (transformation: Ome.SceneTransformationMetadata) => {
       const path = transformation.input.path;
+      log.debug("Creating source data for scene image", { path });
       const sourceDatas = await createSourceData({
         source: `${config.source}/${path}`,
         coordinateSystem: transformation.input.name,
@@ -219,10 +220,8 @@ export async function loadPlate(
 
   // Create loader for every Well. Some loaders may be undefined if Wells are missing.
   const mapper = async ([key, path]: string[]) => {
-    // @ts-expect-error - we don't need the meta for these arrays
     let arr: zarr.Array<zarr.DataType, zarr.Readable> = await zarr.open(grp.resolve(path), {
       kind: "array",
-      attrs: false,
     });
     return [key, arr] as const;
   };
@@ -385,8 +384,6 @@ export async function loadOmeMultiscales(
   log.debug("Loading image", { source: config.source });
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
-  const axes = utils.getNgffAxes(attrs.multiscales);
-  const axis_labels = utils.getNgffAxisLabels(axes);
   const tileSize = utils.guessTileSize(data[0]);
   const coordinateSystems = attrs.multiscales[0].coordinateSystems
     ? attrs.multiscales[0].coordinateSystems
@@ -396,6 +393,9 @@ export async function loadOmeMultiscales(
         return coordinateSystem.name === config.coordinateSystem;
       })[0]
     : coordinateSystems[0];
+  const axes = selectedCoordinateSystem.axes;
+
+  const axis_labels = utils.getNgffAxisLabels(axes);
   let meta: Meta;
   if (utils.isOmeMultiscales(attrs)) {
     meta = parseOmeroMeta(attrs.omero, axes);
@@ -405,19 +405,29 @@ export async function loadOmeMultiscales(
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
     meta = await defaultMeta(lowresSource, axis_labels);
   }
-  const originalSizeZ = data[0].shape[axis_labels.indexOf("z")];
-  const zDownsampled = isDownsampledZ(data, axis_labels.indexOf("z"), originalSizeZ);
-  const physicalSizes = getPhysicalSizes(axes, getHighestResolutionTransformations(attrs.multiscales));
-  const loader = data.map(
-    (arr, i) =>
-      new ZarrPixelSource(arr, {
-        labels: axis_labels,
-        tileSize,
-        ...(i === 0 ? { meta: { physicalSizes } } : {}),
-        originalSizeZ: zDownsampled ? originalSizeZ : undefined,
-      }),
-  );
-  const labels = await resolveOmeLabelsFromMultiscales(grp);
+
+  const loader = await getImageLoader(attrs.multiscales, grp, axes);
+
+  let labelGroup = grp;
+  let labelPath = "labels";
+  let labels: string[] = [];
+
+  //Non-embedded label image
+  if (config.label) {
+    const labelStore = await utils.normalizeStore(config.label);
+    labelGroup = await zarr.open(labelStore, { kind: "group" });
+    labelPath = "";
+    const labelAttrs = parse(labelGroup.attrs);
+    if (labelAttrs?.type === "bf2Raw") {
+      //@to-do temporary until transformer layer fully implemented
+      const b2frawAttrs = (await getBf2rawOMEXML(config.label)) as Bf2RawOMEXML;
+      labels = await getBf2RawImagePaths(labelGroup, b2frawAttrs);
+    } else {
+      labels = [""];
+    }
+  } else {
+    labels = await resolveOmeLabelsFromMultiscales(labelGroup, labelPath);
+  }
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
   const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);
   return {
@@ -432,73 +442,93 @@ export async function loadOmeMultiscales(
     ...meta,
     name: meta.name ?? name,
     labels: await Promise.all(
-      labels.map((name) => loadOmeImageLabel(grp.resolve("labels"), name, selectedCoordinateSystem.name)),
+      labels.map((name) => loadOmeImageLabel(labelGroup.resolve(labelPath).resolve(name), name)),
     ),
   };
+}
+
+async function getImageLoader(multiscales: Ome.Multiscale[], grp: zarr.Group<zarr.Readable>, axes: Ome.Axis[]) {
+  const data = await utils.loadMultiscales(grp, multiscales);
+
+  const tileSize = utils.guessTileSize(data[0]);
+  const axis_labels = utils.getNgffAxisLabels(axes);
+  const originalSizeZ = data[0].shape[axis_labels.indexOf("z")];
+  const zDownsampled = isDownsampledZ(data, axis_labels.indexOf("z"), originalSizeZ);
+  const physicalSizes = getPhysicalSizes(axes, getHighestResolutionTransformations(multiscales));
+  return data.map(
+    (arr, i) =>
+      new ZarrPixelSource(arr, {
+        labels: axis_labels,
+        tileSize,
+        ...(i === 0 ? { meta: { physicalSizes } } : {}),
+        originalSizeZ: zDownsampled ? originalSizeZ : undefined,
+      }),
+  );
 }
 
 async function loadOmeImageLabel(
   root: zarr.Location<zarr.Readable>,
   name: string,
-  coordinateSystemName: string,
+  coordinateSystem?: string,
 ): Promise<ImageLabels[number]> {
-  const grp = await zarr.open(root.resolve(name), { kind: "group" });
-  const attrs = utils.resolveAttrs(grp.attrs);
-  utils.assert(utils.isOmeImageLabel(attrs), "No 'image-label' metadata.");
-  const data = await utils.loadMultiscales(grp, attrs.multiscales);
-  const baseResolution = data.at(0);
-  utils.assert(baseResolution, "No base resolution found for multiscale labels.");
-  const tileSize = utils.guessTileSize(baseResolution);
+  const store = root.store as zarr.FetchStore;
+  const url = new URL(root.path.replace(/^\/+/, ""), store.url).href;
+  const node = await openZarrRoot(url);
+  const parsedAttrs = parse(node.attrs);
+  // Unlike the callers that only probe what a group is, this one cannot proceed without
+  // an answer. Saying so is what stops the unchecked cast below reaching the user as
+  // "Cannot read properties of undefined".
+  if (!parsedAttrs) {
+    throw new MetadataError(
+      `The label image at ${url} does not match any supported OME-NGFF version.`,
+      "No OME-NGFF schema matched the group attributes.",
+    );
+  }
+
+  //@to-do temporary until transformation layer implemented
+  const attrs = parsedAttrs.data as Ome.LabelImage;
   const coordinateSystems = attrs.multiscales[0].coordinateSystems
     ? attrs.multiscales[0].coordinateSystems
     : getDefaultCoordinateSystem(attrs.multiscales);
-  const selectedCoordinateSystem = coordinateSystems.filter((coordinateSystem) => {
-    return coordinateSystem.name === coordinateSystemName;
-  })[0];
-  const coordinateSystem = selectedCoordinateSystem ? selectedCoordinateSystem : coordinateSystems[0];
-
-  const labels = utils.getNgffAxisLabels(coordinateSystem.axes);
-  const colors = (attrs["image-label"].colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));
-  return {
+  const selectedCoordinateSystem = coordinateSystem
+    ? coordinateSystems.filter((system) => {
+        return system.name === coordinateSystem;
+      })[0]
+    : coordinateSystems[0];
+  const loader = await getImageLoader(attrs.multiscales, node, selectedCoordinateSystem.axes);
+  const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
+  const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);
+  const colors = (attrs["image-label"]?.colors ?? []).map((d) => ({ labelValue: d["label-value"], rgba: d.rgba }));
+  const labelSource = {
     name,
-    modelMatrix: coordinateTransformationsToMatrix(
-      getOrderedTransformations(attrs.multiscales, coordinateSystem),
-      coordinateSystem.axes,
-    ),
-    loader: data.map((arr) => new ZarrPixelSource(arr, { labels, tileSize })),
+    modelMatrix: modelMatrix,
+    loader: loader,
     colors: colors.length > 0 ? colors : undefined,
   };
+  return labelSource;
 }
 
-const LabelSchema = z.object({
-  labels: z.array(z.string()),
-});
-const OmeLabelSchema = z.object({
-  ome: z.object({
-    labels: z.array(z.string()),
-  }),
-});
-
-function resolveLabelAttrs(attrs: unknown): string[] {
-  if (LabelSchema.safeParse(attrs).success) {
-    return LabelSchema.parse(attrs).labels;
-  }
-  if (OmeLabelSchema.safeParse(attrs).success) {
-    return OmeLabelSchema.parse(attrs).ome.labels;
+function resolveLabelAttrs(attrs: object): string[] {
+  const parsedResult = parse(attrs);
+  if (parsedResult?.success) {
+    //*to-do temporary until transformation layer fully implemented
+    const data = parsedResult.data as Ome.ImageLabelsList;
+    return data.labels;
   }
   return [];
 }
 
-async function resolveOmeLabelsFromMultiscales(grp: zarr.Group<zarr.Readable>): Promise<Array<string>> {
-  return zarr
-    .open(grp.resolve("labels"), { kind: "group" })
-    .then(({ attrs }) => {
-      return (resolveLabelAttrs(attrs) ?? []) as Array<string>;
-    })
-    .catch((e) => {
-      utils.rethrowUnless(e, zarr.NodeNotFoundError);
-      return [];
-    });
+async function resolveOmeLabelsFromMultiscales(
+  grp: zarr.Group<zarr.Readable>,
+  labelPath: string,
+): Promise<Array<string>> {
+  try {
+    const labelGroup = await zarr.open(grp.resolve(labelPath), { kind: "group" });
+    return (resolveLabelAttrs(labelGroup.attrs) ?? []) as Array<string>;
+  } catch (e) {
+    utils.rethrowUnless(e, zarr.NodeNotFoundError);
+    return [];
+  }
 }
 
 type Meta = {

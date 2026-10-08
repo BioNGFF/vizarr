@@ -55,6 +55,7 @@ export interface ViewerInfo {
 export interface VizarrViewerProps {
   /**  Source image urls*/
   sources?: string[];
+  labels?: string[];
   /** View state of the viewer*/
   viewState?: ViewState;
   /** Callback to execute side effects when view state changes */
@@ -167,8 +168,21 @@ function ViewerBridge({
   );
 }
 
+/**
+ * Holds an array's identity steady while its contents are unchanged, so an effect
+ * depending on it does not re-run for a host that rebuilds the array each render.
+ */
+function useStableArray(value: string[]): string[] {
+  const ref = React.useRef(value);
+  if (ref.current.join("\u0000") !== value.join("\u0000")) {
+    ref.current = value;
+  }
+  return ref.current;
+}
+
 function VizarrViewerComponent({
   sources = [],
+  labels = [],
   viewState: initialViewState,
   onViewStateChange,
   onViewerStateChange,
@@ -181,13 +195,10 @@ function VizarrViewerComponent({
   children,
   logger,
 }: VizarrViewerProps) {
-  // Compared by value: a host rebuilding the array each render would otherwise reload
-  // every source, which resets all layer state.
-  const sourcesRef = React.useRef(sources);
-  if (sourcesRef.current.join("\u0000") !== sources.join("\u0000")) {
-    sourcesRef.current = sources;
-  }
-  const stableSources = sourcesRef.current;
+  // Compared by value: a host rebuilding either array each render would otherwise
+  // reload every source, which resets all layer state.
+  const stableSources = useStableArray(sources);
+  const stableLabels = useStableArray(labels);
 
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
@@ -244,8 +255,8 @@ function VizarrViewerComponent({
       return;
     }
     let cancelled = false;
-    log.debug("Loading sources", { sources: stableSources });
-    loadSources(stableSources)
+    log.debug("Loading sources", { sources: stableSources, labels: stableLabels });
+    loadSources(stableSources, stableLabels)
       .then((results) => {
         if (cancelled) {
           return;
@@ -287,7 +298,7 @@ function VizarrViewerComponent({
     return () => {
       cancelled = true;
     };
-  }, [stableSources, setSourceInfo, setSourceError, addSourceWarning]);
+  }, [stableSources, stableLabels, setSourceInfo, setSourceError, addSourceWarning]);
 
   // Recolouring is applied to the loaded layer state, so it must also run once the
   // sources themselves arrive (colours can be selected before the image has loaded).
