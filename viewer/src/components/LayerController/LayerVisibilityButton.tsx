@@ -1,5 +1,5 @@
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { IconButton } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import React from "react";
 import type { MouseEvent } from "react";
 import { useLayerState, useSourceData } from "../../hooks";
@@ -15,17 +15,19 @@ function LayerVisibilityButton() {
     });
   };
   return (
-    <IconButton
-      component="span"
-      aria-label={`toggle-layer-visibility-${sourceData.id}`}
-      onClick={toggle}
-      sx={{
-        backgroundColor: "transparent",
-        color: `rgb(255, 255, 255, ${layer.on ? 1 : 0.5})`,
-      }}
-    >
-      {layer.on ? <Visibility /> : <VisibilityOff />}
-    </IconButton>
+    <Tooltip title={layer.on ? "Hide image" : "Show image"}>
+      <IconButton
+        component="span"
+        aria-label={`toggle-layer-visibility-${sourceData.id}`}
+        onClick={toggle}
+        sx={{
+          backgroundColor: "transparent",
+          color: `rgb(255, 255, 255, ${layer.on ? 1 : 0.5})`,
+        }}
+      >
+        {layer.on ? <Visibility /> : <VisibilityOff />}
+      </IconButton>
+    </Tooltip>
   );
 }
 

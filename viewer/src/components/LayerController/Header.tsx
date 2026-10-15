@@ -1,47 +1,64 @@
-import { AccordionSummary, Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
-import React from "react";
+import { ExpandMore } from "@mui/icons-material";
+import { AccordionSummary, Box, Typography } from "@mui/material";
+import { useSourceData } from "../../hooks";
+import { tokens } from "../../theme";
+import LayerFitToViewportButton from "./LayerFitToViewportButton";
+import LayerInfoButton from "./LayerInfoButton";
 import LayerVisibilityButton from "./LayerVisibilityButton";
 
-import { useSourceData } from "../../hooks";
-import LayerFitToViewportButton from "./LayerFitToViewportButton";
-
-const DenseAccordionSummary = styled(AccordionSummary)`
-  border-bottom: 1px solid rgba(150, 150, 150, .125);
-  background-color: rgba(150, 150, 150, 0.25);
-  display: block;
-  padding: 0 3px;
-  height: 27px;
-  min-height: 27px;
-  overflow: hidden;
-  transition: none;
-
-  &.Mui-expanded {
-    min-height: 27px;
-  }
-
-  .MuiAccordionSummary-content {
-    margin: 0;
-
-    &.Mui-expanded {
-      margin: 0;
-    }
-  }
-`;
+const ROW_HEIGHT = 28;
+const ICON_SIZE = 16;
 
 function Header({ name }: { name: string }) {
   const [sourceData] = useSourceData();
   const label = `layer-controller-${sourceData.id}`;
   return (
-    <DenseAccordionSummary aria-controls={label} id={label}>
-      <div style={{ display: "flex", flexDirection: "row" }}>
+    <AccordionSummary
+      aria-controls={label}
+      id={label}
+      expandIcon={<ExpandMore />}
+      sx={{
+        px: 0.5,
+        minHeight: ROW_HEIGHT,
+        // A shade lighter than the card body so the header reads as one, matching how
+        // the toolbar buttons lift on hover.
+        backgroundColor: tokens.rail.hover,
+        "&:hover": { backgroundColor: tokens.rail.active },
+        borderBottom: `1px solid ${tokens.rail.border}`,
+        "&.Mui-expanded": { minHeight: ROW_HEIGHT },
+        // Caret before the content, so the disclosure sits
+        // at the start of the row and the layer's own actions stay grouped at the end.
+        flexDirection: "row-reverse",
+        gap: 0.5,
+        "& .MuiAccordionSummary-expandIconWrapper .MuiSvgIcon-root": { fontSize: ICON_SIZE },
+        "& .MuiAccordionSummary-content": {
+          m: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: 0.25,
+          minWidth: 0,
+          "&.Mui-expanded": { m: 0 },
+        },
+        // Sized down here rather than in each button, so the row's icons stay uniform.
+        "& .MuiIconButton-root": { p: 0.5 },
+        "& .MuiIconButton-root .MuiSvgIcon-root": { fontSize: ICON_SIZE },
+      }}
+    >
+      <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }}>
+        {name}
+      </Typography>
+      {/* The summary is the accordion's toggle, so anything landing in the action area
+          is stopped here rather than relying on every button to remember to do it. */}
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 0.25 }}
+        onClick={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <LayerVisibilityButton />
         <LayerFitToViewportButton />
-        <Typography style={{ marginTop: "4px", marginLeft: "5px" }} variant="body2">
-          {name}
-        </Typography>
-      </div>
-    </DenseAccordionSummary>
+        <LayerInfoButton />
+      </Box>
+    </AccordionSummary>
   );
 }
 

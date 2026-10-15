@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { type RoiTableInfo, discoverRoiTables } from "../importRois";
+import { log } from "../logger";
 
 interface ImportRoiDialogProps {
   open: boolean;
@@ -40,7 +41,7 @@ export default function ImportRoiDialog({ open, onClose, onImport, sourceUrl }: 
         setSelected(new Set(discovered.filter((t) => t.type === "roi_table").map((t) => t.name)));
       })
       .catch((err) => {
-        console.error("[ROI Import] Failed to discover ROI tables:", err);
+        log.error("Failed to discover ROI tables:", err);
         setError("Failed to read tables from zarr store.");
       })
       .finally(() => setLoading(false));
