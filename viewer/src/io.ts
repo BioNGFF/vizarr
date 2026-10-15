@@ -1,12 +1,14 @@
 import * as zarr from "zarrita";
+import type { z } from "zod";
 import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
 import { parse } from "./parsers/parse";
 import * as utils from "./utils";
 
-import type { SceneSchema } from "zod-ome-ngff/0.6";
+import type { v06 } from "zod-ome-ngff";
 import { DEFAULT_LABEL_OPACITY, type OmeColor } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
+import { loadBf2Raw } from "./providers/bioformats2raw";
 import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 
 import { openZarrRoot } from "./services/http";
@@ -82,13 +84,16 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
   let axes: Ome.Axis[] | undefined;
   if (node instanceof zarr.Group) {
     const parsedData = parse(node.attrs);
-    if (parsedData.version === "v06") {
-      if (parsedData.type === "SceneSchema") {
+
+    //@to-do should only depend on image type, e.g. scene, well, multiscale, rather than version.
+    //Transformer layer will fix this be normalizing all versions
+    if (parsedData?.version === "0.6.dev3" || parsedData?.version === "0.6") {
+      if (parsedData?.type === "scene") {
         // TODO
         //Temporary assertion until parsing layer implemented
-        const data = parsedData.data as typeof SceneSchema;
-        const scene = data.ome.scene as Ome.Scene;
-        return loadScene(config, node, scene);
+        const scene = parsedData.data?.scene as Ome.Scene;
+        const sceneSources = await loadScene(config, node, scene);
+        return sceneSources;
       }
     }
 
@@ -113,10 +118,9 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
         return [await loadPlate(config, parent, parentAttrs.plate)];
       }
     }
-
-    if (utils.isBioformats2rawlayout(attrs)) {
-      let toUrl = `${utils.OME_VALIDATOR_URL}?source=${config.source}`;
-      throw new utils.RedirectError("Please open in ome-ngff-validator", toUrl);
+    if (parsedData?.type === "bf2Raw") {
+      const sources = await loadBf2Raw(config, node, parsedData.data as Ome.Bioformats2rawlayout);
+      return sources;
     }
     utils.assert(utils.isMultiscales(attrs), "Group is missing multiscales specification.");
     data = await utils.loadMultiscales(node, attrs.multiscales);
@@ -315,12 +319,12 @@ export function applyLabelColors<T extends LayerState>(layerState: T, colors: Re
  * array. `sourceIndex` records which entry of `sources` an image came from, which callers
  * need because that mapping is no longer positional once the results are flattened.
  */
-export async function loadSources(sources: string[]) {
+export async function loadSources(sources: string[], labels: string[] = []) {
   return await Promise.allSettled(
     sources.map(async (source, index) => {
-      const sourceData = await createSourceData({ source: source });
+      const sourceData = await createSourceData({ source: source, label: labels[index] });
       return sourceData.map((data, subIndex) => {
-        const id = utils.sourceId(source, index, subIndex);
+        const id = utils.sourceId(source, index, subIndex, labels[index]);
         if (!data.name) {
           data.name = sourceData.length > 1 ? `image_${index}_${subIndex}` : `image_${index}`;
         }

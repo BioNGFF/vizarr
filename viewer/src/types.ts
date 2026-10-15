@@ -92,6 +92,7 @@ declare namespace Ome {
 
   interface Bioformats2rawlayout {
     "bioformats2raw.layout": 3;
+    plate?: Plate;
   }
 
   interface Acquisition {
@@ -136,6 +137,15 @@ declare namespace Ome {
     source: {
       image: string;
     };
+  }
+
+  interface ImageLabelsList {
+    labels: string[];
+  }
+
+  interface LabelImage {
+    multiscales: Multiscale[];
+    "image-label": ImageLabel;
   }
 
   type Attrs =

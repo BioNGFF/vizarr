@@ -34,9 +34,7 @@ export const getAnndataColors = async (
     labelQueryParameters.type === "feature"
       ? await getFeatureDataPath(url, labelQueryParameters.labelIndex)
       : await getObservationDataPath(labelQueryParameters.labelIndex);
-
   const data = await fetchDataFromZarr(url, path.path, path.slice);
-
   let min: number;
   let max: number;
   let colorscale: string[] | undefined;
@@ -60,7 +58,6 @@ export const getAnndataColors = async (
     colorscale,
     categories,
   });
-
   return {
     colors: colours,
     max,

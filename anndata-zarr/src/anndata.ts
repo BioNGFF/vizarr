@@ -1,6 +1,7 @@
 import { type Group, type Readable, open } from "zarrita";
 import { z } from "zod";
 import type { FeatureMetadata, ObservationMetadata } from "./hooks";
+import { log } from "./logger";
 import { fetchZarrGroup, getData } from "./zarr";
 
 const OBSERVATION_NAMES_PATH = "obs";
@@ -9,15 +10,30 @@ const CATEGORY_NAMES_PATH = "categories";
 const CATEGORY_DATA_PATH = "codes";
 const DEFAULT_INDEX_NAME = "_index";
 
+const EncodingTypeSchema = z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]);
+type EncodingType = z.infer<typeof EncodingTypeSchema>;
+
+/**
+ * AnnData records the encoding on every group it writes, but arrays produced by other
+ * tools can arrive without it. The fields are optional rather than absent from the schema,
+ * so a value that *is* present still has to be one we understand.
+ */
 const ZarrAttrsSchema = z.object({
-  "encoding-type": z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]),
-  "encoding-version": z.string(),
+  "encoding-type": EncodingTypeSchema.optional(),
+  "encoding-version": z.string().optional(),
 });
 
 const ZarrObservationAttrsSchema = ZarrAttrsSchema.extend({
   "column-order": z.array(z.string()),
   _index: z.string().optional(),
 });
+
+/** What an array without a declared encoding is treated as. */
+const DEFAULT_ENCODING_TYPE: EncodingType = "array";
+
+function encodingType(attrs: z.infer<typeof ZarrAttrsSchema>): EncodingType {
+  return attrs["encoding-type"] ?? DEFAULT_ENCODING_TYPE;
+}
 
 const AnndataCategoriesSchema = z.array(z.string());
 
@@ -52,8 +68,8 @@ function parseBooleanArray(data: unknown[]): number[] {
   return parsedData.map((value: boolean) => Number(value));
 }
 
-const getDataPath = (encodingType: string): string | undefined => {
-  if (encodingType === "categorical") {
+const getDataPath = (encoding: EncodingType): string | undefined => {
+  if (encoding === "categorical") {
     return CATEGORY_DATA_PATH;
   }
   return "";
@@ -64,9 +80,14 @@ export const fetchDataFromZarr = async (
   slice: (number | null)[] | undefined,
 ): Promise<{ data: number[]; categories?: string[] }> => {
   const root = await fetchZarrGroup(url);
+
   const dataNodeOrGroup = await open(root.resolve(path));
+
   const attrs = parseZarrAttrs(dataNodeOrGroup.attrs);
-  const dataPath = `${path}/${getDataPath(attrs["encoding-type"])}`;
+  const encoding = encodingType(attrs);
+
+  const dataPath = `${path}/${getDataPath(encoding)}`;
+
   const { data, dtype } = await getData(root, dataPath, slice);
   if (dtype === "bool") {
     const parsedData = parseBooleanArray(data);
@@ -75,7 +96,7 @@ export const fetchDataFromZarr = async (
       categories: ["false", "true"],
     };
   }
-  if (attrs["encoding-type"] === "categorical") {
+  if (encoding === "categorical") {
     const parsedData = parseIntegerArray(data);
     const categoryNamesPath = `${path}/${CATEGORY_NAMES_PATH}`;
     const categories = await getData(root, categoryNamesPath);
@@ -86,7 +107,7 @@ export const fetchDataFromZarr = async (
       categories: categoryNames,
     };
   }
-  if (attrs["encoding-type"] === "array") {
+  if (encoding === "array") {
     const parsedData = parseFloatArray(data);
     return {
       data: parsedData,
@@ -107,7 +128,7 @@ export async function getLabels(url: URL): Promise<(FeatureMetadata | Observatio
  */
 async function getVarNames(root: Group<Readable>, namesCol?: string): Promise<string[]> {
   const node = await open(root.resolve(FEATURE_NAMES_PATH));
-  const parsedAttrs = ZarrObservationAttrsSchema.parse(node.attrs);
+  const parsedAttrs = parseZarrObservationAttrs(node.attrs);
   const path = `${FEATURE_NAMES_PATH}/${namesCol ?? parsedAttrs._index ?? DEFAULT_INDEX_NAME}`;
   const { data } = await getData(root, path);
   return parseStringArray(data);
@@ -125,13 +146,13 @@ export const getFeatureNames = async (url: URL): Promise<FeatureMetadata[]> => {
       };
     });
   } catch (error) {
-    console.error(error);
+    log.error("Could not read feature names; none will be offered", error);
     return [];
   }
 };
 
-function getObservationNamesPath(encodingType: string): string {
-  if (encodingType === "categorical") {
+function getObservationNamesPath(encoding: EncodingType): string {
+  if (encoding === "categorical") {
     return CATEGORY_NAMES_PATH;
   }
   return "";
@@ -147,8 +168,9 @@ export const getObservationNames = async (url: URL): Promise<Array<ObservationMe
     const obs = await Promise.all(
       cols.map(async (col) => {
         const dataNodeOrGroup = await open(root.resolve(`${OBSERVATION_NAMES_PATH}/${col}`));
-        const parsedAttrs = ZarrAttrsSchema.parse(dataNodeOrGroup.attrs);
-        const dataPath = `${OBSERVATION_NAMES_PATH}/${col}/${getObservationNamesPath(parsedAttrs["encoding-type"])}`;
+        const parsedAttrs = parseZarrAttrs(dataNodeOrGroup.attrs);
+        const colEncoding = encodingType(parsedAttrs);
+        const dataPath = `${OBSERVATION_NAMES_PATH}/${col}/${getObservationNamesPath(colEncoding)}`;
         const dataNode = await open(root.resolve(dataPath), { kind: "array" });
 
         const metadata: ObservationMetadata = { type: "observation", labelIndex: col };
@@ -157,11 +179,11 @@ export const getObservationNames = async (url: URL): Promise<Array<ObservationMe
           return metadata;
         }
 
-        if (parsedAttrs["encoding-type"] === "array") {
+        if (colEncoding === "array") {
           return metadata;
         }
 
-        if (parsedAttrs["encoding-type"] === "categorical") {
+        if (colEncoding === "categorical") {
           const { data } = await getData(root, dataPath);
           const parsedCategories = AnndataCategoriesSchema.parse(data);
           metadata.categories = parsedCategories;
@@ -172,7 +194,7 @@ export const getObservationNames = async (url: URL): Promise<Array<ObservationMe
     );
     return obs.filter((observation) => observation !== undefined);
   } catch (error) {
-    console.error(error);
+    log.error("Could not read observation names; none will be offered", error);
     return [];
   }
 };
