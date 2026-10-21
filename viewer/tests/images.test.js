@@ -8,14 +8,13 @@ import { getYamlFileNames, writeImageYaml } from "./metadata";
 const imagesPath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "generic"));
 
 const files = getYamlFileNames(imagesPath);
-
 files.map(async (file) => {
+  console.log(file);
   const filePath = path.join(imagesPath, file);
   const description = yaml.parse(fs.readFileSync(filePath, "utf8"));
-
   if (description.testable) {
     test(`Can read ${description.source} without error`, async () => {
-      const sourceData = await createSourceData({
+      await createSourceData({
         source: description.source,
       });
       await writeImageYaml(description.source, file, imagesPath);

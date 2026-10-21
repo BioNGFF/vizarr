@@ -12,6 +12,14 @@ import { getBf2RawImagePaths, getBf2rawOMEXML } from "./providers/bioformats2raw
 import { MetadataError, openZarrRoot } from "./services/http";
 import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
 
+/** Unique, defined image paths referenced by a scene's coordinate transformations. */
+export function getSceneImagePaths(scene: Ome.Scene): string[] {
+  const paths = scene.coordinateTransformations
+    .map((transformation) => transformation.input.path)
+    .filter((path): path is string => path !== undefined);
+  return Array.from(new Set(paths));
+}
+
 export async function loadScene(
   config: ImageLayerConfig,
   grp: zarr.Group<zarr.Readable>,
@@ -312,7 +320,7 @@ function getImageTransformations(metadata: Ome.Multiscale[]): Ome.CoordinateTran
   return metadata[0].coordinateTransformations ? metadata[0].coordinateTransformations : [];
 }
 
-function getOrderedTransformations(
+export function getOrderedTransformations(
   metadata: Ome.Multiscale[],
   coordinateSystem: Ome.CoordinateSystem,
 ): Ome.CoordinateTransformation[] {
@@ -390,8 +398,8 @@ export async function loadOmeMultiscales(
     : getDefaultCoordinateSystem(attrs.multiscales);
   const selectedCoordinateSystem = config.coordinateSystem
     ? coordinateSystems.filter((coordinateSystem) => {
-        return coordinateSystem.name === config.coordinateSystem;
-      })[0]
+      return coordinateSystem.name === config.coordinateSystem;
+    })[0]
     : coordinateSystems[0];
   const axes = selectedCoordinateSystem.axes;
 
@@ -492,8 +500,8 @@ async function loadOmeImageLabel(
     : getDefaultCoordinateSystem(attrs.multiscales);
   const selectedCoordinateSystem = coordinateSystem
     ? coordinateSystems.filter((system) => {
-        return system.name === coordinateSystem;
-      })[0]
+      return system.name === coordinateSystem;
+    })[0]
     : coordinateSystems[0];
   const loader = await getImageLoader(attrs.multiscales, node, selectedCoordinateSystem.axes);
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);

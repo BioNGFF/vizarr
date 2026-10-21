@@ -1,5 +1,14 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.1/6001237.zarr
+zarr_version: 2
+version: "0.1"
+type: image
+zipped: false
+multiscale: true
+channels:
+  - Oct6
+  - LaminB1
+  - Dapi
+  - gamma-tubulin
+labels: 1
 name: fa237fbb-6a92-4998-85d3-1ec795baf516.yaml
 testable: true
-features:
-  multiscale: true

@@ -1,5 +1,12 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.1/6001241.zarr
+zarr_version: 2
+version: "0.1"
+type: image
+zipped: false
+multiscale: true
+channels:
+  - LaminB1
+  - Dapi
+labels: 0
 name: 698053e3-d485-4469-9245-caa6c3ec9fe1.yaml
 testable: true
-features:
-  multiscale: true

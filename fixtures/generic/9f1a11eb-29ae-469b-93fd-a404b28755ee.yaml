@@ -1,5 +1,14 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.1/9836844.zarr
+zarr_version: 2
+version: "0.1"
+type: image
+zipped: false
+multiscale: true
+channels:
+  - Cam2-T1
+  - Cam1-T2
+  - "2"
+  - "3"
+labels: 0
 name: 9f1a11eb-29ae-469b-93fd-a404b28755ee.yaml
 testable: true
-features:
-  multiscale: true

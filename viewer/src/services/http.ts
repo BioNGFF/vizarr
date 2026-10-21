@@ -47,7 +47,6 @@ export class MetadataNotFoundError extends MetadataError {
     Object.setPrototypeOf(this, MetadataNotFoundError.prototype);
   }
 }
-
 function isCorsFailure(error: unknown): error is TypeError {
   return error instanceof TypeError && MAYBE_CORS_ERROR_MESSAGES.includes(error.message);
 }

@@ -1,5 +1,9 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.1/4495402.zarr
+zarr_version: 2
+version: "0.1"
+type: image
+zipped: false
+multiscale: true
+labels: 0
 name: 13834ee8-6e10-4898-8cd5-76545ba98793.yaml
 testable: true
-features:
-  multiscale: true

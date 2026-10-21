@@ -1,5 +1,13 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.1/6001258.zarr
+zarr_version: 2
+version: "0.1"
+type: image
+zipped: false
+multiscale: true
+channels:
+  - GammaTubulin
+  - LaminB1
+  - Dapi
+labels: 0
 name: 55e542b3-8927-4719-8ec0-b1d33cd8bd41.yaml
 testable: true
-features:
-  multiscale: true

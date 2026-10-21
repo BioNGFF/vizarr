@@ -1,3 +1,149 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr
-name: 14002892
-testable: false
+zarr_version: 3
+version: "0.5"
+type: bf2Raw
+zipped: false
+images:
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/0
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/1
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    transformations:
+      - scale
+      - translation
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/2
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    transformations:
+      - scale
+      - translation
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/3
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    transformations:
+      - scale
+      - translation
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/4
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    transformations:
+      - scale
+      - translation
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/5
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    transformations:
+      - scale
+      - translation
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/6
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    transformations:
+      - scale
+      - translation
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/7
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    transformations:
+      - scale
+      - translation
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0033A/BR00109990_C2.zarr/8
+    zarr_version: 3
+    version: "0.5"
+    type: image
+    zipped: false
+    multiscale: true
+    transformations:
+      - scale
+      - translation
+    channels:
+      - Nuclei
+      - ER
+      - Nucleoli/Cytoplasmic RNA
+      - Actin/Golgi/Membrane
+      - Mitochondria
+    labels: 0
+name: a105f5b7-7e76-42cc-9652-5c051e122f59.yaml
+testable: true

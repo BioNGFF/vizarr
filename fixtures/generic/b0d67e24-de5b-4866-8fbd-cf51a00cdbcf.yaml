@@ -1,5 +1,60 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0076A/10501752.zarr
+zarr_version: 2
+version: "0.4"
+type: image
+zipped: false
+multiscale: true
+channels:
+  - Total HH3-113In
+  - Xe126-126Xe
+  - I127-127I
+  - Xe131-131Xe
+  - Xe134-134Xe
+  - H3K27me3-139La
+  - Ce140-140Ce
+  - CK5-141Pr
+  - Fibronectin-Nd142
+  - CK19-143Nd
+  - CK8_18-144Nd
+  - Twist-145Nd
+  - CD68-146Nd
+  - CK14-147Sm
+  - SMA-148Nd
+  - Vimentin-149Sm
+  - C-myc-Nd150
+  - HER2-Eu151
+  - CD3-Sm152
+  - p-HH3-Eu153
+  - p-ERK1/2-154Sm
+  - Slug-155Gd
+  - ER-156Gd
+  - PR-158Gd
+  - p53-159Tb
+  - CD44-160Gd
+  - EpCAM-161Dy
+  - CD45-162Dy
+  - GATA3-163Dy
+  - CD20-164Dy
+  - Beta-catenin-165Ho
+  - CAIX-166Er
+  - E_Cadherin-167Er
+  - Ki67-168Er
+  - EGFR-169Tm
+  - pS6-170Er
+  - Sox9-171Yb
+  - vWF-CD31-Yb172
+  - mTOR-173Yb
+  - CK7-174Yb
+  - panCK-175Lu
+  - cPARP-cCasp3-176Yb
+  - DNA1-191Ir
+  - DNA2-193Ir
+  - Hg202-202Hg
+  - Pb202-202Pb
+  - Pb206-206Pb
+  - Pb207-207Pb
+  - Pb208-208Pb
+  - ArAr80-80ArAr
+labels: 1
 name: b0d67e24-de5b-4866-8fbd-cf51a00cdbcf.yaml
 testable: true
-features:
-  multiscale: true
