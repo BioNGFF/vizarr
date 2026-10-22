@@ -40,7 +40,13 @@ export default function App() {
 
   // Read once on mount. These are inputs; the URL writes below are outputs, kept so a
   // view can be shared by link.
-  const { sources, labels, viewState, enableRoi, tableURLs } = React.useMemo(() => {
+  const {
+    sources: initialSources,
+    labels,
+    viewState,
+    enableRoi,
+    tableURLs,
+  } = React.useMemo(() => {
     const { searchParams } = new URL(window.location.href);
     return {
       sources: searchParams.getAll("source"),
@@ -49,6 +55,40 @@ export default function App() {
       enableRoi: searchParams.get("roi") === "1",
       tableURLs: searchParams.getAll("anndata"),
     };
+  }, []);
+
+  // Held in state rather than read from the URL on each render, so that drilling into a
+  // plate and the browser's own history both have one place to change it. Re-reading the
+  // URL every render would hand the viewer a new array each time and reload everything.
+  const [sources, setSources] = React.useState(initialSources);
+
+  // Record a drill-down in the URL so the view can be shared and stepped back through.
+  // pushState rather than replaceState: a well is somewhere you navigated to, and Back
+  // should return to the plate.
+  const handleSourceChange = React.useCallback((url: string) => {
+    setSources((current) => {
+      if (current.length === 1 && current[0] === url) {
+        return current;
+      }
+      const next = new URL(window.location.href);
+      next.searchParams.delete("source");
+      next.searchParams.append("source", url);
+      // The view belongs to the image being left; the next one fits itself.
+      next.searchParams.delete("viewState");
+      window.history.pushState(window.history.state, "", next.href);
+      return [url];
+    });
+  }, []);
+
+  // Follow the browser's own history. The viewer reloads from the prop, which also
+  // discards the breadcrumb trail.
+  React.useEffect(() => {
+    const onPopState = () => {
+      const fromUrl = new URL(window.location.href).searchParams.getAll("source");
+      setSources((current) => (current.join("\u0000") === fromUrl.join("\u0000") ? current : fromUrl));
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   // Keyed by source index rather than a fixed-length array, so it stays correct if the
@@ -95,6 +135,15 @@ export default function App() {
   }, [tableURLs, sources, selectCallback]);
 
   const [viewerInfo, setViewerInfo] = React.useState<ViewerInfo | null>(null);
+
+  // The viewer navigates itself when a plate is drilled into; this is how the app hears
+  // about it. Only meaningful for a single source, which is what a drill-down produces.
+  const navigatedTo = viewerInfo?.sourceUrl;
+  React.useEffect(() => {
+    if (navigatedTo && sources.length <= 1) {
+      handleSourceChange(navigatedTo);
+    }
+  }, [navigatedTo, sources.length, handleSourceChange]);
 
   // ---- ROI state (lifted to app level) ----
   const [roiDrawState, setRoiDrawState] = React.useState<RoiDrawState>(null);

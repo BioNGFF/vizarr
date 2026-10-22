@@ -1,12 +1,13 @@
 import { Add, ChevronLeft, ChevronRight, Fullscreen, GitHub, HighlightAlt, PanTool, Remove } from "@mui/icons-material";
 import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import * as React from "react";
 
 import { useReducer } from "react";
 import { version } from "../../../package.json";
 
 import { SourceDataContext, useViewState } from "../hooks";
-import { firstLayerFitAtom, interactionModeAtom, sourceInfoAtom, sourceInfoAtomAtoms } from "../state";
+import { firstLayerFitAtom, interactionModeAtom, panelInsetAtom, sourceInfoAtom, sourceInfoAtomAtoms } from "../state";
 import { tokens } from "../theme";
 import { REPOSITORY_URL } from "../utils";
 import LayerController from "./LayerController";
@@ -19,6 +20,25 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
   const sourceInfo = useAtomValue(sourceInfoAtom);
   const sourceAtoms = useAtomValue(sourceInfoAtomAtoms);
   const [hidden, toggle] = useReducer((v) => !v, !(open ?? true));
+
+  // Measured rather than taken from the token, because the width is responsive and
+  // animates as the panel collapses. Fitting an image reads this so the image lands in
+  // the space the panel leaves, not behind it.
+  const panelRef = React.useRef<HTMLDivElement | null>(null);
+  const setPanelInset = useSetAtom(panelInsetAtom);
+  React.useEffect(() => {
+    const element = panelRef.current;
+    if (!element) {
+      return;
+    }
+    const observer = new ResizeObserver(([entry]) => setPanelInset(entry.contentRect.width));
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      // The panel is gone, so nothing is covered any more.
+      setPanelInset(0);
+    };
+  }, [setPanelInset]);
   const [interactionMode, setInteractionMode] = useAtom(interactionModeAtom);
   const [, setViewState] = useViewState();
   const fitViewState = useAtomValue(firstLayerFitAtom);
@@ -63,6 +83,7 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
       }}
     >
       <Box
+        ref={panelRef}
         sx={{
           pointerEvents: "auto",
           width: hidden ? 0 : tokens.layout.panelWidth,

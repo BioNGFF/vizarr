@@ -22,16 +22,24 @@ export const MAX_CHANNELS = 6;
  * label settings. Derived from the url and position instead, a reload of the same
  * sources returns the same atoms.
  *
- * The label url is part of the key because the family hands back a cached atom for a
- * known id without rebuilding its state: a source whose label changed but whose id did
- * not would keep layer state describing the label it no longer has.
+ * The label url and acquisition are part of the key because the family hands back a
+ * cached atom for a known id without rebuilding its state: a source whose label or
+ * acquisition changed but whose id did not would keep layer state describing the image
+ * it no longer shows. It also means settings tuned for one acquisition come back when
+ * that acquisition does.
  *
  * FNV-1a, base36. Not cryptographic; it only has to separate different urls and stay
  * safe to embed in a DOM id and a deck.gl layer id.
  */
-export function sourceId(source: string, index: number, subIndex: number, label = ""): string {
-  // NUL cannot appear in either url, so no pair of inputs shares a key.
-  const key = `${source}\u0000${label}`;
+export function sourceId(
+  source: string,
+  index: number,
+  subIndex: number,
+  parts: { label?: string; acquisition?: string } = {},
+): string {
+  // Fixed arity and NUL-separated, so no combination of present and absent parts can
+  // produce the key of a different combination.
+  const key = [source, parts.label ?? "", parts.acquisition ?? ""].join("\u0000");
   let hash = 2166136261;
   for (let i = 0; i < key.length; i++) {
     hash ^= key.charCodeAt(i);
@@ -277,8 +285,10 @@ export function fitImageToViewport(options: {
   viewport: { width: number; height: number };
   padding: number;
   matrix?: Matrix4;
+  /** Width of the panel covering the left of the viewport, in pixels. */
+  insetLeft?: number;
 }): ViewState {
-  const { image, viewport, padding, matrix = new Matrix4().identity() } = options;
+  const { image, viewport, padding, matrix = new Matrix4().identity(), insetLeft = 0 } = options;
   const corners = [
     [0, 0, 0],
     [image.width, 0, 0],
@@ -291,17 +301,22 @@ export function fitImageToViewport(options: {
   const minY = Math.min(...corners.map((p) => p[1]));
   const maxY = Math.max(...corners.map((p) => p[1]));
 
-  const availableWidth = viewport.width - 2 * padding;
-  const availableHeight = viewport.height - 2 * padding;
+  // Only the uncovered part of the viewport can show the image, so the panel narrows
+  // what there is to fit into. Clamped so a panel wider than the viewport cannot ask
+  // for a negative width.
+  const availableWidth = Math.max(1, viewport.width - insetLeft - 2 * padding);
+  const availableHeight = Math.max(1, viewport.height - 2 * padding);
 
+  const scale = Math.min(
+    availableWidth / (maxX - minX), // scaleX
+    availableHeight / (maxY - minY), // scaleY
+  );
+
+  // Deck puts `target` at the centre of the whole viewport, so centring the image in
+  // the uncovered part means moving the target half the covered width to the left.
   return {
-    zoom: Math.log2(
-      Math.min(
-        availableWidth / (maxX - minX), // scaleX
-        availableHeight / (maxY - minY), // scaleY
-      ),
-    ),
-    target: [(minX + maxX) / 2, (minY + maxY) / 2],
+    zoom: Math.log2(scale),
+    target: [(minX + maxX) / 2 - insetLeft / 2 / scale, (minY + maxY) / 2],
   };
 }
 
@@ -587,7 +602,7 @@ export function isGridLayerProps(
 export function resolveLoaderFromLayerProps(
   layerProps: GridLayerProps | ImageLayerProps | MultiscaleImageLayerProps | LabelLayerProps,
 ) {
-  return isGridLayerProps(layerProps) ? layerProps.loaders[0].loader : layerProps.loader;
+  return isGridLayerProps(layerProps) ? layerProps.loaders[0].sources : layerProps.loader;
 }
 
 /**

@@ -207,7 +207,7 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
     colormap,
     modelMatrix: source.model_matrix,
     onClick: source.onClick,
-    pickable: Boolean(source.onClick),
+    pickable: Boolean(source.onClick || source.resolveCellSource),
   } satisfies BaseLayerProps;
 
   if (source.loaders) {
@@ -324,11 +324,12 @@ export async function loadSources(sources: string[], labels: string[] = []) {
     sources.map(async (source, index) => {
       const sourceData = await createSourceData({ source: source, label: labels[index] });
       return sourceData.map((data, subIndex) => {
-        const id = utils.sourceId(source, index, subIndex, labels[index]);
+        const config = { source, label: labels[index] };
+        const id = utils.sourceId(source, index, subIndex, { label: labels[index] });
         if (!data.name) {
           data.name = sourceData.length > 1 ? `image_${index}_${subIndex}` : `image_${index}`;
         }
-        return { id, sourceIndex: index, ...data };
+        return { ...data, id, sourceIndex: index, subIndex, config };
       });
     }),
   );

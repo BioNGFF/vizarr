@@ -1,6 +1,6 @@
 import { type Atom, atom } from "jotai";
 import { atomFamily, splitAtom, waitForAll } from "jotai/utils";
-import { RedirectError, fitImageToViewport, getLayerSize, rethrowUnless } from "./utils";
+import { RedirectError, fitImageToViewport, getLayerSize, rethrowUnless, sourceId } from "./utils";
 
 import type { Layer } from "deck.gl";
 
@@ -9,7 +9,7 @@ export interface ViewportSize {
   width: number;
   height: number;
 }
-import type { PrimitiveAtom } from "jotai";
+import type { Getter, PrimitiveAtom, Setter } from "jotai";
 import type { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import type { Matrix4 } from "math.gl";
 import type * as zarr from "zarrita";
@@ -66,6 +66,9 @@ export type OnClickData = Record<string, unknown> & {
   gridCoord?: { row: number; column: number };
 };
 
+/** One step of the trail into a plate: a source, and what to call it. */
+export type NavigationStep = { source: string; name: string };
+
 export type ImageLabels = Array<{
   name: string;
   loader: ZarrPixelSource[];
@@ -85,6 +88,10 @@ export type SourceData = {
   name?: string;
   /** Index of the `sources` entry this image was loaded from; see `loadSources`. */
   sourceIndex?: number;
+  /** Position within that entry, where one url yielded several images. */
+  subIndex?: number;
+  /** What this was loaded from, so it can be reloaded with one part changed. */
+  config?: ImageLayerConfig;
   channel_axis: number | null;
   colors: string[];
   names: string[];
@@ -98,6 +105,15 @@ export type SourceData = {
   model_matrix: Matrix4;
   axis_labels: string[];
   onClick?: (e: OnClickData) => void;
+  /**
+   * The url of the image a grid cell stands for, for drilling into it.
+   *
+   * Set only where the host has not supplied its own click handler, since a host that
+   * handles clicks decides what one means.
+   */
+  resolveCellSource?: (coord: { row: number; column: number }) => string | undefined;
+  /** Where this was drilled into from, oldest first. Empty when opened directly. */
+  history?: NavigationStep[];
   labels?: ImageLabels;
 };
 
@@ -123,8 +139,42 @@ type WithId<T> = T & { id: string };
 
 export const viewStateAtom = atom<ViewState | null>(null);
 
+/**
+ * How much of the viewport's left edge the controls panel covers, in pixels.
+ *
+ * Reported by the panel because its width is responsive and it can be collapsed. Fitting
+ * an image uses it so the image lands in the space actually visible rather than behind
+ * the panel.
+ */
+export const panelInsetAtom = atom(0);
+
 export const sourceErrorAtom = atom<string | null>(null);
 export const sourceWarningAtom = atom<string[]>([]);
+
+/**
+ * How many source loads are in flight.
+ *
+ * A count rather than a flag: a host can add an image while the initial sources are
+ * still arriving, and the viewer is only idle once every one of them has settled.
+ *
+ * This deliberately covers whole sources, not pixels. Layers that already have an image
+ * on screen refine themselves by drawing a coarser resolution until a sharper one
+ * arrives, which tells the user more than a spinner would.
+ */
+const loadingCountAtom = atom(0);
+
+/** Whether any source is currently loading. */
+export const isLoadingAtom = atom((get) => get(loadingCountAtom) > 0);
+
+export const beginLoadAtom = atom(null, (_get, set) => {
+  set(loadingCountAtom, (count) => count + 1);
+});
+
+export const endLoadAtom = atom(null, (_get, set) => {
+  // Clamped so an unbalanced end can never leave the count negative and wedge the
+  // viewer in a permanently "loading" state.
+  set(loadingCountAtom, (count) => Math.max(0, count - 1));
+});
 
 /**
  * Which pointer interaction the toolbar has selected. "pan" is the viewer's own default;
@@ -277,6 +327,7 @@ export const addImageAtom = atom(null, async (get, set, config: ImageLayerConfig
   const { createSourceData } = await import("./io");
   const id = Math.random().toString(36).slice(2);
 
+  set(beginLoadAtom);
   try {
     const sourceData = await createSourceData(config);
     const prevSourceInfo = get(sourceInfoAtom);
@@ -291,7 +342,133 @@ export const addImageAtom = atom(null, async (get, set, config: ImageLayerConfig
     } else {
       set(sourceErrorAtom, err.message);
     }
+  } finally {
+    set(endLoadAtom);
   }
+});
+
+/**
+ * Reload one source showing a different acquisition, replacing it where it sits.
+ *
+ * Changing acquisition changes which arrays are read, so this is a load rather than a
+ * layer toggle. Only the one source is replaced, leaving any others alone, and the new
+ * id means the layer state describes the acquisition actually on screen. Returning to a
+ * previous acquisition returns to its settings, since the family keeps both.
+ *
+ * `acquisitionId` below zero means "no particular acquisition", matching the option the
+ * panel offers.
+ */
+export const setAcquisitionAtom = atom(null, async (get, set, params: { id: string; acquisitionId: number }) => {
+  const sources = get(sourceInfoAtom);
+  const entry = sources.find((source) => source.id === params.id);
+  const config = entry?.config;
+  // Nothing to reload from for a source added through the programmatic API without a
+  // url, so the panel leaves it as it is rather than guessing.
+  if (!entry || !config || typeof config.source !== "string") {
+    return;
+  }
+  const acquisition = params.acquisitionId < 0 ? undefined : String(params.acquisitionId);
+  const nextConfig = { ...config, acquisition };
+  const { createSourceData } = await import("./io");
+  set(beginLoadAtom);
+  try {
+    const [data] = await createSourceData(nextConfig);
+    const nextId = sourceId(config.source, entry.sourceIndex ?? 0, entry.subIndex ?? 0, {
+      label: config.label,
+      acquisition,
+    });
+    const replacement = {
+      ...data,
+      id: nextId,
+      sourceIndex: entry.sourceIndex,
+      subIndex: entry.subIndex,
+      config: nextConfig,
+    };
+    // The id may be one shown before, whose layers deck.gl has already finalized.
+    dropLayerInstances(replacement);
+    set(
+      sourceInfoAtom,
+      get(sourceInfoAtom).map((source) => (source.id === params.id ? replacement : source)),
+    );
+  } catch (err) {
+    rethrowUnless(err, Error);
+    set(sourceErrorAtom, err.message);
+  } finally {
+    set(endLoadAtom);
+  }
+});
+
+/**
+ * Replace one source with another, keeping a trail of where it came from.
+ *
+ * This is how drilling into a plate works: the well takes the plate's place in the same
+ * viewer rather than opening a second one, so the view, the plugins and every other
+ * source stay as they are. `history` is what lets the panel offer the way back.
+ *
+ * `trimTo` rewinds instead: it drops back to that depth in the trail, which is what the
+ * breadcrumb's earlier steps do.
+ */
+async function replaceSource(
+  get: Getter,
+  set: Setter,
+  params: { id: string; source: string; history: NavigationStep[] },
+): Promise<void> {
+  const current = get(sourceInfoAtom);
+  const entry = current.find((source) => source.id === params.id);
+  if (!entry?.config) {
+    return;
+  }
+  // Acquisition belongs to the image it was chosen for, so it does not follow a move.
+  const nextConfig: ImageLayerConfig = { ...entry.config, source: params.source, acquisition: undefined };
+  const { createSourceData } = await import("./io");
+  set(beginLoadAtom);
+  try {
+    const [data] = await createSourceData(nextConfig);
+    const nextId = sourceId(params.source, entry.sourceIndex ?? 0, entry.subIndex ?? 0, {
+      label: nextConfig.label,
+    });
+    const replacement = {
+      ...data,
+      id: nextId,
+      sourceIndex: entry.sourceIndex,
+      subIndex: entry.subIndex,
+      config: nextConfig,
+      history: params.history,
+    };
+    // The id may be one shown before, whose layers deck.gl has already finalized.
+    dropLayerInstances(replacement);
+    set(
+      sourceInfoAtom,
+      get(sourceInfoAtom).map((source) => (source.id === params.id ? replacement : source)),
+    );
+  } catch (err) {
+    rethrowUnless(err, Error);
+    set(sourceErrorAtom, err.message);
+  } finally {
+    set(endLoadAtom);
+  }
+}
+
+/** Drill into `source`, remembering the image being left behind. */
+export const navigateIntoAtom = atom(null, async (get, set, params: { id: string; source: string }) => {
+  const entry = get(sourceInfoAtom).find((source) => source.id === params.id);
+  const from = entry?.config?.source;
+  if (!entry || typeof from !== "string") {
+    return;
+  }
+  const history = [...(entry.history ?? []), { source: from, name: entry.name ?? "Image" }];
+  await replaceSource(get, set, { id: params.id, source: params.source, history });
+});
+
+/** Go back to `depth` steps into the trail, which the breadcrumb's earlier steps do. */
+export const navigateBackAtom = atom(null, async (get, set, params: { id: string; depth: number }) => {
+  const entry = get(sourceInfoAtom).find((source) => source.id === params.id);
+  const trail = entry?.history ?? [];
+  const step = trail[params.depth];
+  if (!step) {
+    return;
+  }
+  await replaceSource(get, set, { id: params.id, source: step.source, history: trail.slice(0, params.depth) });
 });
 
 export const sourceInfoAtomAtoms = splitAtom(sourceInfoAtom);
@@ -317,6 +494,7 @@ export const firstLayerFitAtom = atom((get) => {
   const layerProps = get(layerFamilyAtom(sources[0])).layerProps;
   return {
     ...fitImageToViewport({
+      insetLeft: get(panelInsetAtom),
       image: getLayerSize({ props: layerProps } as VizarrLayer),
       viewport,
       // Matches LayerFitToViewportButton, so per-layer and global fit agree.
@@ -406,6 +584,21 @@ const imageLabelsIstanceFamily = atomFamily((a: Atom<LayerState>) =>
     );
   }),
 );
+
+/**
+ * Drop the memoized deck.gl layers for a source id.
+ *
+ * `layerInstanceFamily` rebuilds only when its layer state changes, so returning to a
+ * source shown earlier -- switching an acquisition back, or stepping up a plate -- finds
+ * an unchanged state and hands deck.gl the very layer instance it has already finalized.
+ * Nothing then draws until a viewport change forces an update. The layer *state* is kept,
+ * so whatever was tuned for that image is still there; only the instance is rebuilt.
+ */
+function dropLayerInstances(source: WithId<SourceData>): void {
+  const layerStateAtom = layerFamilyAtom(source);
+  layerInstanceFamily.remove(layerStateAtom);
+  imageLabelsIstanceFamily.remove(layerStateAtom);
+}
 
 export const layerAtoms = atom((get) => {
   const layerAtoms = [];
