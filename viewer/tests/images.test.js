@@ -9,7 +9,6 @@ const imagesPath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "ge
 
 const files = getYamlFileNames(imagesPath);
 files.map(async (file) => {
-  console.log(file);
   const filePath = path.join(imagesPath, file);
   const description = yaml.parse(fs.readFileSync(filePath, "utf8"));
   if (description.testable) {
