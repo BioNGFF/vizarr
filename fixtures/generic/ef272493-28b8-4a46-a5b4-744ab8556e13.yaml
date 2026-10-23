@@ -4,6 +4,7 @@ version: "0.5"
 type: image
 zipped: false
 multiscale: true
+transformations: []
 channels:
   - LaminB1
   - Dapi

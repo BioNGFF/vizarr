@@ -3,6 +3,10 @@ zarr_version: 3
 version: 0.6.dev3
 type: scene
 zipped: false
+transformations:
+  - sequence
+  - affine
+  - translation
 images:
   - source: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/test-data/v0.6.dev3/idr0050/4995115_scene.zarr/4995115_full.zarr
     zarr_version: 3
@@ -10,6 +14,7 @@ images:
     type: image
     zipped: false
     multiscale: true
+    transformations: []
     channels:
       - Actin
       - Cell
@@ -23,6 +28,8 @@ images:
     multiscale: true
     transformations:
       - sequence
+      - translation
+      - rotation
     channels:
       - Actin
       - Cell
@@ -36,6 +43,8 @@ images:
     multiscale: true
     transformations:
       - sequence
+      - translation
+      - rotation
     channels:
       - Actin
       - Cell

@@ -4,6 +4,7 @@ version: "0.1"
 type: image
 zipped: false
 multiscale: true
+transformations: []
 channels:
   - GammaTubulin
   - LaminB1

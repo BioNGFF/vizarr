@@ -8,8 +8,8 @@ import * as utils from "./utils";
 import { DEFAULT_LABEL_OPACITY, type OmeColor } from "./layers/label-layer";
 import type { BaseLayerProps } from "./layers/viv-layers";
 import { loadBf2Raw } from "./providers/bioformats2raw";
-import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 import { openZarrRoot } from "./services/http";
+import type { ImageLayerConfig, LayerState, MultichannelConfig, SingleChannelConfig, SourceData } from "./state";
 
 async function loadSingleChannel(config: SingleChannelConfig, data: Array<ZarrPixelSource>): Promise<SourceData> {
   const { color, contrast_limits, visibility, name, colormap = "", opacity = 1 } = config;
@@ -106,7 +106,6 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
 
     if (utils.isMultiscales(attrs)) {
       const sources = [await loadOmeMultiscales(config, node, attrs)];
-      debugger;
       return sources;
     }
 

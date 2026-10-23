@@ -4,6 +4,7 @@ version: "0.1"
 type: image
 zipped: false
 multiscale: true
+transformations: []
 channels:
   - Cam2-T1
   - Cam1-T2

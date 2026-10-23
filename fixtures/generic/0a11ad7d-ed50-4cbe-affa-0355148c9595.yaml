@@ -4,6 +4,7 @@ version: "0.4"
 type: image
 zipped: false
 multiscale: true
+transformations: []
 channels:
   - 3-CY5
   - 5-TMR

@@ -19,7 +19,9 @@ test("Image-level transformations should be applied", async () => {
 });
 
 test("Can read a scene image and apply transformations", async () => {
-  const sourcePath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "scene.yaml"));
+  const sourcePath = path.resolve(
+    path.join(__dirname, "..", "..", "fixtures", "generic", "34115deb-4f41-4278-9e29-a544e2a2ca5b.yaml"),
+  );
   const source = yaml.parse(fs.readFileSync(sourcePath, "utf-8"));
   const sourceDatas = await createSourceData(source);
 

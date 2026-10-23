@@ -4,6 +4,7 @@ version: "0.1"
 type: image
 zipped: false
 multiscale: false
+transformations: []
 channels:
   - "0"
 labels: 0

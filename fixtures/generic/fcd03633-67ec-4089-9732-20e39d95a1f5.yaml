@@ -4,6 +4,7 @@ version: "0.4"
 type: image
 zipped: false
 multiscale: true
+transformations: []
 channels:
   - "0"
   - "1"

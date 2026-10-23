@@ -5,6 +5,7 @@ version: "0.5"
 type: image
 zipped: false
 multiscale: true
+transformations: []
 channels:
   - Channel 0
   - Channel 1

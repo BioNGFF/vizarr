@@ -2,23 +2,35 @@ import fs from "node:fs";
 import path from "node:path";
 import ZipFileStore from "@zarrita/storage/zip";
 import { stringify } from "yaml";
-import { createSourceData } from "../src/io";
-import { openZarrRoot } from "../src/services/http";
-import { narrowVersionAndType } from "../src/parsers/shallow-parse";
-import { parse } from "../src/parsers/parse";
-import { getSceneImagePaths } from "../src/ome";
-import { getBf2RawImagePaths, getBf2rawOMEXML } from "../src/providers/bioformats2raw";
-import { guessZarrVersion } from "../src/utils";
 import * as zarr from "zarrita";
+import { createSourceData } from "../src/io";
+import { getSceneImagePaths } from "../src/ome";
+import { parse } from "../src/parsers/parse";
+import { narrowVersionAndType } from "../src/parsers/shallow-parse";
+import { getBf2RawImagePaths, getBf2rawOMEXML } from "../src/providers/bioformats2raw";
+import { openZarrRoot } from "../src/services/http";
+import { guessZarrVersion } from "../src/utils";
 
-// Builds the metadata dictionary for a single OME-Zarr source. For bf2Raw layouts, this
-// recurses into each underlying image so `images` contains the same shape of metadata as
-// a plain image source.
+type TransformationLike = { type: string; transformations?: TransformationLike[] };
+
+function collectTransformationTypes(transformations?: TransformationLike[]): string[] {
+  const types = new Set<string>();
+  for (const t of transformations ?? []) {
+    types.add(t.type);
+    if (t.transformations) {
+      for (const nestedType of collectTransformationTypes(t.transformations)) {
+        types.add(nestedType);
+      }
+    }
+  }
+  return Array.from(types);
+}
+
 export async function createImageMetadata(url: string) {
   const node = await openZarrRoot(url);
   const { version, type } = narrowVersionAndType(node.attrs);
   const attrs = parse(node.attrs);
-  let metadata = {};
+  let metadata: Record<string, unknown> = {};
   metadata.source = url;
   metadata.zarr_version = await guessZarrVersion(node);
   metadata.version = version;
@@ -28,9 +40,7 @@ export async function createImageMetadata(url: string) {
   if (attrs) {
     if (attrs.type === "image") {
       metadata.multiscale = attrs.data.multiscales[0].datasets?.length > 1;
-      metadata.transformations = attrs.data.multiscales[0].coordinateTransformations?.map(
-        (transformation) => transformation.type,
-      );
+      metadata.transformations = collectTransformationTypes(attrs.data.multiscales[0].coordinateTransformations);
       metadata.channels = attrs.data.omero?.channels.map((channel) => {
         return channel.label;
       });
@@ -48,6 +58,7 @@ export async function createImageMetadata(url: string) {
 
     if (attrs.type === "scene") {
       const scene = attrs.data.scene as Ome.Scene;
+      metadata.transformations = collectTransformationTypes(scene.coordinateTransformations);
       const imagePaths = getSceneImagePaths(scene);
       metadata.images = await Promise.all(
         imagePaths.map((imagePath) => createImageMetadata(`${url}/${imagePath}`.replace(/([^:]\/)\/+/g, "$1"))),
@@ -81,4 +92,3 @@ export function writeUntestableYaml(url, imageName, savePath) {
     }),
   );
 }
-
