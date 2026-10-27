@@ -191,7 +191,7 @@ export async function loadPlate(
 ): Promise<SourceData> {
   utils.assert(plateAttrs?.rows || plateAttrs?.columns, "Plate .zattrs missing rows, columns or wells");
 
-  const rows = plateAttrs.rows.map((row) => row.name); 
+  const rows = plateAttrs.rows.map((row) => row.name);
   const columns = plateAttrs.columns.map((row) => row.name);
 
   // Fields are by index and we assume at least 1 per Well
