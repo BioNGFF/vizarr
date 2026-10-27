@@ -7,7 +7,8 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Deliberately a direct console.log rather than the logger
+// Deliberately a direct console.log rather than the logger: the banner has to appear in
+// production builds, and the logger's debug/info levels are compiled out of them.
 console.log(`[vizarr] v${version} ${REPOSITORY_URL}`);
 
 const rootElement = document.getElementById("root");

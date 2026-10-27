@@ -1,4 +1,4 @@
-import { type ViewState, type ViewerInfo, Vizarr, theme } from "@biongff/vizarr";
+import { type ViewState, type ViewerInfo, Vizarr, createLogger, theme } from "@biongff/vizarr";
 
 import { AnndataController, AnndataProvider, type labelColor } from "@biongff/anndata-zarr";
 import type { PendingRoi, RoiDrawState, SavedRoi } from "@biongff/roi-selector";
@@ -10,6 +10,8 @@ import * as React from "react";
 
 import "@biongff/anndata-zarr/dist/anndata-zarr.css";
 
+const log = createLogger("vizarr:app");
+
 const EMPTY_COLORS: labelColor[] = [];
 
 function parseViewStateFromUrl(): ViewState | undefined {
@@ -20,7 +22,7 @@ function parseViewStateFromUrl(): ViewState | undefined {
     try {
       return JSON.parse(viewStateString);
     } catch (e) {
-      console.warn("Invalid viewState in URL:", e);
+      log.warn("Ignoring an unparseable viewState in the URL", e);
     }
   }
 
