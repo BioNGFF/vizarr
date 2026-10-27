@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import ZipFileStore from "@zarrita/storage/zip";
+import pMap from "p-map";
 import { stringify } from "yaml";
 import * as zarr from "zarrita";
 import { createSourceData } from "../src/io";
@@ -24,6 +25,10 @@ function collectTransformationTypes(transformations?: TransformationLike[]): str
     }
   }
   return Array.from(types);
+}
+
+function joinSourcePath(source: string, path: string): string {
+  return `${source}/${path}`.replace(/([^:]\/)\/+/g, "$1");
 }
 
 export async function createImageMetadata(url: string) {
@@ -52,7 +57,7 @@ export async function createImageMetadata(url: string) {
       const parsedOMEXML = await getBf2rawOMEXML(url);
       const imagePaths = await getBf2RawImagePaths(node, parsedOMEXML);
       metadata.images = await Promise.all(
-        imagePaths.map((imagePath) => createImageMetadata(`${url}/${imagePath}`.replace(/([^:]\/)\/+/g, "$1"))),
+        imagePaths.map((imagePath) => createImageMetadata(joinSourcePath(url, imagePath))),
       );
     }
 
@@ -61,8 +66,35 @@ export async function createImageMetadata(url: string) {
       metadata.transformations = collectTransformationTypes(scene.coordinateTransformations);
       const imagePaths = getSceneImagePaths(scene);
       metadata.images = await Promise.all(
-        imagePaths.map((imagePath) => createImageMetadata(`${url}/${imagePath}`.replace(/([^:]\/)\/+/g, "$1"))),
+        imagePaths.map((imagePath) => createImageMetadata(joinSourcePath(url, imagePath))),
       );
+    }
+
+    if (attrs.type === "well") {
+      metadata.images = Object.fromEntries(
+        await Promise.all(
+          attrs.data.well.images.map(
+            async ({ path }) => [path, await createImageMetadata(joinSourcePath(url, path))] as const,
+          ),
+        ),
+      );
+    }
+
+    if (attrs.type === "plate") {
+      const { columns, rows, wells: listedWells } = attrs.data.plate;
+      const wells: Record<string, unknown> = Object.fromEntries(
+        rows.flatMap(({ name: row }) => columns.map(({ name: column }) => [`${row}/${column}`, {}] as const)),
+      );
+      const occupiedWells = await pMap(
+        listedWells,
+        async ({ path }) => {
+          const wellMetadata = await createImageMetadata(joinSourcePath(url, path));
+          return [path, wellMetadata.images ?? {}] as const;
+        },
+        { concurrency: 10 },
+      );
+      Object.assign(wells, Object.fromEntries(occupiedWells));
+      metadata.wells = wells;
     }
   }
 

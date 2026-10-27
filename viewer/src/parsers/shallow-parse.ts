@@ -105,6 +105,13 @@ export function narrowVersionAndType(data: object): { version: Versions | undefi
     if (hasVersion.success) {
       return { version: hasVersion.data.version, type: type };
     }
+  } else if (type === "plate") {
+    const plate = isPlateSchema.parse(parsedData).plate;
+    const hasVersion = hasVersionSchema.safeParse(plate);
+    if (hasVersion.success) {
+      return { version: hasVersion.data.version, type: type };
+    }
   }
+
   return { version: version, type: type };
 }

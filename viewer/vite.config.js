@@ -11,7 +11,7 @@ export default defineConfig({
     // These suites fetch real images over the network, which is well beyond vitest's 5s
     // default on a loaded CI runner. Set here rather than in the root config: a project
     // does not inherit test options from the config that lists it.
-    testTimeout: 30000,
+    testTimeout: 60000,
     setupFiles: ["./tests/setup.ts"],
   },
   build: {
