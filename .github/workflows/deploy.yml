@@ -1,9 +1,20 @@
 name: Deploy
 
+# The release, not the push that caused it. semantic-release writes the version bump
+# as a commit of its own, so the pushed commit carries the previous version and would
+# deploy a build that misreports itself. The tag names the bumped commit, so checking
+# that out deploys what the release actually is. See #139.
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
+  # A deploy is otherwise only reachable by cutting a release, which is a poor way to
+  # recover from a bad one.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to deploy. Defaults to the tip of main."
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -19,6 +30,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # An empty ref is the default branch, which is what an unqualified manual run
+          # should get.
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
