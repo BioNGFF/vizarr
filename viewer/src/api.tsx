@@ -21,6 +21,8 @@ import {
 import theme from "./theme";
 import { defer, typedEmitter } from "./utils";
 
+export type { LogFunction, Logger } from "./logger";
+
 type Events = {
   viewStateChange: ViewState;
 };

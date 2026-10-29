@@ -1,5 +1,6 @@
 import type * as viv from "@vivjs/types";
 import { Matrix4 } from "math.gl";
+import { log } from "./logger";
 
 /**
  * Convert an array of coordinateTransformations objects to a 16-element
@@ -19,11 +20,16 @@ export function coordinateTransformationsToMatrix(
 ) {
   // Apply each transformation sequentially and in order according to the OME-NGFF v0.4 spec.
   // Reference: https://ngff.openmicroscopy.org/0.4/#trafo-md
-  for (const transform of coordinateTransformations ?? []) {
+  const transforms = coordinateTransformations ?? [];
+  if (transforms.length > 0) {
+    log.debug("Applying coordinate transformations", {
+      types: transforms.map((t) => t.type),
+      transforms,
+    });
+  }
+  for (const transform of transforms) {
     if (transform.type === "translation") {
-      console.log("Translating image");
       const { translation: axisOrderedTranslation } = transform;
-      console.log(transform);
       if (axisOrderedTranslation.length !== axes.length) {
         throw new Error("Length of translation array was expected to match length of axes.");
       }
@@ -31,7 +37,6 @@ export function coordinateTransformationsToMatrix(
 
       mat = applyCoordinateTranslationToMatrix(mat, cartesianTranslation);
     } else if (transform.type === "scale") {
-      console.log("Scaling image");
       const { scale: axisOrderedScale } = transform;
       // Add in z dimension needed for Matrix4 scale API.
       if (axisOrderedScale.length !== axes.length) {
@@ -41,16 +46,13 @@ export function coordinateTransformationsToMatrix(
 
       mat = applyCoordinateScalingToMatrix(mat, cartesianTranslation);
     } else if (transform.type === "rotation") {
-      console.log("Rotating image");
       const cartesianRotation = getCartesianMatrixTransformation(axes, transform.rotation);
 
       mat = applyCoordinateRotationToMatrix(mat, cartesianRotation);
     } else if (transform.type === "sequence") {
-      console.log("Sequence tranformation detected");
       mat = coordinateTransformationsToMatrix(transform.transformations, axes, mat);
     }
     if (transform.type === "affine") {
-      console.log("Affine transformation detected");
       const cartestianAffine = getCartesianMatrixTransformation(axes, transform.affine);
       const affineMat = new Matrix4(cartestianAffine);
       mat = mat.multiplyLeft(affineMat);
