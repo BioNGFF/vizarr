@@ -2,11 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect, test } from "vitest";
 import yaml from "yaml";
-import { getFeatureDataPath, getObservationNames, getVarIndex } from "../src/anndata";
-import { getAnndataColors } from "../src/hooks";
+import { getFeatureDataPath, getObservationNames, getVarIndex } from "../../src/anndata";
+import { getAnndataColors } from "../../src/hooks";
 import expectedColours from "./expected_colours.json";
 
-const fixtures_path = path.resolve(path.join(__dirname, "..", "..", "fixtures"));
+const fixtures_path = path.resolve(path.join(__dirname, "..", "..", "..", "fixtures"));
 
 const table = yaml.parse(fs.readFileSync(path.join(fixtures_path, "anndata_table.yaml"), "utf-8"));
 const url = new URL(table.source);

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
-import { applyLabelColors, initLayerStateFromSource, loadSources } from "../src/io";
-import type { OmeColor } from "../src/layers/label-layer";
-import { range } from "../src/utils";
+import { applyLabelColors, initLayerStateFromSource, loadSources } from "../../src/io";
+import type { OmeColor } from "../../src/layers/label-layer";
+import { range } from "../../src/utils";
 
 const labelImageURL = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr";
 const imageURL = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0066/ExpD_chicken_embryo_MIP.ome.zarr";

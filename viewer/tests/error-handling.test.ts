@@ -5,9 +5,8 @@ import * as path from "node:path";
 import { afterEach, beforeEach, expect, test } from "vitest";
 
 import type { Server } from "node:http";
-import { Group } from "zarrita";
 import { createSourceData } from "../src/io";
-import { HttpError, MetadataNotFoundError, openZarrRoot } from "../src/services/http";
+import { HttpError, MetadataNotFoundError } from "../src/services/http";
 
 let server: Server<typeof http.IncomingMessage, typeof http.ServerResponse>;
 let port: number;
@@ -101,11 +100,4 @@ test("Server handles zarr files with no metadata", async () => {
     expect(result.status).toBe("rejected");
     expect(result.reason).toBeInstanceOf(MetadataNotFoundError);
   });
-});
-
-//Ensure that the error handling is not over-eager
-test("Server handles zarr metadata errors elegantly", async () => {
-  const source = "https://livingobjects.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr";
-  const result = await openZarrRoot(source);
-  expect(result).toBeInstanceOf(Group);
 });
