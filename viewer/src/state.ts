@@ -1,6 +1,6 @@
 import { type Atom, atom } from "jotai";
 import { atomFamily, splitAtom, waitForAll } from "jotai/utils";
-import { RedirectError, fitImageToViewport, getLayerSize, rethrowUnless, sourceId } from "./utils";
+import { RedirectError, fitImageToViewport, getLayerSize, nameFromSource, rethrowUnless, sourceId } from "./utils";
 
 import type { Layer } from "deck.gl";
 
@@ -75,42 +75,38 @@ export type OnClickData = Record<string, unknown> & {
  */
 export type NavigationStep = { source: string; name: string; acquisition?: string };
 
-/** Separates an ancestor's url from the view of it, when a trail travels through a URL. */
-const TRAIL_VIEW_PREFIX = "#acquisition=";
-
 /**
  * A trail step as a single string, so it can live in one URL parameter.
  *
- * The acquisition rides in a fragment because that is what a fragment is for -- which
- * view of a resource -- and a zarr source never carries one of its own.
+ * What was being viewed rides in a fragment, because that is what a fragment is for --
+ * which view of a resource -- and a zarr source never carries one of its own. The name
+ * travels too: a plate is called whatever its metadata calls it, which no amount of
+ * reading the url will tell you, and a refreshed page should read as the session did.
  */
 export function encodeNavigationStep(step: NavigationStep): string {
-  return step.acquisition ? `${step.source}${TRAIL_VIEW_PREFIX}${step.acquisition}` : step.source;
-}
-
-/**
- * The inverse, for a trail arriving from a URL.
- *
- * Such a trail has no names, since nothing has loaded those ancestors; the last path
- * segments stand in, which for a well is the row and column that names it anyway.
- */
-export function decodeNavigationStep(encoded: string): NavigationStep {
-  const at = encoded.indexOf(TRAIL_VIEW_PREFIX);
-  const source = at === -1 ? encoded : encoded.slice(0, at);
-  const acquisition = at === -1 ? undefined : encoded.slice(at + TRAIL_VIEW_PREFIX.length) || undefined;
-  return { source, acquisition, name: nameFromSource(source) };
-}
-
-/** A readable label for a source url, for a trail that arrived without names. */
-function nameFromSource(source: string): string {
-  const segments = source.split("?")[0].replace(/\/+$/, "").split("/").filter(Boolean);
-  const last = segments.at(-1) ?? source;
-  // A well is addressed as <plate>/<row>/<column>, which reads better joined up.
-  const previous = segments.at(-2);
-  if (previous && /^[A-Za-z]{1,2}$/.test(previous) && /^\d{1,3}$/.test(last)) {
-    return `${previous}${last}`;
+  const view = new URLSearchParams();
+  // Only worth carrying when it says more than the url already does.
+  if (step.name && step.name !== nameFromSource(step.source)) {
+    view.set("name", step.name);
   }
-  return last.replace(/\.(ome\.)?zarr$/i, "");
+  if (step.acquisition) {
+    view.set("acquisition", step.acquisition);
+  }
+  const fragment = view.toString();
+  return fragment ? `${step.source}#${fragment}` : step.source;
+}
+
+/** The inverse, for a trail arriving from a URL. */
+export function decodeNavigationStep(encoded: string): NavigationStep {
+  const at = encoded.indexOf("#");
+  const source = at === -1 ? encoded : encoded.slice(0, at);
+  const view = new URLSearchParams(at === -1 ? "" : encoded.slice(at + 1));
+  return {
+    source,
+    acquisition: view.get("acquisition") || undefined,
+    // Falls back to the url for a trail written by hand.
+    name: view.get("name") || nameFromSource(source),
+  };
 }
 
 export type ImageLabels = Array<{

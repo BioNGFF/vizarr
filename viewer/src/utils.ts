@@ -48,6 +48,30 @@ export function sourceId(
   return `${(hash >>> 0).toString(36)}-${index}-${subIndex}`;
 }
 
+/**
+ * A readable name for a source url, for an image that does not name itself.
+ *
+ * Follows the names used elsewhere for the same things, so a plate opened fresh reads
+ * the same as one drilled into: a well is `Well A1`, a field of one is `Field 0`, and
+ * anything else is its group without the extension read back at you.
+ */
+export function nameFromSource(source: string): string {
+  const segments = source.split("?")[0].split("#")[0].replace(/\/+$/, "").split("/").filter(Boolean);
+  const last = segments.at(-1) ?? source;
+  const previous = segments.at(-2);
+  const beforeThat = segments.at(-3);
+  const isRow = (segment: string | undefined) => Boolean(segment && /^[A-Za-z]{1,2}$/.test(segment));
+  const isIndex = (segment: string) => /^\d{1,3}$/.test(segment);
+  // A field is addressed as <plate>/<row>/<column>/<field>, a well as <plate>/<row>/<column>.
+  if (isRow(beforeThat) && previous && isIndex(previous) && isIndex(last)) {
+    return `Field ${last}`;
+  }
+  if (isRow(previous) && isIndex(last)) {
+    return `Well ${previous}${last}`;
+  }
+  return last.replace(/\.(ome\.)?zarr$/i, "");
+}
+
 /** Project repository, linked from the panel header and the load-error message. */
 export const REPOSITORY_URL = "https://github.com/BioNGFF/vizarr";
 
