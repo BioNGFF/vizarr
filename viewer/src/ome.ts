@@ -75,27 +75,77 @@ const GRID_OPEN_CONCURRENCY = 64;
  * datasets from, which is what being a grid of like images means. The grid layer clamps
  * per cell anyway, so a shallower image degrades rather than fails.
  */
-async function openImagePyramids(
+/** One image of a grid, with its levels opened as they are needed. */
+type LazyPyramid = {
+  /** Levels, finest first. An entry is undefined until something has asked for it. */
+  sources: Array<ZarrPixelSource | undefined>;
+  /** Opens a level if it is not already open, and remembers it. */
+  open(level: number): Promise<ZarrPixelSource>;
+};
+
+/**
+ * Open the levels a grid needs to draw now, and leave the rest until a zoom asks.
+ *
+ * Opening every level of every image dominated the time before anything appeared: on a
+ * 96-well, 5-level plate it is 480 arrays against 96, and measured against IDR that is
+ * 2.1s against 0.8s, while fetching the pixels for the whole grid at its coarsest level
+ * takes about 0.2s. So only the coarsest level of each image is opened eagerly, which is
+ * all a grid zoomed out can draw, plus every level of one image, whose shapes tell the
+ * layer what the pyramid looks like without opening it everywhere.
+ */
+async function openGridPyramids(
   grp: zarr.Group<zarr.Readable>,
   imagePaths: string[],
   datasetPaths: string[],
-): Promise<Array<Array<zarr.Array<zarr.DataType, zarr.Readable>>>> {
-  const opens = imagePaths.flatMap((imagePath, imageIndex) =>
-    datasetPaths.map((datasetPath, level) => ({ imagePath, imageIndex, datasetPath, level })),
-  );
-  const pyramids: Array<Array<zarr.Array<zarr.DataType, zarr.Readable>>> = imagePaths.map(() => []);
-  await pMap(
-    opens,
-    async ({ imagePath, imageIndex, datasetPath, level }) => {
-      // @ts-expect-error - we don't need the meta for these arrays
-      const arr: zarr.Array<zarr.DataType, zarr.Readable> = await zarr.open(
-        grp.resolve(utils.join(imagePath, datasetPath)),
-        { kind: "array", attrs: false },
-      );
-      pyramids[imageIndex][level] = arr;
-    },
-    { concurrency: GRID_OPEN_CONCURRENCY },
-  );
+  axisLabels: ReturnType<typeof utils.getNgffAxisLabels>,
+): Promise<LazyPyramid[]> {
+  async function openArray(imagePath: string, level: number) {
+    // @ts-expect-error - we don't need the meta for these arrays
+    const arr: zarr.Array<zarr.DataType, zarr.Readable> = await zarr.open(
+      grp.resolve(utils.join(imagePath, datasetPaths[level])),
+      { kind: "array", attrs: false },
+    );
+    return arr;
+  }
+
+  const reference = await Promise.all(datasetPaths.map((_, level) => openArray(imagePaths[0], level)));
+  const tileSize = utils.guessTileSize(reference[0]);
+
+  const pyramids: LazyPyramid[] = imagePaths.map((imagePath, index) => {
+    const sources: Array<ZarrPixelSource | undefined> = new Array(datasetPaths.length).fill(undefined);
+    if (index === 0) {
+      reference.forEach((arr, level) => {
+        sources[level] = new ZarrPixelSource(arr, { labels: axisLabels, tileSize });
+      });
+    }
+    // Opens in progress, so two cells asking for the same level do not open it twice.
+    const opening = new Map<number, Promise<ZarrPixelSource>>();
+    return {
+      sources,
+      open(level: number): Promise<ZarrPixelSource> {
+        const ready = sources[level];
+        if (ready) {
+          return Promise.resolve(ready);
+        }
+        const already = opening.get(level);
+        if (already) {
+          return already;
+        }
+        const promise = openArray(imagePath, level).then((arr) => {
+          const source = new ZarrPixelSource(arr, { labels: axisLabels, tileSize });
+          sources[level] = source;
+          opening.delete(level);
+          return source;
+        });
+        opening.set(level, promise);
+        return promise;
+      },
+    };
+  });
+
+  // The coarsest level of every other image, which is what a grid zoomed out draws.
+  const coarsest = datasetPaths.length - 1;
+  await pMap(pyramids.slice(1), (pyramid) => pyramid.open(coarsest), { concurrency: GRID_OPEN_CONCURRENCY });
   return pyramids;
 }
 
@@ -144,12 +194,11 @@ export async function loadWell(
   // at once, which made it more expensive than the plate it is opened from.
   const datasetPaths = imgAttrs.multiscales[0].datasets.map((dataset) => dataset.path);
 
-  // Create loaders for every Image.
-  const pyramids = await openImagePyramids(grp, imgPaths, datasetPaths);
   const axes = utils.getNgffAxes(imgAttrs.multiscales);
   const axis_labels = utils.getNgffAxisLabels(axes);
 
-  const tileSize = utils.guessTileSize(pyramids[0][0]);
+  // Create loaders for every Image.
+  const pyramids = await openGridPyramids(grp, imgPaths, datasetPaths, axis_labels);
   const loaders = utils.range(rows).flatMap((row) => {
     // filter to remove any empty row/col position
     return utils
@@ -161,7 +210,7 @@ export async function loadWell(
           name: String(offset),
           row,
           col,
-          sources: pyramids[offset].map((arr) => new ZarrPixelSource(arr, { labels: axis_labels, tileSize })),
+          ...pyramids[offset],
         };
       });
   });
@@ -179,7 +228,7 @@ export async function loadWell(
     loaders,
     ...meta,
     axis_labels,
-    loader: loaders[0].sources,
+    loader: loaders[0].sources.filter((source): source is ZarrPixelSource => Boolean(source)),
     model_matrix: utils.parseMatrix(config.model_matrix),
     defaults: {
       selection: meta.defaultSelection,
@@ -239,7 +288,6 @@ export async function loadPlate(
   // A well holds one image per acquisition, and the plate can only draw one of them per
   // cell. Without a choice it draws the first, which is what it has always done; with
   // one it draws that acquisition across every well.
-  const acquisitions = plateAttrs.acquisitions ?? [];
   const acquisitionId: number | undefined = config.acquisition ? Number.parseInt(config.acquisition) : undefined;
 
   // Fields are by index and we assume at least 1 per Well
@@ -275,28 +323,38 @@ export async function loadPlate(
   const { datasets } = imgAttrs.multiscales[0];
   const datasetPaths = datasets.map((dataset) => dataset.path);
 
-  async function getImgPath(wellPath: string) {
+  async function readWell(wellPath: string) {
     const wellAttrs = await utils.getAttrsOnly<{ well: Ome.Well }>(grp, {
       path: wellPath,
       zarrVersion,
     });
     utils.assert("well" in wellAttrs, "Path for image is not valid, not a well.");
-    return utils.join(wellPath, pickImage(wellAttrs.well.images).path);
+    const images = wellAttrs.well.images;
+    return {
+      imagePath: utils.join(wellPath, pickImage(images).path),
+      // Which acquisitions this well was actually imaged in.
+      acquisitionIds: images.flatMap((image) => (image.acquisition === undefined ? [] : [image.acquisition])),
+    };
   }
-  const wellImagePaths = await Promise.all(wellPaths.map(getImgPath));
+  const wells = await Promise.all(wellPaths.map(readWell));
+  const wellImagePaths = wells.map((well) => well.imagePath);
+  // Offer only the acquisitions some well was actually imaged in. A plate can declare
+  // more than its wells reference, and choosing one of those would silently fall back
+  // to the first image -- a choice that appears to do nothing.
+  const referenced = new Set(wells.flatMap((well) => well.acquisitionIds));
+  const offered = (plateAttrs.acquisitions ?? []).filter((acquisition) => referenced.has(acquisition.id));
 
-  // Create loaders for every Well. Some loaders may be undefined if Wells are missing.
-  const pyramids = await openImagePyramids(grp, wellImagePaths, datasetPaths);
   const axes = utils.getNgffAxes(imgAttrs.multiscales);
   const axis_labels = utils.getNgffAxisLabels(axes);
-  const tileSize = utils.guessTileSize(pyramids[0][0]);
+  // Create loaders for every Well. Some loaders may be undefined if Wells are missing.
+  const pyramids = await openGridPyramids(grp, wellImagePaths, datasetPaths, axis_labels);
   const loaders = wellImagePaths.map((wellImagePath, index) => {
     const [row, col] = wellImagePath.split("/");
     return {
       name: `${row}${col}`,
       row: rows.indexOf(row),
       col: columns.indexOf(col),
-      sources: pyramids[index].map((arr) => new ZarrPixelSource(arr, { labels: axis_labels, tileSize })),
+      ...pyramids[index],
     };
   });
   let meta: Meta;
@@ -313,7 +371,7 @@ export async function loadPlate(
     loaders,
     ...meta,
     axis_labels,
-    loader: loaders[0].sources,
+    loader: loaders[0].sources.filter((source): source is ZarrPixelSource => Boolean(source)),
     model_matrix: utils.parseMatrix(config.model_matrix),
     defaults: {
       selection: meta.defaultSelection,
@@ -323,10 +381,9 @@ export async function loadPlate(
     name: plateAttrs.name || "Plate",
     rows: rows.length,
     columns: columns.length,
-    // Only where there is a choice to make. A plate that declares a single acquisition
-    // would otherwise get a dropdown whose two options do the same thing. This mirrors
-    // the guard loadWell already applies.
-    ...(acquisitions.length > 1 ? { acquisitions, acquisitionId: acquisitionId ?? -1 } : {}),
+    // Only where there is a choice to make. One acquisition, or none the wells use,
+    // would otherwise get a dropdown whose options all do the same thing.
+    ...(offered.length > 1 ? { acquisitions: offered, acquisitionId: acquisitionId ?? -1 } : {}),
     rowNames: rows,
     columnNames: columns,
   };

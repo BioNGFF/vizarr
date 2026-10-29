@@ -16,7 +16,14 @@ import type { BaseLayerProps } from "./viv-layers";
  * the plate is on screen. A well holds a single level, as its images are shown whole.
  */
 export interface GridLoader {
-  sources: ZarrPixelSource[];
+  /**
+   * Resolution levels, finest first. An entry is undefined until something has asked
+   * for that level, which `open` is for: opening every level of every cell up front is
+   * what used to delay the first frame.
+   */
+  sources: Array<ZarrPixelSource | undefined>;
+  /** Opens a level if it is not already open, and remembers it. */
+  open(level: number): Promise<ZarrPixelSource>;
   row: number;
   col: number;
   name: string;
@@ -100,6 +107,16 @@ type SharedLayerState = {
   inFlightKey: string | null;
   /** What the data currently on screen was fetched for. */
   renderedKey: string | null;
+  /**
+   * A refresh held back until the first frame has landed.
+   *
+   * Opening a plate starts the coarsest level, which is the cheapest thing that can be
+   * shown. Fitting the view then asks for a sharper one a moment later, and superseding
+   * the first request would throw away a frame that was nearly ready and leave the
+   * plate empty for longer. Held as props rather than as a built request, so the viewport
+   * is read again when it finally runs.
+   */
+  deferredProps: GridLayerProps | null;
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -245,11 +262,13 @@ function requestKey(context: GridContext, level: number, selections: number[][])
 
 function buildGridContext(props: GridLayerProps, viewport?: Viewport): GridContext | null {
   const { loaders, spacer = 0 } = props;
-  const base = loaders.find((loader) => loader.sources.length > 0);
-  if (!base) {
+  // The reference cell, whose levels are all open; the rest describe the same pyramid.
+  const base = loaders.find((loader) => loader.sources[0]);
+  const finest = base?.sources[0];
+  if (!finest) {
     return null;
   }
-  const fullSize = sourceDimensions(base.sources[0]);
+  const fullSize = sourceDimensions(finest);
   if (fullSize.width === 0 || fullSize.height === 0) {
     return null;
   }
@@ -276,7 +295,8 @@ async function loadCell(
 ): Promise<GridDataEntry> {
   const { loader } = cell;
   // Levels are shared across a plate but a cell may be shallower; clamp rather than fail.
-  const source = loader.sources[Math.min(level, loader.sources.length - 1)];
+  // Opened on demand, so a zoom pays for the levels it actually reaches and no more.
+  const source = await loader.open(Math.min(level, loader.sources.length - 1));
   const { window, renderBounds } = windowForLevel({
     visibleBounds: cell.visibleBounds,
     cellBounds: cell.cellBounds,
@@ -356,6 +376,7 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
       settleTimer: null,
       inFlightKey: null,
       renderedKey: null,
+      deferredProps: null,
     };
     if (context) {
       this.#refresh(this.props, level, context);
@@ -510,6 +531,7 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
     state.inFlight?.abort();
     state.inFlight = null;
     state.inFlightKey = null;
+    state.deferredProps = null;
   }
 
   #scheduleRefresh(props: GridLayerProps) {
@@ -542,6 +564,14 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
       return;
     }
 
+    // Nothing on screen yet and a cheaper frame already on its way: let it land, and
+    // come back to this once it has. Only while the grid is empty -- after that there is
+    // something to look at, so replacing it promptly matters more than the wasted work.
+    if (state.renderedKey === null && state.inFlight !== null) {
+      state.deferredProps = props;
+      return;
+    }
+
     // Supersede whatever was in flight: its result is for a viewport we have left.
     state.inFlight?.abort();
     const controller = new AbortController();
@@ -562,6 +592,7 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
           fullWidth: context.fullSize.width,
           fullHeight: context.fullSize.height,
         });
+        this.#runDeferred();
       })
       .catch(() => {
         // Never blank the grid on failure. An abort is the ordinary way a superseded
@@ -571,7 +602,25 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
         if (requestId !== current.requestId) return;
         current.inFlight = null;
         current.inFlightKey = null;
+        // Even a failed first frame must release whatever was waiting behind it.
+        this.#runDeferred();
       });
+  }
+
+  /** Run the refresh that was held back, against the viewport as it is now. */
+  #runDeferred() {
+    const state = this.#state;
+    const props = state.deferredProps;
+    if (!props) {
+      return;
+    }
+    state.deferredProps = null;
+    const viewport = this.context.viewport;
+    const level = this.#pickLevel(props.loaders, viewport);
+    if (level !== state.resolutionLevel) {
+      this.setState({ resolutionLevel: level });
+    }
+    this.#refresh(props, level, buildGridContext(props, viewport));
   }
 
   /** The deepest level every cell has, i.e. the coarsest resolution available to all. */
@@ -585,12 +634,15 @@ class GridLayer extends CompositeLayer<CompositeLayerProps & GridLayerProps> {
     if (coarsest <= 0) {
       return 0;
     }
-    const base = loaders.find((loader) => loader.sources.length > 0);
+    const base = loaders.find((loader) => loader.sources[0]);
     const screen = this.#cellScreenSize(viewport);
     if (!base || !screen) {
       return this.#state.resolutionLevel;
     }
-    const levelSizes = base.sources.slice(0, coarsest + 1).map(sourceDimensions);
+    const levelSizes = base.sources
+      .slice(0, coarsest + 1)
+      .filter((source): source is ZarrPixelSource => Boolean(source))
+      .map(sourceDimensions);
     return pickLevelForScreenSize(levelSizes, screen);
   }
 

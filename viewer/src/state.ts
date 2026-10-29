@@ -66,8 +66,52 @@ export type OnClickData = Record<string, unknown> & {
   gridCoord?: { row: number; column: number };
 };
 
-/** One step of the trail into a plate: a source, and what to call it. */
-export type NavigationStep = { source: string; name: string };
+/**
+ * One step of the trail into a plate.
+ *
+ * The acquisition is part of the step because the breadcrumb returns you to the view you
+ * left, not to a default: coming back to a plate you were reading at one timepoint and
+ * finding it at another loses your place.
+ */
+export type NavigationStep = { source: string; name: string; acquisition?: string };
+
+/** Separates an ancestor's url from the view of it, when a trail travels through a URL. */
+const TRAIL_VIEW_PREFIX = "#acquisition=";
+
+/**
+ * A trail step as a single string, so it can live in one URL parameter.
+ *
+ * The acquisition rides in a fragment because that is what a fragment is for -- which
+ * view of a resource -- and a zarr source never carries one of its own.
+ */
+export function encodeNavigationStep(step: NavigationStep): string {
+  return step.acquisition ? `${step.source}${TRAIL_VIEW_PREFIX}${step.acquisition}` : step.source;
+}
+
+/**
+ * The inverse, for a trail arriving from a URL.
+ *
+ * Such a trail has no names, since nothing has loaded those ancestors; the last path
+ * segments stand in, which for a well is the row and column that names it anyway.
+ */
+export function decodeNavigationStep(encoded: string): NavigationStep {
+  const at = encoded.indexOf(TRAIL_VIEW_PREFIX);
+  const source = at === -1 ? encoded : encoded.slice(0, at);
+  const acquisition = at === -1 ? undefined : encoded.slice(at + TRAIL_VIEW_PREFIX.length) || undefined;
+  return { source, acquisition, name: nameFromSource(source) };
+}
+
+/** A readable label for a source url, for a trail that arrived without names. */
+function nameFromSource(source: string): string {
+  const segments = source.split("?")[0].replace(/\/+$/, "").split("/").filter(Boolean);
+  const last = segments.at(-1) ?? source;
+  // A well is addressed as <plate>/<row>/<column>, which reads better joined up.
+  const previous = segments.at(-2);
+  if (previous && /^[A-Za-z]{1,2}$/.test(previous) && /^\d{1,3}$/.test(last)) {
+    return `${previous}${last}`;
+  }
+  return last.replace(/\.(ome\.)?zarr$/i, "");
+}
 
 export type ImageLabels = Array<{
   name: string;
@@ -373,6 +417,11 @@ export const setAcquisitionAtom = atom(null, async (get, set, params: { id: stri
   set(beginLoadAtom);
   try {
     const [data] = await createSourceData(nextConfig);
+    // A change of acquisition is the same image at another timepoint, so it keeps the
+    // name it was already shown under.
+    if (!data.name) {
+      data.name = entry.name;
+    }
     const nextId = sourceId(config.source, entry.sourceIndex ?? 0, entry.subIndex ?? 0, {
       label: config.label,
       acquisition,
@@ -383,6 +432,9 @@ export const setAcquisitionAtom = atom(null, async (get, set, params: { id: stri
       sourceIndex: entry.sourceIndex,
       subIndex: entry.subIndex,
       config: nextConfig,
+      // Changing the acquisition is a change of view, not a move, so the way back out
+      // of the plate is still the way back out.
+      history: entry.history,
     };
     // The id may be one shown before, whose layers deck.gl has already finalized.
     dropLayerInstances(replacement);
@@ -411,21 +463,29 @@ export const setAcquisitionAtom = atom(null, async (get, set, params: { id: stri
 async function replaceSource(
   get: Getter,
   set: Setter,
-  params: { id: string; source: string; history: NavigationStep[] },
+  params: { id: string; source: string; history: NavigationStep[]; acquisition?: string; name?: string },
 ): Promise<void> {
   const current = get(sourceInfoAtom);
   const entry = current.find((source) => source.id === params.id);
   if (!entry?.config) {
     return;
   }
-  // Acquisition belongs to the image it was chosen for, so it does not follow a move.
-  const nextConfig: ImageLayerConfig = { ...entry.config, source: params.source, acquisition: undefined };
+  // An acquisition does not follow a move inwards -- a well shows all of its images --
+  // but stepping back out restores the one that step was recorded with.
+  const nextConfig: ImageLayerConfig = { ...entry.config, source: params.source, acquisition: params.acquisition };
   const { createSourceData } = await import("./io");
   set(beginLoadAtom);
   try {
     const [data] = await createSourceData(nextConfig);
+    // Only `loadSources` names an unnamed image, and a move does not go through it. A
+    // field of a well rarely names itself, so the caller's name for it stands in rather
+    // than leaving the panel header blank.
+    if (!data.name && params.name) {
+      data.name = params.name;
+    }
     const nextId = sourceId(params.source, entry.sourceIndex ?? 0, entry.subIndex ?? 0, {
       label: nextConfig.label,
+      acquisition: nextConfig.acquisition,
     });
     const replacement = {
       ...data,
@@ -450,14 +510,17 @@ async function replaceSource(
 }
 
 /** Drill into `source`, remembering the image being left behind. */
-export const navigateIntoAtom = atom(null, async (get, set, params: { id: string; source: string }) => {
+export const navigateIntoAtom = atom(null, async (get, set, params: { id: string; source: string; name?: string }) => {
   const entry = get(sourceInfoAtom).find((source) => source.id === params.id);
   const from = entry?.config?.source;
   if (!entry || typeof from !== "string") {
     return;
   }
-  const history = [...(entry.history ?? []), { source: from, name: entry.name ?? "Image" }];
-  await replaceSource(get, set, { id: params.id, source: params.source, history });
+  const history = [
+    ...(entry.history ?? []),
+    { source: from, name: entry.name ?? "Image", acquisition: entry.config?.acquisition },
+  ];
+  await replaceSource(get, set, { id: params.id, source: params.source, history, name: params.name });
 });
 
 /** Go back to `depth` steps into the trail, which the breadcrumb's earlier steps do. */
@@ -468,7 +531,13 @@ export const navigateBackAtom = atom(null, async (get, set, params: { id: string
   if (!step) {
     return;
   }
-  await replaceSource(get, set, { id: params.id, source: step.source, history: trail.slice(0, params.depth) });
+  await replaceSource(get, set, {
+    id: params.id,
+    source: step.source,
+    history: trail.slice(0, params.depth),
+    acquisition: step.acquisition,
+    name: step.name,
+  });
 });
 
 export const sourceInfoAtomAtoms = splitAtom(sourceInfoAtom);

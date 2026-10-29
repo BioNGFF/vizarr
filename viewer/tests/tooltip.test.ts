@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { describeHover } from "../src/components/Viewer";
+import { describeHover, gridCellName } from "../src/components/Viewer";
 
 /** The shape deck.gl hands to getTooltip; only the fields the description reads. */
 // biome-ignore lint/suspicious/noExplicitAny: a picking info is wider than this test needs
@@ -61,4 +61,19 @@ test("Background, where there is nothing to describe, shows no tooltip", () => {
   // Label 0 is background in an OME-NGFF label image, not a segment.
   expect(describeHover(hover({ label: 0, value: 1 }))).toBeNull();
   expect(describeHover({ layer: null, index: -1 } as never)).toBeNull();
+});
+
+test("A cell's name is the same before the click as the image carries after it", () => {
+  // Drilling in uses this to name an image that does not name itself, so the panel
+  // header and the tooltip agree rather than one of them reading blank.
+  expect(gridCellName(hover({ gridCoord: { row: 1, column: 0 }, gridLabels: { row: "B", column: "1" } }))).toBe(
+    "Well B1",
+  );
+  expect(gridCellName(hover({ gridCoord: { row: 0, column: 0 }, gridLabels: {}, gridCell: { name: "0" } }))).toBe(
+    "Field 0",
+  );
+});
+
+test("Away from the grid there is no cell to name", () => {
+  expect(gridCellName(hover({ label: 42 }))).toBeNull();
 });

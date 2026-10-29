@@ -10,7 +10,13 @@ import {
 
 /** A grid cell is placed by its row/column; only those three fields matter here. */
 function at(row: number, col: number) {
-  return { row, col, name: `${row}-${col}`, sources: [] };
+  return {
+    row,
+    col,
+    name: `${row}-${col}`,
+    sources: [],
+    open: () => Promise.reject(new Error("geometry needs no pixels")),
+  };
 }
 
 const CELL: Dimensions = { width: 100, height: 100 };

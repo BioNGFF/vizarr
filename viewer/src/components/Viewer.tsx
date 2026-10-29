@@ -38,24 +38,41 @@ const TOOLTIP_STYLE: Partial<CSSStyleDeclaration> = {
  * The first line names the thing; any further line adds what the name alone does not
  * say. Kept to two lines so it stays readable while the pointer is moving.
  */
-export function describeHover(info: GrayscaleBitmapLayerPickingInfo | PickingInfo): string | null {
-  const pickingInfo = info as PickingInfo & {
-    gridCoord?: { row: number; column: number };
-    gridLabels?: { row?: string; column?: string };
-    gridCell?: { name: string } | null;
-  };
+/** The picking fields the grid layer adds, which deck.gl's own types do not describe. */
+type GridPickingInfo = PickingInfo & {
+  gridCoord?: { row: number; column: number };
+  gridLabels?: { row?: string; column?: string };
+  gridCell?: { name: string } | null;
+  gridSourceId?: string;
+};
 
-  const coord = pickingInfo.gridCoord;
-  if (coord && typeof coord.row === "number" && typeof coord.column === "number") {
-    const rowLabel = pickingInfo.gridLabels?.row;
-    const columnLabel = pickingInfo.gridLabels?.column;
-    // A plate labels its rows and columns, so the pair names a well. A well grid does
-    // not, and its cells are fields of view, which the grid already numbers on screen.
-    const isWellOfPlate = Boolean(rowLabel && columnLabel);
-    const name = isWellOfPlate
-      ? `${rowLabel}${columnLabel}`
-      : (pickingInfo.gridCell?.name ?? `${coord.row + 1}, ${coord.column + 1}`);
-    const title = isWellOfPlate ? `Well ${name}` : `Field ${name}`;
+/**
+ * What to call the grid cell under the pointer, or null where the pointer is not on one.
+ *
+ * Shared by the tooltip and by drilling in, so that the name you are shown before the
+ * click is the name the image carries afterwards.
+ */
+export function gridCellName(info: PickingInfo): string | null {
+  const picked = info as GridPickingInfo;
+  const coord = picked.gridCoord;
+  if (!coord || typeof coord.row !== "number" || typeof coord.column !== "number") {
+    return null;
+  }
+  const rowLabel = picked.gridLabels?.row;
+  const columnLabel = picked.gridLabels?.column;
+  // A plate labels its rows and columns, so the pair names a well. A well grid does
+  // not, and its cells are fields of view, which the grid already numbers on screen.
+  if (rowLabel && columnLabel) {
+    return `Well ${rowLabel}${columnLabel}`;
+  }
+  return `Field ${picked.gridCell?.name ?? `${coord.row + 1}, ${coord.column + 1}`}`;
+}
+
+export function describeHover(info: GrayscaleBitmapLayerPickingInfo | PickingInfo): string | null {
+  const pickingInfo = info as GridPickingInfo;
+
+  const title = gridCellName(pickingInfo);
+  if (title !== null) {
     // Distinguishing an empty position from one that is merely still loading would
     // need the layer to track both; an absent image is the common case and the one a
     // user can act on.
@@ -203,15 +220,14 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
       // A plugin that claims the click keeps it; the select tool is not a drill-down.
       if (onPluginClick?.(coord)) return;
 
-      const picked = info as PickingInfo & {
-        gridCoord?: { row: number; column: number };
-        gridSourceId?: string;
-      };
+      const picked = info as GridPickingInfo;
       if (!picked.gridCoord || !picked.gridSourceId) return;
       const source = sourceInfo.find((entry) => entry.id === picked.gridSourceId);
       const target = source?.resolveCellSource?.(picked.gridCoord);
       if (target) {
-        navigateInto({ id: picked.gridSourceId, source: target });
+        // A field of a well rarely names itself, so the grid's own name for the cell
+        // stands in; without it the panel header would be blank.
+        navigateInto({ id: picked.gridSourceId, source: target, name: gridCellName(picked) ?? undefined });
       }
     },
     [onPluginClick, sourceInfo, navigateInto],

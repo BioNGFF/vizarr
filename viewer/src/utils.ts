@@ -602,7 +602,11 @@ export function isGridLayerProps(
 export function resolveLoaderFromLayerProps(
   layerProps: GridLayerProps | ImageLayerProps | MultiscaleImageLayerProps | LabelLayerProps,
 ) {
-  return isGridLayerProps(layerProps) ? layerProps.loaders[0].sources : layerProps.loader;
+  // A grid's first cell is the reference pyramid, the one opened in full; the others
+  // open as they are needed, so only this one is safe to read levels from.
+  return isGridLayerProps(layerProps)
+    ? layerProps.loaders[0].sources.filter((source): source is ZarrPixelSource => Boolean(source))
+    : layerProps.loader;
 }
 
 /**
