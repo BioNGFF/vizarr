@@ -4,14 +4,15 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
+import { testScope } from "../vitest.scope.js";
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), dts({ rollupTypes: true, tsconfigPath: "./tsconfig.json" })],
   test: {
-    // These suites fetch real images over the network, which is well beyond vitest's 5s
-    // default on a loaded CI runner. Set here rather than in the root config: a project
-    // does not inherit test options from the config that lists it.
-    testTimeout: 30000,
+    // Set here rather than in the root config: a project does not inherit test options
+    // from the config that lists it.
+    ...testScope(),
     setupFiles: ["./tests/setup.ts"],
   },
   build: {

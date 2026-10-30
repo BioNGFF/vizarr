@@ -1,5 +1,14 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.1/12689244.zarr
+zarr_version: 2
+version: "0.1"
+type: image
+zipped: false
+multiscale: true
+transformations: []
+channels:
+  - alpha-SMA-FITC
+  - VEGFR3-Alexa546
+  - A549-mCherry
+labels: 0
 name: 77aa71ae-e067-41e4-a24a-8c694160f8f7.yaml
 testable: true
-features:
-  multiscale: true

@@ -1,5 +1,38 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0054A/5025553.zarr
+zarr_version: 2
+version: "0.4"
+type: image
+zipped: false
+multiscale: true
+transformations: []
+channels:
+  - CD3-170Er
+  - CD19-169Tm
+  - CD324/E-Cadherin-158Gd
+  - HistoneH3-176Yb
+  - collagen14-173Yb
+  - CD279/PD-1-175Lu
+  - alphaSMA-141Pr
+  - IL-21-164Dy
+  - CD185/CXCR5-171Yb
+  - CD45-154Sm
+  - CD123-148Nd
+  - CXCL13-157Gd
+  - CD1c/BDCA1-152Sm
+  - avanti-lipid
+  - Foxp3-162Dy
+  - CD45RA-155Gd
+  - Bcl6-163Dy
+  - CD44-153Eu
+  - CTLA4-161Dy
+  - CD8a-146Nd
+  - CD11c-159Tb
+  - Rutenium red
+  - DNA1-191/193Ir
+  - Bcl2-166Er
+  - DNA3-191/193Ir
+  - CD14-156Gd
+  - Ki67-168Er
+labels: 0
 name: 5c2bd073-a256-4047-be0a-1768938caf61.yaml
 testable: true
-features:
-  multiscale: true
