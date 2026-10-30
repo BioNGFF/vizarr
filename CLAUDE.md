@@ -37,15 +37,22 @@ approve your own, so a pull request needs someone else.
 which decides the version, tags it, writes `CHANGELOG.md`, and commits the bumped
 `package.json` files back. Nothing else should move versions.
 
-Raise that merge with the **Open release PR** workflow, from the Actions tab or:
+That merge is raised for you. The **Release PR** workflow runs on every push to
+`dev`, so a `dev` to `main` pull request is always open whenever `dev` is ahead, and is
+rewritten on each merge to list what is currently waiting, grouped the way
+semantic-release reads it, so the kind of release is visible before the merge rather
+than after. 
+
+When `dev` holds nothing new it opens nothing and says so, rather than failing.
+
+To refresh it by hand, from the Actions tab or:
 
 ```
 gh workflow run release-pr.yml
 ```
 
-It opens (or refreshes) a `dev` → `main` pull request listing what is about to ship,
-grouped the way semantic-release reads it, so the kind of release is visible before
-the merge rather than after. It refuses when `dev` holds nothing new.
+Run that way it does fail when there is nothing to release, because asking for a
+release that cannot happen is a mistake worth hearing about.
 
 That pull request is not another review of the code -- everything on `dev` was
 reviewed on the way in -- but `main` still requires an approving review, so someone
@@ -70,12 +77,13 @@ Do not commit unless asked. The user reviews before anything is recorded.
 ## Commands
 
 ```
-pnpm dev     the app at http://localhost:5173
-pnpm test    the test suite
-pnpm check   typecheck, which builds the libraries first
-pnpm lint    biome ci
-pnpm fix     biome check --write
-pnpm build   all packages
+pnpm dev          the app at http://localhost:5173
+pnpm test         the offline suite
+pnpm test:remote  the corpus, which reads real images over the network
+pnpm check        typecheck, which builds the libraries first
+pnpm lint         biome ci
+pnpm fix          biome check --write
+pnpm build        all packages
 ```
 
 Run `pnpm check` and `pnpm lint` before handing work over. `pnpm check` is the slow
@@ -83,15 +91,18 @@ one and catches what the tests do not.
 
 ## Tests
 
-**`pnpm test` currently reads real data over the network** — 171 of its 184 tests
-fetch from IDR and elsewhere — so it is slow, and it fails when a server we do not
-control is slow or down. Allow for that before concluding a change broke something:
-run it again, and check whether the failures are all fetches.
+**`pnpm test` is the offline suite** — 46 tests against fixtures this repository
+generates, no network at all. It is what CI runs, and it takes about 15 seconds.
 
-Splitting it into an offline default suite and an opt-in remote one is in progress;
-see #141 and #142. Once that lands, `pnpm test` is the offline suite, `pnpm test:remote`
-is the corpus, and a test needing a server we do not run belongs in `tests/remote/`.
-Until then, prefer not to add more tests that fetch.
+**`pnpm test:remote` is the corpus**, which reads real images from IDR and elsewhere.
+It is slow, and it fails when a server we do not control is slow or down, so it is
+opt-in and CI does not run it. A test that needs a server we do not run belongs in
+`tests/remote/`.
+
+That split is not cosmetic. While the corpus ran by default it took the *deploy* down
+twice — releases 1.4.0 and 1.4.1 both failed on a closed socket to EBI, in a workflow
+whose job was to publish a build that had already passed. Think twice before putting a
+fetch anywhere that has to succeed.
 
 ## Things that are easy to get wrong
 
@@ -102,6 +113,16 @@ Until then, prefer not to add more tests that fetch.
   target it. Pass `--base dev`.
 - **The release commit carries `[skip ci]`**, so no workflow runs on it. Anything
   that needs to see the bumped version must trigger on the release, not the push.
+- **Check, lint and test live in one place**, `.github/workflows/ci.yml`, which runs on
+  pull requests and which the release calls through `workflow_call`. Do not paste those
+  steps into another workflow; call this one.
+- **Setup lives in `.github/actions/setup`**, and the order inside it matters: pnpm,
+  then Node with `cache: pnpm`, then the install. Installing earlier — inside
+  `pnpm/action-setup` via `run_install` — runs before the store cache is restored, and
+  every run then downloads every package again.
+- **Deploying from a tag needs the `github-pages` environment to allow tags.** It is
+  set to selected refs, and a `v*` **tag** rule is not the same thing as a branch rule
+  named `v*`.
 - **Measure before claiming.** Several conclusions in this repository's history have
   turned out to rest on a number nobody checked — a slow CI run that was queue time
   rather than compute, a test that passed offline for the wrong reason. If a claim

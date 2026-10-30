@@ -97,15 +97,26 @@ export class ZarrPixelSource implements viv.PixelSource<Array<string>> {
     return this.#arr.shape;
   }
 
+  /**
+   * Read a raster, optionally restricted to a window in array coordinates.
+   *
+   * Without a window this reads the whole plane, as it always has. The grid layer uses
+   * the window to read only the part of a plate well that is actually on screen, which
+   * is what makes a full-resolution well affordable to display.
+   */
   async getRaster(options: {
     selection: viv.PixelSourceSelection<Array<string>> | Array<number>;
     signal?: AbortSignal;
+    window?: { x: [start: number, stop: number]; y: [start: number, stop: number] };
   }): Promise<viv.PixelData> {
-    const { selection, signal } = options;
+    const { selection, signal, window } = options;
     return this.#fetchData({
       selection: buildZarrSelection(selection, {
         labels: this.labels,
-        slices: { x: zarr.slice(null), y: zarr.slice(null) },
+        slices: {
+          x: sliceWithin(window?.x, this.#width),
+          y: sliceWithin(window?.y, this.#height),
+        },
       }),
       signal,
     });
@@ -215,6 +226,26 @@ function buildZarrSelection(
     selection[labels.indexOf(RGBA_CHANNEL_AXIS_NAME)] = zarr.slice(null);
   }
   return selection;
+}
+
+/**
+ * A zarr slice for `range`, clamped to `[0, limit)` and guaranteed non-empty.
+ *
+ * The caller derives the range from viewport geometry, so rounding can put it slightly
+ * outside the array or collapse it to zero width at extreme zoom; neither should reach
+ * the store.
+ */
+function sliceWithin(range: [number, number] | undefined, limit: number) {
+  if (!range || limit <= 0) {
+    return zarr.slice(null);
+  }
+  const [rawStart, rawStop] = range;
+  if (!Number.isFinite(rawStart) || !Number.isFinite(rawStop)) {
+    return zarr.slice(null);
+  }
+  const start = Math.min(Math.max(0, Math.floor(rawStart)), Math.max(0, limit - 1));
+  const stop = Math.min(limit, Math.max(start + 1, Math.ceil(rawStop)));
+  return zarr.slice(start, stop);
 }
 
 function capitalize<T extends string>(s: T): Capitalize<T> {

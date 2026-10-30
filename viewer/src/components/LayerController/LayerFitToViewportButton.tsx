@@ -4,7 +4,7 @@ import { useAtomValue } from "jotai";
 import type { MouseEvent } from "react";
 import React from "react";
 import { useLayerState, useSourceData, useViewState } from "../../hooks";
-import { type VizarrLayer, viewportAtom } from "../../state";
+import { type VizarrLayer, panelInsetAtom, viewportAtom } from "../../state";
 import { fitImageToViewport, getLayerSize } from "../../utils";
 
 function LayerFitToViewportButton() {
@@ -12,12 +12,14 @@ function LayerFitToViewportButton() {
   const [layer] = useLayerState();
   const [, setViewState] = useViewState();
   const viewport = useAtomValue(viewportAtom);
+  const panelInset = useAtomValue(panelInsetAtom);
 
   const fitToViewport = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     if (viewport) {
       setViewState(() => ({
         ...fitImageToViewport({
+          insetLeft: panelInset,
           image: getLayerSize({ props: layer.layerProps } as VizarrLayer),
           viewport: viewport,
           padding: viewport.width < 400 ? 10 : viewport.width < 600 ? 30 : 50,

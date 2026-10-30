@@ -1,9 +1,13 @@
-name: Deploy
+name: Deploy app
 
 # The release, not the push that caused it. semantic-release writes the version bump
 # as a commit of its own, so the pushed commit carries the previous version and would
 # deploy a build that misreports itself. The tag names the bumped commit, so checking
 # that out deploys what the release actually is. See #139.
+#
+# Deploying from a tag needs the `github-pages` environment to allow one: it is set to
+# "selected branches and tags", and until a `v*` tag rule was added it held branch rules
+# only, so every release deploy was rejected after a successful build.
 on:
   release:
     types: [published]
@@ -17,12 +21,12 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,28 +38,14 @@ jobs:
           # should get.
           ref: ${{ github.event.release.tag_name || inputs.tag }}
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.5.0
-          run_install: true
+      - name: Set up the workspace
+        uses: ./.github/actions/setup
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Typecheck
-        run: pnpm check
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Test
-        run: pnpm test
-
-      - name: Build main branch
+      # No typecheck, lint or test here. This runs after the release has been cut, so
+      # failing cannot prevent anything -- it only blocks the deploy of code that CI
+      # already passed twice. The one thing this tree has that main's did not is the
+      # version bump, and a build that succeeds is proof enough that it did no harm.
+      - name: Build
         run: pnpm build
 
       - name: Add .nojekyll
@@ -68,7 +58,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-deploy
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

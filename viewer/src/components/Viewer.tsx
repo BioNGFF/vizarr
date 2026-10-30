@@ -1,15 +1,93 @@
 import { ScaleBarLayer } from "@hms-dbmi/viv";
 import DeckGL, { type Layer, OrthographicView } from "deck.gl";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { useAxisNavigation } from "../hooks/useAxisNavigation";
-import { layerAtoms, viewportAtom } from "../state";
+import { layerAtoms, navigateIntoAtom, panelInsetAtom, sourceInfoAtom, viewportAtom } from "../state";
+import theme, { tokens } from "../theme";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
 import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
 import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
+
+/**
+ * Styling for deck.gl's tooltip, which is a plain DOM node outside the MUI tree and so
+ * cannot inherit from the theme. Opaque like the menus rather than translucent like the
+ * panel: it sits directly over the image and has to stay legible against any of it.
+ */
+const TOOLTIP_STYLE: Partial<CSSStyleDeclaration> = {
+  backgroundColor: tokens.overlay.background,
+  color: "#fff",
+  border: `1px solid ${tokens.panel.border}`,
+  borderRadius: `${tokens.panel.radius}px`,
+  padding: "6px 10px",
+  fontFamily: String(theme.typography.fontFamily),
+  fontSize: "12px",
+  lineHeight: "1.45",
+  // The description is written as lines; this is what makes them render as lines.
+  whiteSpace: "pre-line",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
+  pointerEvents: "none",
+};
+
+/**
+ * What the pointer is over, as a short block of lines, or null to show no tooltip.
+ *
+ * The first line names the thing; any further line adds what the name alone does not
+ * say. Kept to two lines so it stays readable while the pointer is moving.
+ */
+/** The picking fields the grid layer adds, which deck.gl's own types do not describe. */
+type GridPickingInfo = PickingInfo & {
+  gridCoord?: { row: number; column: number };
+  gridLabels?: { row?: string; column?: string };
+  gridCell?: { name: string } | null;
+  gridSourceId?: string;
+};
+
+/**
+ * What to call the grid cell under the pointer, or null where the pointer is not on one.
+ *
+ * Shared by the tooltip and by drilling in, so that the name you are shown before the
+ * click is the name the image carries afterwards.
+ */
+export function gridCellName(info: PickingInfo): string | null {
+  const picked = info as GridPickingInfo;
+  const coord = picked.gridCoord;
+  if (!coord || typeof coord.row !== "number" || typeof coord.column !== "number") {
+    return null;
+  }
+  const rowLabel = picked.gridLabels?.row;
+  const columnLabel = picked.gridLabels?.column;
+  // A plate labels its rows and columns, so the pair names a well. A well grid does
+  // not, and its cells are fields of view, which the grid already numbers on screen.
+  if (rowLabel && columnLabel) {
+    return `Well ${rowLabel}${columnLabel}`;
+  }
+  return `Field ${picked.gridCell?.name ?? `${coord.row + 1}, ${coord.column + 1}`}`;
+}
+
+export function describeHover(info: GrayscaleBitmapLayerPickingInfo | PickingInfo): string | null {
+  const pickingInfo = info as GridPickingInfo;
+
+  const title = gridCellName(pickingInfo);
+  if (title !== null) {
+    // Distinguishing an empty position from one that is merely still loading would
+    // need the layer to track both; an absent image is the common case and the one a
+    // user can act on.
+    return pickingInfo.gridCell === null ? `${title}\nNo image` : title;
+  }
+
+  const { layer, index } = pickingInfo;
+  const { label, value } = info as GrayscaleBitmapLayerPickingInfo;
+  if (!layer || index === null || index === undefined || !label) {
+    return null;
+  }
+  // `label` is the segmentation id under the pointer; `value` is whatever a host has
+  // mapped onto it. Naming both beats the bare "42: 0.9" this used to show.
+  return value === null || value === undefined ? `Label ${label}` : `Label ${label}\nValue ${value}`;
+}
 
 interface ViewerProps {
   additionalLayers?: Layer[];
@@ -23,9 +101,14 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
   const [viewport, setViewport] = useAtom(viewportAtom);
   const [viewState, setViewState] = useViewState();
   const layers = useAtomValue(layerAtoms);
+  const sourceInfo = useAtomValue(sourceInfoAtom);
+  const navigateInto = useSetAtom(navigateIntoAtom);
   const firstLayer = layers[0] as VizarrLayer;
   const axisNavigationSnackbar = useAxisNavigation(deckRef);
+  /** The image extent the current view state was fitted to. */
+  const fittedExtentRef = React.useRef<string | null>(null);
 
+  const panelInset = useAtomValue(panelInsetAtom);
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
       const { deck } = deckRef.current || {};
@@ -36,13 +119,14 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
             viewport: deck,
             padding: deck.width < 400 ? 10 : deck.width < 600 ? 30 : 50,
             matrix: layer?.props.modelMatrix,
+            insetLeft: panelInset,
           }),
           width: deck.width,
           height: deck.height,
         });
       }
     },
-    [setViewState],
+    [setViewState, panelInset],
   );
 
   React.useEffect(() => {
@@ -51,7 +135,15 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
       setViewport({ width: d.width, height: d.height });
     }
     if (viewport && firstLayer) {
-      if (!viewState) {
+      // Refit whenever the image being shown changes extent, which is what navigating
+      // into a well does: it would otherwise keep the plate's zoom and draw the well a
+      // fraction of its size. Keyed on extent rather than on the layer changing at all,
+      // so switching acquisition -- same geometry, different timepoint -- does not yank
+      // the view away from wherever it was.
+      const { width, height } = getLayerSize(firstLayer);
+      const extent = `${width}x${height}`;
+      if (!viewState || fittedExtentRef.current !== extent) {
+        fittedExtentRef.current = extent;
         resetViewState(firstLayer);
       } else if (!(viewState?.width || viewState?.height)) {
         setViewState((vs) => ({
@@ -88,30 +180,8 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
   };
 
   const getTooltip = (info: GrayscaleBitmapLayerPickingInfo | PickingInfo) => {
-    const pickingInfo = info as PickingInfo & {
-      gridCoord?: { row: number; column: number };
-      gridLabels?: { row?: string; column?: string };
-    };
-
-    if (pickingInfo.gridCoord) {
-      const { row, column } = pickingInfo.gridCoord;
-      if (typeof row === "number" && typeof column === "number") {
-        const rowLabel = pickingInfo.gridLabels?.row;
-        const columnLabel = pickingInfo.gridLabels?.column;
-        const rowText = rowLabel ? `${rowLabel}` : `${row + 1}`;
-        const columnText = columnLabel ? `${columnLabel}` : `${column + 1}`;
-        return { text: `${rowText}${columnText}` };
-      }
-    }
-
-    const { layer, index } = pickingInfo;
-    const { label, value } = info as GrayscaleBitmapLayerPickingInfo;
-    if (!layer || index === null || index === undefined || !label) {
-      return null;
-    }
-    return {
-      text: value !== null && value !== undefined ? `${label}: ${value}` : `${label}`,
-    };
+    const text = describeHover(info);
+    return text === null ? null : { text, style: TOOLTIP_STYLE };
   };
 
   const { near, far } = React.useMemo(() => {
@@ -142,14 +212,25 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
     };
   }, [layers]);
 
-  // ---- Click handler (delegates to plugins, then falls through) ----
+  // ---- Click handler (delegates to plugins, then drills into a grid cell) ----
   const handleClick = React.useCallback(
     (info: PickingInfo) => {
       if (!info.coordinate) return;
       const coord: [number, number] = [info.coordinate[0], info.coordinate[1]];
-      onPluginClick?.(coord);
+      // A plugin that claims the click keeps it; the select tool is not a drill-down.
+      if (onPluginClick?.(coord)) return;
+
+      const picked = info as GridPickingInfo;
+      if (!picked.gridCoord || !picked.gridSourceId) return;
+      const source = sourceInfo.find((entry) => entry.id === picked.gridSourceId);
+      const target = source?.resolveCellSource?.(picked.gridCoord);
+      if (target) {
+        // A field of a well rarely names itself, so the grid's own name for the cell
+        // stands in; without it the panel header would be blank.
+        navigateInto({ id: picked.gridSourceId, source: target, name: gridCellName(picked) ?? undefined });
+      }
     },
-    [onPluginClick],
+    [onPluginClick, sourceInfo, navigateInto],
   );
 
   // ---- Hover handler (delegates to plugins) ----
