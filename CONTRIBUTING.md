@@ -46,18 +46,52 @@ pnpm <command>
 
 ## Making Changes
 
-1. Create a new feature branch:
+We work on `dev`. It is the integration branch, and `main` holds released code only,
+so branch from `dev` and open your pull request against it.
+
+1. Start from an up-to-date `dev`:
 
 ```bash
-git checkout main -b your-feature-branch-name
+git fetch upstream
+git checkout -b your-feature-branch-name upstream/dev
 ```
 
 2. Make your changes, then stage and commit:
 
 ```bash
 git add .
-git commit -m "Describe your changes"
+git commit -m "fix: describe your changes"
 ```
+
+### Commit messages
+
+Releases are cut automatically from commit messages, so the prefix is not decoration
+— it chooses the next version number:
+
+| prefix | effect |
+| --- | --- |
+| `fix:` | patch release |
+| `feat:` | minor release |
+| `feat!:`, or a `BREAKING CHANGE:` footer | major release |
+| `chore:`, `docs:`, `refactor:`, `style:`, `test:` | no release on their own |
+
+Add a scope where it helps: `fix(viewer): …`. If you are unsure which applies, open
+the pull request anyway and we will help you pick.
+
+## Running the tests
+
+```bash
+pnpm test
+```
+
+Most of the suite reads real images over the network, from IDR and elsewhere, so it
+takes a while and can fail because a server is slow rather than because your change
+is wrong. If the failures you see are all fetches, try again before assuming the
+worst.
+
+We are part-way through splitting this into a fast offline suite and an opt-in one
+that reads real data. Until that lands, please avoid adding tests that fetch over the
+network where you can test the same thing without one.
 
 ## Sharing Your Changes
 
@@ -67,28 +101,41 @@ Push your branch to your fork:
 git push -u origin your-feature-branch-name
 ```
 
-Create a pull request (PR) against the `main` branch of `BioNGFF/vizarr`.
+Create a pull request (PR) against the **`dev`** branch of `BioNGFF/vizarr`, not
+`main`. Every pull request needs an approving review before it can be merged, so a
+maintainer will take a look — please do not be put off if we ask questions.
 
-> **Tip:** Before submitting your PR, make sure your code is formatted and linted:
+Where possible, open an issue first and link to it. It gives us somewhere to discuss
+the problem separately from the change that answers it.
 
-```bash
-pnpm fix   # formats code using Biome
-pnpm lint  # checks for linting issues
-```
-
-Your PR will automatically be checked by the CI workflow.
-
-## Building a Production Version
-
-If you need to build or release a new version locally:
+> **Tip:** Before submitting your PR, make sure your code is formatted, linted and
+> type-checks:
 
 ```bash
-pnpm build                        # builds all packages
-pnpm version [major|minor|patch]  # updates versions across packages
-pnpm publish                      # publishes package(s) if you have permissions
+pnpm fix    # formats code using Biome
+pnpm lint   # checks for linting issues
+pnpm check  # type-checks, building the libraries first
 ```
 
-> For development pre-releases (e.g., dev branches), use `pnpm publish --tag dev`.
+Checks run in CI where they are configured for the branch you are targeting. If you
+do not see any, that is not a sign your change is fine — run the three commands above
+locally before asking for a review.
+
+## Building
+
+```bash
+pnpm build  # builds all packages
+```
+
+## How releases happen
+
+You do not need to do anything to release your change, and you should not edit version
+numbers by hand.
+
+Once your pull request is merged into `dev`, a maintainer merges `dev` into `main`.
+That runs semantic-release, which reads the commit messages, picks the next version,
+tags it, updates `CHANGELOG.md`, and publishes. This is why the commit prefixes above
+matter.
 
 ## Recommended VSCode Extensions
 
