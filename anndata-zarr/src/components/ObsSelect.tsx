@@ -79,7 +79,7 @@ const CategoricalCol = ({
 const NumericalCol = ({ name }: { name: string }) => {
   return <FormControlLabel control={<Radio size="small" />} label={name} key={name} value={name} />;
 };
-interface ObservationControlsProps {
+export interface ObservationControlsProps {
   observations: ObservationMetadata[];
   selectedObservation?: string;
   onObservationSelect: (labelIndex: string, labelType: LabelType) => void;

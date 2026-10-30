@@ -78,12 +78,14 @@ Do not commit unless asked. The user reviews before anything is recorded.
 
 ```
 pnpm dev          the app at http://localhost:5173
+pnpm docs:dev     the API docs at http://localhost:8080, rebuilt as you edit
 pnpm test         the offline suite
 pnpm test:remote  the corpus, which reads real images over the network
 pnpm check        typecheck, which builds the libraries first
 pnpm lint         biome ci
 pnpm fix          biome check --write
 pnpm build        all packages
+pnpm build:docs   the API site into docs/build
 ```
 
 Run `pnpm check` and `pnpm lint` before handing work over. `pnpm check` is the slow
