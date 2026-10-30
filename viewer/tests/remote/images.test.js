@@ -2,10 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "vitest";
 import yaml from "yaml";
-import { createSourceData } from "../src/io";
-import { getYamlFileNames, writeImageYaml } from "./metadata";
+import { createSourceData } from "../../src/io";
+import { getYamlFileNames, writeImageYaml } from "../metadata";
 
-const imagesPath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "generic"));
+const imagesPath = path.resolve(path.join(__dirname, "..", "..", "..", "fixtures", "generic"));
 
 const files = getYamlFileNames(imagesPath);
 files.map(async (file) => {

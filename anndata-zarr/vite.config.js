@@ -3,9 +3,12 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
+import { testScope } from "../vitest.scope.js";
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), dts({ rollupTypes: true, tsconfigPath: "./tsconfig.json" })],
+  test: testScope(),
   build: {
     // outDir: path.resolve(__dirname, '../dist'),
     lib: {

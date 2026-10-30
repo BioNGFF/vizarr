@@ -2,10 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect, test } from "vitest";
 import yaml from "yaml";
-import { createSourceData } from "../src/io";
+import { createSourceData } from "../../src/io";
 
 test("Resolution-level transformations should be applied", async () => {
-  const sourcePath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "resolution_transformationsv0.5.yaml"));
+  const sourcePath = path.resolve(
+    path.join(__dirname, "..", "..", "..", "fixtures", "resolution_transformationsv0.5.yaml"),
+  );
   const source = yaml.parse(fs.readFileSync(sourcePath, "utf-8"));
   const sourceData = await createSourceData(source);
   const expectedValues = [0.108335, 0, 0, 0, 0, 0.108335, 0, 0, 0, 0, 0.4, 0, 60.88427, 52.109135, 1.2, 1];
@@ -13,14 +15,14 @@ test("Resolution-level transformations should be applied", async () => {
 }, 30000);
 
 test("Image-level transformations should be applied", async () => {
-  const sourcePath = path.resolve(path.join(__dirname, "..", "..", "fixtures", "transformationsv0.5.yaml"));
+  const sourcePath = path.resolve(path.join(__dirname, "..", "..", "..", "fixtures", "transformationsv0.5.yaml"));
   const source = yaml.parse(fs.readFileSync(sourcePath, "utf-8"));
   await createSourceData(source);
 });
 
 test("Can read a scene image and apply transformations", async () => {
   const sourcePath = path.resolve(
-    path.join(__dirname, "..", "..", "fixtures", "generic", "34115deb-4f41-4278-9e29-a544e2a2ca5b.yaml"),
+    path.join(__dirname, "..", "..", "..", "fixtures", "generic", "34115deb-4f41-4278-9e29-a544e2a2ca5b.yaml"),
   );
   const source = yaml.parse(fs.readFileSync(sourcePath, "utf-8"));
   const sourceDatas = await createSourceData(source);

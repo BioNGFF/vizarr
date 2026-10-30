@@ -1,0 +1,52 @@
+{
+  "plate": {
+    "version": "0.4",
+    "name": "Local plate v0.4",
+    "columns": [
+      {
+        "name": "1"
+      },
+      {
+        "name": "2"
+      }
+    ],
+    "rows": [
+      {
+        "name": "A"
+      },
+      {
+        "name": "B"
+      }
+    ],
+    "wells": [
+      {
+        "path": "A/1",
+        "rowIndex": 0,
+        "columnIndex": 0
+      },
+      {
+        "path": "A/2",
+        "rowIndex": 0,
+        "columnIndex": 1
+      },
+      {
+        "path": "B/1",
+        "rowIndex": 1,
+        "columnIndex": 0
+      }
+    ],
+    "acquisitions": [
+      {
+        "id": 1,
+        "name": "Second pass",
+        "starttime": 2000
+      },
+      {
+        "id": 2,
+        "name": "First pass",
+        "starttime": 1000
+      }
+    ],
+    "field_count": 2
+  }
+}
