@@ -1,4 +1,4 @@
-name: Deploy Viewer Docs
+name: Deploy docs
 
 on:
   push:
@@ -28,17 +28,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.5.0
-          run_install: true
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
+      - name: Set up the workspace
+        uses: ./.github/actions/setup
 
       - name: Build docs
         run: pnpm build:docs
