@@ -61,6 +61,102 @@ export async function loadScene(
   return results.flat();
 }
 
+/**
+ * Metadata requests in flight while opening a grid of images.
+ *
+ * A grid opens one array per image per resolution level, so this is a few hundred small
+ * requests. Measured against a 96-well, 5-level plate on IDR (581 requests): 3.8s at 16,
+ * 2.5s here, 2.7s at 128 and 4.2s at 256, as the connections start to contend. At 64 the
+ * whole pyramid costs about what the single lowest level used to.
+ */
+const GRID_OPEN_CONCURRENCY = 64;
+
+/**
+ * Open every resolution level of every image, returning one pyramid per path in the
+ * order given, finest level first.
+ *
+ * Opens are queued flat, as one request each, rather than an image at a time. An image
+ * is several requests, so limiting images would multiply the number in flight by the
+ * depth of the pyramid and leave the queue far longer than it looks.
+ *
+ * Every image is assumed to have the same levels as the one the caller read its
+ * datasets from, which is what being a grid of like images means. The grid layer clamps
+ * per cell anyway, so a shallower image degrades rather than fails.
+ */
+/** One image of a grid, with its levels opened as they are needed. */
+type LazyPyramid = {
+  /** Levels, finest first. An entry is undefined until something has asked for it. */
+  sources: Array<ZarrPixelSource | undefined>;
+  /** Opens a level if it is not already open, and remembers it. */
+  open(level: number): Promise<ZarrPixelSource>;
+};
+
+/**
+ * Open the levels a grid needs to draw now, and leave the rest until a zoom asks.
+ *
+ * Opening every level of every image dominated the time before anything appeared: on a
+ * 96-well, 5-level plate it is 480 arrays against 96, and measured against IDR that is
+ * 2.1s against 0.8s, while fetching the pixels for the whole grid at its coarsest level
+ * takes about 0.2s. So only the coarsest level of each image is opened eagerly, which is
+ * all a grid zoomed out can draw, plus every level of one image, whose shapes tell the
+ * layer what the pyramid looks like without opening it everywhere.
+ */
+async function openGridPyramids(
+  grp: zarr.Group<zarr.Readable>,
+  imagePaths: string[],
+  datasetPaths: string[],
+  axisLabels: ReturnType<typeof utils.getNgffAxisLabels>,
+): Promise<LazyPyramid[]> {
+  async function openArray(imagePath: string, level: number) {
+    // @ts-expect-error - we don't need the meta for these arrays
+    const arr: zarr.Array<zarr.DataType, zarr.Readable> = await zarr.open(
+      grp.resolve(utils.join(imagePath, datasetPaths[level])),
+      { kind: "array", attrs: false },
+    );
+    return arr;
+  }
+
+  const reference = await Promise.all(datasetPaths.map((_, level) => openArray(imagePaths[0], level)));
+  const tileSize = utils.guessTileSize(reference[0]);
+
+  const pyramids: LazyPyramid[] = imagePaths.map((imagePath, index) => {
+    const sources: Array<ZarrPixelSource | undefined> = new Array(datasetPaths.length).fill(undefined);
+    if (index === 0) {
+      reference.forEach((arr, level) => {
+        sources[level] = new ZarrPixelSource(arr, { labels: axisLabels, tileSize });
+      });
+    }
+    // Opens in progress, so two cells asking for the same level do not open it twice.
+    const opening = new Map<number, Promise<ZarrPixelSource>>();
+    return {
+      sources,
+      open(level: number): Promise<ZarrPixelSource> {
+        const ready = sources[level];
+        if (ready) {
+          return Promise.resolve(ready);
+        }
+        const already = opening.get(level);
+        if (already) {
+          return already;
+        }
+        const promise = openArray(imagePath, level).then((arr) => {
+          const source = new ZarrPixelSource(arr, { labels: axisLabels, tileSize });
+          sources[level] = source;
+          opening.delete(level);
+          return source;
+        });
+        opening.set(level, promise);
+        return promise;
+      },
+    };
+  });
+
+  // The coarsest level of every other image, which is what a grid zoomed out draws.
+  const coarsest = datasetPaths.length - 1;
+  await pMap(pyramids.slice(1), (pyramid) => pyramid.open(coarsest), { concurrency: GRID_OPEN_CONCURRENCY });
+  return pyramids;
+}
+
 export async function loadWell(
   config: ImageLayerConfig,
   grp: zarr.Group<zarr.Readable>,
@@ -102,32 +198,27 @@ export async function loadWell(
   const imgAttrs = utils.resolveAttrs(first.attrs);
 
   utils.assert(utils.isMultiscales(imgAttrs), "Path for image is not valid.");
-  let resolution = imgAttrs.multiscales[0].datasets[0].path;
+  // Every level, finest first. A well used to load only the finest level of every field
+  // at once, which made it more expensive than the plate it is opened from.
+  const datasetPaths = imgAttrs.multiscales[0].datasets.map((dataset) => dataset.path);
 
-  // Create loader for every Image.
-  const promises = imgPaths.map((p) => {
-    const loc = grp.resolve(utils.join(p, resolution));
-    // @ts-expect-error - ok flag to avoid loading unused attrs
-    const arr: zarr.Array<zarr.DataType, zarr.Readable> = zarr.open(loc, { kind: "array", attrs: false });
-    return arr;
-  });
-  const data = await Promise.all(promises);
   const axes = utils.getNgffAxes(imgAttrs.multiscales);
   const axis_labels = utils.getNgffAxisLabels(axes);
 
-  const tileSize = utils.guessTileSize(data[0]);
+  // Create loaders for every Image.
+  const pyramids = await openGridPyramids(grp, imgPaths, datasetPaths, axis_labels);
   const loaders = utils.range(rows).flatMap((row) => {
     // filter to remove any empty row/col position
     return utils
       .range(cols)
-      .filter((col) => col + row * cols < data.length)
+      .filter((col) => col + row * cols < pyramids.length)
       .map((col) => {
         const offset = col + row * cols;
         return {
           name: String(offset),
           row,
           col,
-          loader: new ZarrPixelSource(data[offset], { labels: axis_labels, tileSize }),
+          ...pyramids[offset],
         };
       });
   });
@@ -136,16 +227,16 @@ export async function loadWell(
   if (utils.isOmeMultiscales(imgAttrs)) {
     meta = parseOmeroMeta(imgAttrs.omero, axes);
   } else {
-    const lowres = loaders.at(-1);
+    const lowres = loaders.at(-1)?.sources.at(-1);
     utils.assert(lowres, "Expected at least one resolution, found none.");
-    meta = await defaultMeta(lowres.loader, axis_labels);
+    meta = await defaultMeta(lowres, axis_labels);
   }
 
   const sourceData: SourceData = {
     loaders,
     ...meta,
     axis_labels,
-    loader: [loaders[0].loader],
+    loader: loaders[0].sources.filter((source): source is ZarrPixelSource => Boolean(source)),
     model_matrix: utils.parseMatrix(config.model_matrix),
     defaults: {
       selection: meta.defaultSelection,
@@ -163,24 +254,32 @@ export async function loadWell(
   sourceData.rows = rows;
   sourceData.columns = cols;
   sourceData.onClick = (info: OnClickData) => {
-    let gridCoord = info.gridCoord;
+    const gridCoord = info.gridCoord;
     if (!gridCoord) {
       return;
     }
     const { row, column } = gridCoord;
-    let imgSource = undefined;
-    if (typeof config.source === "string" && grp.path && !Number.isNaN(row) && !Number.isNaN(column)) {
-      const field = row * cols + column;
-      imgSource = utils.join(config.source, imgPaths[field]);
-    }
+    const field = row * cols + column;
+    const imgSource =
+      typeof config.source === "string" && grp.path && !Number.isNaN(row) && !Number.isNaN(column)
+        ? utils.join(config.source, imgPaths[field])
+        : undefined;
     if (config.onClick) {
       info.layer = undefined;
       info.imageSource = imgSource;
       config.onClick(info);
-    } else if (imgSource) {
-      window.open(`${window.location.origin + window.location.pathname}?source=${imgSource}`);
     }
   };
+  // Only where the host has not claimed the click. A host that handles it decides what
+  // a click means, as it always has; otherwise the viewer navigates to the image.
+  if (!config.onClick) {
+    sourceData.resolveCellSource = ({ row, column }) => {
+      if (typeof config.source !== "string" || !grp.path || Number.isNaN(row) || Number.isNaN(column)) {
+        return undefined;
+      }
+      return utils.join(config.source, imgPaths[row * cols + column]);
+    };
+  }
   return sourceData;
 }
 
@@ -194,9 +293,24 @@ export async function loadPlate(
   const rows = plateAttrs.rows.map((row) => row.name);
   const columns = plateAttrs.columns.map((row) => row.name);
 
+  // A well holds one image per acquisition, and the plate can only draw one of them per
+  // cell. Without a choice it draws the first, which is what it has always done; with
+  // one it draws that acquisition across every well.
+  const acquisitionId: number | undefined = config.acquisition ? Number.parseInt(config.acquisition) : undefined;
+
   // Fields are by index and we assume at least 1 per Well
   const wellPaths = plateAttrs.wells.map((well) => well.path);
   const zarrVersion = await utils.guessZarrVersion(grp);
+
+  /** The image for the chosen acquisition, or the first where there is no choice. */
+  function pickImage(images: Ome.Well["images"]) {
+    if (acquisitionId === undefined) {
+      return images[0];
+    }
+    // A well need not have been imaged in every acquisition; fall back rather than
+    // dropping the well out of the plate entirely.
+    return images.find((image) => image.acquisition === acquisitionId) ?? images[0];
+  }
 
   // Use first image as proxy for others.
   const wellAttrs = await utils.getAttrsOnly<{ well: Ome.Well }>(grp, {
@@ -205,60 +319,59 @@ export async function loadPlate(
   });
   utils.assert("well" in wellAttrs, "Path for image is not valid, not a well.");
 
-  const imgPath = wellAttrs.well.images[0].path;
+  const imgPath = pickImage(wellAttrs.well.images).path;
   const imgAttrs = await utils.getAttrsOnly<Ome.Attrs>(grp, {
     path: utils.join(wellPaths[0], imgPath),
     zarrVersion,
   });
   utils.assert("multiscales" in imgAttrs, "Path for image is not valid.");
 
-  // Lowest resolution is the 'path' of the last 'dataset' from the first multiscales
+  // Every level, finest first. The grid layer chooses one per viewport, so unlike before
+  // it needs the whole pyramid rather than just the lowest resolution.
   const { datasets } = imgAttrs.multiscales[0];
-  const resolution = datasets[datasets.length - 1].path;
+  const datasetPaths = datasets.map((dataset) => dataset.path);
 
-  async function getImgPath(wellPath: string) {
+  async function readWell(wellPath: string) {
     const wellAttrs = await utils.getAttrsOnly<{ well: Ome.Well }>(grp, {
       path: wellPath,
       zarrVersion,
     });
     utils.assert("well" in wellAttrs, "Path for image is not valid, not a well.");
-    return utils.join(wellPath, wellAttrs.well.images[0].path);
+    const images = wellAttrs.well.images;
+    return {
+      imagePath: utils.join(wellPath, pickImage(images).path),
+      // Which acquisitions this well was actually imaged in.
+      acquisitionIds: images.flatMap((image) => (image.acquisition === undefined ? [] : [image.acquisition])),
+    };
   }
-  const wellImagePaths = await Promise.all(wellPaths.map(getImgPath));
+  const wells = await Promise.all(wellPaths.map(readWell));
+  const wellImagePaths = wells.map((well) => well.imagePath);
+  // Offer only the acquisitions some well was actually imaged in. A plate can declare
+  // more than its wells reference, and choosing one of those would silently fall back
+  // to the first image -- a choice that appears to do nothing.
+  const referenced = new Set(wells.flatMap((well) => well.acquisitionIds));
+  const offered = (plateAttrs.acquisitions ?? []).filter((acquisition) => referenced.has(acquisition.id));
 
-  // Create loader for every Well. Some loaders may be undefined if Wells are missing.
-  const mapper = async ([key, path]: string[]) => {
-    let arr: zarr.Array<zarr.DataType, zarr.Readable> = await zarr.open(grp.resolve(path), {
-      kind: "array",
-    });
-    return [key, arr] as const;
-  };
-
-  const promises = await pMap(
-    wellImagePaths.map((p) => [p, utils.join(p, resolution)]),
-    mapper,
-    { concurrency: 10 },
-  );
-  const data = await Promise.all(promises);
   const axes = utils.getNgffAxes(imgAttrs.multiscales);
   const axis_labels = utils.getNgffAxisLabels(axes);
-  const tileSize = utils.guessTileSize(data[0][1]);
-  const loaders = data.map((d) => {
-    const [row, col] = d[0].split("/");
+  // Create loaders for every Well. Some loaders may be undefined if Wells are missing.
+  const pyramids = await openGridPyramids(grp, wellImagePaths, datasetPaths, axis_labels);
+  const loaders = wellImagePaths.map((wellImagePath, index) => {
+    const [row, col] = wellImagePath.split("/");
     return {
       name: `${row}${col}`,
       row: rows.indexOf(row),
       col: columns.indexOf(col),
-      loader: new ZarrPixelSource(d[1], { labels: axis_labels, tileSize }),
+      ...pyramids[index],
     };
   });
   let meta: Meta;
   if ("omero" in imgAttrs) {
     meta = parseOmeroMeta(imgAttrs.omero, axes);
   } else {
-    const lowres = loaders.at(-1);
+    const lowres = loaders.at(-1)?.sources.at(-1);
     utils.assert(lowres, "Expected at least one resolution, found none.");
-    meta = await defaultMeta(lowres.loader, axis_labels);
+    meta = await defaultMeta(lowres, axis_labels);
   }
 
   // Load Image to use for channel names, rendering settings, sizeZ, sizeT etc.
@@ -266,7 +379,7 @@ export async function loadPlate(
     loaders,
     ...meta,
     axis_labels,
-    loader: [loaders[0].loader],
+    loader: loaders[0].sources.filter((source): source is ZarrPixelSource => Boolean(source)),
     model_matrix: utils.parseMatrix(config.model_matrix),
     defaults: {
       selection: meta.defaultSelection,
@@ -276,28 +389,37 @@ export async function loadPlate(
     name: plateAttrs.name || "Plate",
     rows: rows.length,
     columns: columns.length,
+    // Only where there is a choice to make. One acquisition, or none the wells use,
+    // would otherwise get a dropdown whose options all do the same thing.
+    ...(offered.length > 1 ? { acquisitions: offered, acquisitionId: acquisitionId ?? -1 } : {}),
     rowNames: rows,
     columnNames: columns,
   };
   // Us onClick from image config or Open Well in new window
   sourceData.onClick = (info: OnClickData) => {
-    let gridCoord = info.gridCoord;
+    const gridCoord = info.gridCoord;
     if (!gridCoord) {
       return;
     }
     const { row, column } = gridCoord;
-    let imgSource = undefined;
-    if (typeof config.source === "string" && grp.path && !Number.isNaN(row) && !Number.isNaN(column)) {
-      imgSource = utils.join(config.source, rows[row], columns[column]);
-    }
+    const imgSource =
+      typeof config.source === "string" && grp.path && !Number.isNaN(row) && !Number.isNaN(column)
+        ? utils.join(config.source, rows[row], columns[column])
+        : undefined;
     if (config.onClick) {
       info.layer = undefined;
       info.imageSource = imgSource;
       config.onClick(info);
-    } else if (imgSource) {
-      window.open(`${window.location.origin + window.location.pathname}?source=${imgSource}`);
     }
   };
+  if (!config.onClick) {
+    sourceData.resolveCellSource = ({ row, column }) => {
+      if (typeof config.source !== "string" || !grp.path || Number.isNaN(row) || Number.isNaN(column)) {
+        return undefined;
+      }
+      return utils.join(config.source, rows[row], columns[column]);
+    };
+  }
   return sourceData;
 }
 

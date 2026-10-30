@@ -1,9 +1,9 @@
 import { AccordionDetails, Grid, Typography } from "@mui/material";
-import React from "react";
 
 import AcquisitionController from "./AcquisitionController";
 import AddChannelButton from "./AddChannelButton";
 import AxisSliders from "./AxisSliders";
+import Breadcrumb from "./Breadcrumb";
 import ChannelController from "./ChannelController";
 import Labels from "./Labels";
 import OpacitySlider from "./OpacitySlider";
@@ -18,6 +18,7 @@ function Content() {
   return (
     <AccordionDetails sx={{ px: 0.5, py: 0.5 }}>
       <Grid container direction="column">
+        <Breadcrumb />
         <AcquisitionController />
         <Grid>
           <Grid container justifyContent="space-between">

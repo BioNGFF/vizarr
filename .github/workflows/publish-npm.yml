@@ -1,0 +1,35 @@
+name: Publish to npm
+
+# This authenticates by npm trusted publishing over OIDC. There is no NPM_TOKEN in the
+# repository and no .npmrc, so `id-token: write` below is load-bearing rather than
+# leftover. Trusted publishing needs a recent npm, which comes bundled with a recent
+# Node, which is why this one workflow asks for 24 where everything else runs 22.
+# Lowering it stops publishing working.
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup
+        with:
+          node-version: "24"
+
+      - name: Build the viewer package
+        run: pnpm build:viewer
+
+      - name: Publish to npm
+        run: pnpm publish viewer --access public --no-git-checks

@@ -1,0 +1,34 @@
+name: Set up the workspace
+description: >
+  pnpm, Node and a frozen install, in the order that lets the store cache work.
+  setup-node restores the pnpm store, so it has to run before the install that wants
+  it. Installing inside pnpm/action-setup instead -- which is what every workflow here
+  used to do -- runs the install one step too early, and the logs showed the cost:
+  "resolved 780, reused 0, downloaded 780", 28.6s of cold download on every run of
+  every workflow, against a store that was then restored and never read.
+
+inputs:
+  node-version:
+    description: >
+      Node major to install. Everything runs on 22 except the npm publish, which needs
+      a newer one for trusted publishing.
+    required: false
+    default: "22"
+
+runs:
+  using: composite
+  steps:
+    # No `version` on purpose: action-setup reads `packageManager` from package.json,
+    # so the pnpm version has one home rather than one copy per workflow.
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6
+
+    - name: Install Node and restore the pnpm store
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash
