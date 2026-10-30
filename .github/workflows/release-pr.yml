@@ -79,17 +79,36 @@ jobs:
             echo "</details>"
           } > body.md
 
+      # The REST endpoints rather than `gh pr create` and `gh pr edit`. Those fetch
+      # repository metadata so they can offer --add-label, --add-reviewer and the
+      # rest, and that query asks for organisation and team fields, so it needs
+      # `read:org`. Nothing here wants a label or a reviewer. GH_PAT carries `repo`,
+      # `workflow` and `write:packages`, which is all these calls need, and widening
+      # it to satisfy a query whose answer is thrown away would be the wrong trade.
+      # See #154: the update path runs on almost every push and was failing on it.
       - name: Open or update the pull request
         if: steps.changes.outputs.skip != '1'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
-          existing=$(gh pr list --base main --head dev --state open --json number --jq '.[0].number // empty')
           title="Release: dev into main"
+          owner=${GITHUB_REPOSITORY%%/*}
+
+          existing=$(gh api \
+            "repos/$GITHUB_REPOSITORY/pulls?base=main&head=$owner:dev&state=open" \
+            --jq '.[0].number // empty')
+
+          # --rawfile rather than interpolation: the body is markdown with backticks,
+          # newlines and quotes in it, and jq is what makes it a valid JSON string.
           if [ -n "$existing" ]; then
-            gh pr edit "$existing" --title "$title" --body-file body.md
-            echo "Updated #$existing"
+            jq -n --arg title "$title" --rawfile body body.md \
+              '{title: $title, body: $body}' \
+              | gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$existing" \
+                  --input - --jq '"Updated \(.html_url)"'
           else
-            gh pr create --base main --head dev --title "$title" --body-file body.md
+            jq -n --arg title "$title" --rawfile body body.md \
+              '{title: $title, head: "dev", base: "main", body: $body}' \
+              | gh api --method POST "repos/$GITHUB_REPOSITORY/pulls" \
+                  --input - --jq '"Opened \(.html_url)"'
           fi
