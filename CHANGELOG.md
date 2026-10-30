@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/BioNGFF/vizarr/compare/v1.4.0...v1.4.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* **ci:** deploy the release, not the push that caused it ([ebf7c16](https://github.com/BioNGFF/vizarr/commit/ebf7c162e7b78407a272607fab5df4bdb2d316ff)), closes [#139](https://github.com/BioNGFF/vizarr/issues/139)
+
 # [1.4.0](https://github.com/BioNGFF/vizarr/compare/v1.3.1...v1.4.0) (2026-10-29)
 
 
