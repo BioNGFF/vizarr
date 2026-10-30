@@ -69,6 +69,8 @@ export function narrowVersionAndType(data: object): { version: Versions | undefi
   let type: ImageTypes | undefined;
   let parsedData: object = data;
   const hasOme = hasOmeSchema.safeParse(data);
+
+  //Version 0.5 onwards, where version number is stored at OME root
   if (hasOme.success) {
     parsedData = hasOme.data.ome;
     const hasVersion = hasVersionSchema.safeParse(hasOme.data.ome);
@@ -78,16 +80,17 @@ export function narrowVersionAndType(data: object): { version: Versions | undefi
         const result = schema.schema.safeParse(parsedData);
         return result.success;
       })?.type;
-
       return { version: version, type: type };
     }
   }
 
+  //Version depends on image type in earlier versions, so try to parse the image type
   type = typeSchemas.find((schema) => {
     const result = schema.schema.safeParse(parsedData);
     return result.success;
   })?.type;
 
+  //Version most generally accessible at omero metadata key
   const hasOmero = hasOmeroSchema.safeParse(parsedData);
   if (hasOmero.success) {
     const hasVersion = hasVersionSchema.safeParse(hasOmero.data.omero);
@@ -95,13 +98,20 @@ export function narrowVersionAndType(data: object): { version: Versions | undefi
       return { version: hasVersion.data.version, type: type };
     }
   }
-
+  //Else, the version may be stored at the multiscales key of a multiscales image
   if (type === "image") {
     const multiscales = isImageSchema.parse(parsedData).multiscales;
     const hasVersion = hasVersionSchema.safeParse(multiscales[0]);
     if (hasVersion.success) {
       return { version: hasVersion.data.version, type: type };
     }
+  } else if (type === "plate") {
+    const plate = isPlateSchema.parse(parsedData).plate;
+    const hasVersion = hasVersionSchema.safeParse(plate);
+    if (hasVersion.success) {
+      return { version: hasVersion.data.version, type: type };
+    }
   }
+
   return { version: version, type: type };
 }

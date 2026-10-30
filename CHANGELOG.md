@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.4.1](https://github.com/BioNGFF/vizarr/compare/v1.4.0...v1.4.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* **ci:** deploy the release, not the push that caused it ([ebf7c16](https://github.com/BioNGFF/vizarr/commit/ebf7c162e7b78407a272607fab5df4bdb2d316ff)), closes [#139](https://github.com/BioNGFF/vizarr/issues/139)
+
+# [1.4.0](https://github.com/BioNGFF/vizarr/compare/v1.3.1...v1.4.0) (2026-10-29)
+
+
+### Bug Fixes
+
+* anndata-zarr boolean arrays ([bbb2082](https://github.com/BioNGFF/vizarr/commit/bbb2082a2a1e55d77ca8f17c77674e5ba4b68e7a))
+* anndata-zarr build and css ([9460772](https://github.com/BioNGFF/vizarr/commit/94607727352f8fb99969dcccc2d17446aa53c60d))
+* build and deploy docs site ([2fb6a3a](https://github.com/BioNGFF/vizarr/commit/2fb6a3a292b8bcd8bfe33bda65c617566e843af2))
+* correct label colouring and render loops in table plugin ([393f46a](https://github.com/BioNGFF/vizarr/commit/393f46a2f2e48e72a9bb57d2f2066ac712ea8fbd))
+* import css ([0643b7f](https://github.com/BioNGFF/vizarr/commit/0643b7f080296a10ba8b8a7e03e2a06019214a93))
+* infinite re-render caused by synchronisation of viewer and roi plugin ([1edce3d](https://github.com/BioNGFF/vizarr/commit/1edce3d75b18e3c9d9bf36f9131390b84368e43c))
+* numerical values. handle BigInt values from zarr int64 and parquet columns ([21a1ab3](https://github.com/BioNGFF/vizarr/commit/21a1ab342bca6770e6fa1da82e93717191b67132))
+* restore the dependency, validation and type-checking ([3040a05](https://github.com/BioNGFF/vizarr/commit/3040a05aa1055891fe2ada421985e85108e5a134))
+* stop the first interaction after load being discarded ([5a1f49b](https://github.com/BioNGFF/vizarr/commit/5a1f49bf8a33dcb75f19da0695f9eb0803e09062))
+* sync the lockfile with anndata-zarr's dependencies ([3ee0def](https://github.com/BioNGFF/vizarr/commit/3ee0defa8624131258610d42945576fdd9e21222))
+* **tests:** apply the test timeout where vitest actually reads it ([661f140](https://github.com/BioNGFF/vizarr/commit/661f14014056e946e8c2b9435b5718987af17538))
+* **ui:** style the warning toast to match the viewer chrome ([3fad8da](https://github.com/BioNGFF/vizarr/commit/3fad8da2d669f27d0b778adc04ea8208f70e49c2))
+* **viewer:** derive source ids from the url so layer state survives a reload ([8f1f95e](https://github.com/BioNGFF/vizarr/commit/8f1f95e326717893c1ec2b329102b69a279900ea))
+* **viewer:** harden the stability of viewStateAtomWithEffect ([92a4228](https://github.com/BioNGFF/vizarr/commit/92a4228ec226c243283697af4ec94b22f02aabc8)), closes [#101](https://github.com/BioNGFF/vizarr/issues/101)
+* **viewer:** probe the server only when an open fails, and explain an absent source ([381bdca](https://github.com/BioNGFF/vizarr/commit/381bdca32315545150d7cdb3c0a2c2fc6f728476))
+* **viewer:** wrap the disabled fit button so Tooltip has an element to listen on ([4d5730c](https://github.com/BioNGFF/vizarr/commit/4d5730cdc94cd5846ba14dd1403a06895f97b7ef))
+* warning length displayed on screen ([6ab5b3f](https://github.com/BioNGFF/vizarr/commit/6ab5b3fccef56c1f728c87daf9615a31157b19ae))
+
+
+### Features
+
+* bioformats2raw, separate label image, and anndata-zarr support ([212873b](https://github.com/BioNGFF/vizarr/commit/212873bfae9cf3a42d1393d6b4b776b6f861647e))
+* let the host own the theme so one theme governs the page ([170e663](https://github.com/BioNGFF/vizarr/commit/170e6636f6e2ae19270b46109c229e2592a391f0))
+* **ui:** make the toolbar real and give plugin panels one design language ([20c7d63](https://github.com/BioNGFF/vizarr/commit/20c7d638f777d9aa5447f0e75fe62c809062fdd4))
+* **viewer:** collapse the controls panel when no image could be loaded ([9e6b4a3](https://github.com/BioNGFF/vizarr/commit/9e6b4a3588a45e0f55c172d3d3b6b6646e450389))
+* **viewer:** collapse the panel header to a title bar ([9c92ffc](https://github.com/BioNGFF/vizarr/commit/9c92ffcf273097cbcff1a2b3ff1b5e25f718bb35))
+* **viewer:** hide the chrome entirely when there is no image ([8b9de98](https://github.com/BioNGFF/vizarr/commit/8b9de985ca1de2205b4f088fc8e38eeac3afcfe2))
+* **viewer:** rework the controls panel ([da03cb2](https://github.com/BioNGFF/vizarr/commit/da03cb22aba0ad29d0377811ab75f3689dfee1e9))
+
 ## [1.3.1](https://github.com/BioNGFF/vizarr/compare/v1.3.0...v1.3.1) (2026-09-14)
 
 

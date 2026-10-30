@@ -12,6 +12,14 @@ import { getBf2RawImagePaths, getBf2rawOMEXML } from "./providers/bioformats2raw
 import { MetadataError, openZarrRoot } from "./services/http";
 import type { ImageLabels, ImageLayerConfig, OnClickData, SourceData } from "./state";
 
+/** Unique, defined image paths referenced by a scene's coordinate transformations. */
+export function getSceneImagePaths(scene: Ome.Scene): string[] {
+  const paths = scene.coordinateTransformations
+    .map((transformation) => transformation.input.path)
+    .filter((path): path is string => path !== undefined);
+  return Array.from(new Set(paths));
+}
+
 export async function loadScene(
   config: ImageLayerConfig,
   grp: zarr.Group<zarr.Readable>,
@@ -434,7 +442,7 @@ function getImageTransformations(metadata: Ome.Multiscale[]): Ome.CoordinateTran
   return metadata[0].coordinateTransformations ? metadata[0].coordinateTransformations : [];
 }
 
-function getOrderedTransformations(
+export function getOrderedTransformations(
   metadata: Ome.Multiscale[],
   coordinateSystem: Ome.CoordinateSystem,
 ): Ome.CoordinateTransformation[] {

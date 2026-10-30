@@ -1,5 +1,19 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0101A/13457539.zarr
+zarr_version: 2
+version: "0.4"
+type: image
+zipped: false
+multiscale: true
+transformations:
+  - scale
+  - translation
+channels:
+  - cy 1
+  - cy 2
+  - cy 3
+  - cy 4
+  - DAPI
+  - Hyb probe
+labels: 1
 name: 55abbf8f-2813-4d5e-86b8-8dca71b44103.yaml
 testable: true
-features:
-  multiscale: true

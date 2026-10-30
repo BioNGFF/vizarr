@@ -1,5 +1,15 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0101A/13457227.zarr
+zarr_version: 2
+version: "0.4"
+type: image
+zipped: false
+multiscale: true
+transformations: []
+channels:
+  - cy 1
+  - cy 2
+  - cy 3
+  - cy 4
+labels: 0
 name: 8a38b941-51b1-4d63-ba43-64b688e7d576.yaml
 testable: true
-features:
-  multiscale: true

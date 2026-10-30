@@ -1,6 +1,6 @@
 {
   "name": "biongff-vizarr-monorepo",
-  "version": "1.3.1",
+  "version": "1.4.1",
   "author": "BioNGFF",
   "license": "MIT",
   "repository": {
@@ -18,6 +18,8 @@
     "build:anndata-zarr": "pnpm --filter @biongff/anndata-zarr build",
     "build:docs": "pnpm typedoc --plugin typedoc-github-theme",
     "test": "vitest",
+    "test:remote": "VIZARR_TEST_REMOTE=1 vitest",
+    "fixtures:local": "node scripts/make-local-fixtures.mjs",
     "build": "pnpm build:viewer && pnpm build:anndata-zarr && pnpm build:roi-selector && pnpm build:app"
   },
   "devDependencies": {

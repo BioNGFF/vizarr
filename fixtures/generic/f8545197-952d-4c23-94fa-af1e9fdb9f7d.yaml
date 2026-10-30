@@ -1,5 +1,14 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.3/idr0095B/11511420.zarr
+zarr_version: 2
+version: "0.3"
+type: image
+zipped: false
+multiscale: true
+transformations: []
+channels:
+  - Phase
+  - YFP
+  - Tx Red
+labels: 1
 name: f8545197-952d-4c23-94fa-af1e9fdb9f7d.yaml
 testable: true
-features:
-  multiscale: true

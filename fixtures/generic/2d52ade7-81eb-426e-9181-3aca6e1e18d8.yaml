@@ -1,3 +1,5000 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr
-name: 13966432
-testable: false
+zarr_version: 2
+version: "0.4"
+type: plate
+zipped: false
+wells:
+  A/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  A/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/A/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  B/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/B/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  C/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/C/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  D/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/D/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  E/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/E/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  F/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/F/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  G/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/G/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  H/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/H/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  I/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/I/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  J/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/J/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  K/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/K/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  L/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/L/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  M/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/M/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  N/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/N/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  O/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/O/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/1:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/1/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/2:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/2/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/3:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/3/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/4:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/4/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/5:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/5/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/6:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/6/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/7:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/7/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/8:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/8/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/9:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/9/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/10:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/10/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/11:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/11/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/12:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/12/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/13:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/13/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/14:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/14/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/15:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/15/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/16:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/16/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/17:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/17/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/18:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/18/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/19:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/19/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/20:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/20/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/21:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/21/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/22:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/22/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/23:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/23/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+  P/24:
+    "0":
+      source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0128E/9701.zarr/P/24/0
+      zarr_version: 2
+      version: "0.4"
+      type: image
+      zipped: false
+      multiscale: true
+      transformations: []
+      channels:
+        - DAPI
+        - FITC
+      labels: 0
+name: 2d52ade7-81eb-426e-9181-3aca6e1e18d8.yaml
+testable: true

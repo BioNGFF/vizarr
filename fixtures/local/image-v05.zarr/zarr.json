@@ -1,0 +1,97 @@
+{
+  "zarr_format": 3,
+  "node_type": "group",
+  "attributes": {
+    "ome": {
+      "version": "0.5",
+      "multiscales": [
+        {
+          "name": "Local image v0.5",
+          "axes": [
+            {
+              "name": "t",
+              "type": "time"
+            },
+            {
+              "name": "c",
+              "type": "channel"
+            },
+            {
+              "name": "z",
+              "type": "space"
+            },
+            {
+              "name": "y",
+              "type": "space",
+              "unit": "micrometer"
+            },
+            {
+              "name": "x",
+              "type": "space",
+              "unit": "micrometer"
+            }
+          ],
+          "datasets": [
+            {
+              "path": "0",
+              "coordinateTransformations": [
+                {
+                  "type": "scale",
+                  "scale": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "1",
+              "coordinateTransformations": [
+                {
+                  "type": "scale",
+                  "scale": [
+                    1,
+                    1,
+                    1,
+                    2,
+                    2
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "omero": {
+        "name": "Local image v0.5",
+        "channels": [
+          {
+            "label": "Red channel",
+            "color": "FF0000",
+            "active": true,
+            "window": {
+              "start": 0,
+              "end": 255,
+              "min": 0,
+              "max": 255
+            }
+          },
+          {
+            "label": "Green channel",
+            "color": "00FF00",
+            "active": true,
+            "window": {
+              "start": 0,
+              "end": 255,
+              "min": 0,
+              "max": 255
+            }
+          }
+        ]
+      }
+    }
+  }
+}

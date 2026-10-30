@@ -1,0 +1,76 @@
+name: Open release PR
+
+# Everything on dev has already been reviewed on its way in, so this pull request is
+# not another review of the code -- it is the act of publishing. Merging it pushes dev
+# to main, which runs semantic-release and cuts the version.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Collect what would be released
+        id: changes
+        run: |
+          set -euo pipefail
+          git fetch origin main dev --quiet
+
+          count=$(git rev-list --count origin/main..origin/dev)
+          if [ "$count" -eq 0 ]; then
+            echo "::error::dev holds nothing that main does not. There is no release to make."
+            exit 1
+          fi
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+          # Grouped the way semantic-release reads them, so the reviewer can see which
+          # kind of release this is before merging rather than after.
+          {
+            echo "Merging this publishes a release. \`dev\` is **$count commit(s)** ahead of \`main\`."
+            echo
+            subjects() { git log --no-merges --pretty="- %s (%h)" "origin/main..origin/dev"; }
+
+            # A "!" after the type, or a BREAKING CHANGE footer, either one is a major.
+            breaking=$(subjects | grep -E "^- [a-z]+(\([^)]*\))?!:" || true)
+            if git log --no-merges --format=%B "origin/main..origin/dev" | grep -q "^BREAKING CHANGE:"; then
+              breaking=$(printf "%s\n- a commit carries a BREAKING CHANGE footer" "$breaking")
+            fi
+            features=$(subjects | grep -E "^- feat(\([^)]*\))?:" || true)
+            fixes=$(subjects | grep -E "^- fix(\([^)]*\))?:" || true)
+
+            # Written as ifs rather than `[ -n "$x" ] && ...`, which under `set -e`
+            # would end the job on the first empty group.
+            if [ -n "$breaking" ]; then printf "### Breaking\n%s\n\n" "$breaking"; fi
+            if [ -n "$features" ]; then printf "### Features\n%s\n\n" "$features"; fi
+            if [ -n "$fixes" ]; then printf "### Fixes\n%s\n\n" "$fixes"; fi
+
+            echo "<details><summary>Every commit</summary>"
+            echo
+            git log --no-merges --pretty='- %s (%h)' "origin/main..origin/dev"
+            echo
+            echo "</details>"
+          } > body.md
+
+      - name: Open or update the pull request
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          existing=$(gh pr list --base main --head dev --state open --json number --jq '.[0].number // empty')
+          title="Release: dev into main"
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$title" --body-file body.md
+            echo "Updated #$existing"
+          else
+            gh pr create --base main --head dev --title "$title" --body-file body.md
+          fi
