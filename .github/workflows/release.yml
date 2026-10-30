@@ -1,9 +1,5 @@
 name: Release
 
-# `main` only moves by merging the release pull request, so what lands here is the same
-# merge commit CI already passed on. The verification below is the gate before anything
-# is tagged and published, which is worth paying for twice; what is not worth paying for
-# is a third copy after the release exists, which is why the deploy no longer has one.
 on:
   push:
     branches:
