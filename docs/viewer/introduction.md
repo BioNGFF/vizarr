@@ -21,7 +21,7 @@ React 18 and `react-dom` are peer dependencies, so the host application supplies
 ```tsx
 import { Vizarr } from "@biongff/vizarr";
 
-const sources = ["https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240.zarr"];
+const sources = ["https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr"];
 
 export default function App() {
   return (
@@ -73,7 +73,7 @@ quietly stop matching.
 import { createViewer } from "@biongff/vizarr";
 
 const viewer = await createViewer(document.getElementById("root"));
-viewer.addImage({ source: "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240.zarr" });
+viewer.addImage({ source: "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr" });
 ```
 
 ## Label images
