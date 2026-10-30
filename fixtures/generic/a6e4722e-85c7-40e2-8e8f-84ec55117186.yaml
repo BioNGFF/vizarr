@@ -1,5 +1,38 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0054A/5025552.zarr
+zarr_version: 2
+version: "0.4"
+type: image
+zipped: false
+multiscale: true
+transformations: []
+channels:
+  - CD3-170Er
+  - CD19-169Tm
+  - CD324/E-Cadherin-158Gd
+  - CD206-168Er
+  - Bcl6-163Dy
+  - CD141/BDCA3-165Ho
+  - alphaSMA-141Pr
+  - IL-21-164Dy
+  - CD185/CXCR5-151Eu
+  - CD45-152Sm
+  - empty
+  - CXCL13-157Gd
+  - CD1c/BDCA1-biotin + Neutravidin-173Yb
+  - CD303/BDCA2-147Sm
+  - CD11b-149Sm
+  - CD45RA-155Gd
+  - CD123-143Nd
+  - CD68-171Yb
+  - HLA-DR-174Yb
+  - CD279/PD-1-175Lu
+  - CD370/Clec9A-161Dy
+  - CD11c-159Tb
+  - ICOS-148Nd
+  - DNA1-191/193Ir
+  - CD56-176Yb
+  - DNA2-191/193Ir
+  - CD14-156Gd
+labels: 0
 name: a6e4722e-85c7-40e2-8e8f-84ec55117186.yaml
 testable: true
-features:
-  multiscale: true

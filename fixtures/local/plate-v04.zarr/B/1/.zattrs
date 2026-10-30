@@ -1,0 +1,11 @@
+{
+  "well": {
+    "version": "0.4",
+    "images": [
+      {
+        "path": "0",
+        "acquisition": 2
+      }
+    ]
+  }
+}

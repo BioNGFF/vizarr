@@ -1,5 +1,14 @@
 source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.1/1884807.zarr
+zarr_version: 2
+version: "0.1"
+type: image
+zipped: false
+multiscale: false
+transformations: []
+channels:
+  - "442.0"
+  - "525.0"
+  - "615.0"
+labels: 0
 name: cb2244ef-3881-4736-858f-fad8f3aef12e.yaml
 testable: true
-features:
-  multiscale: true
