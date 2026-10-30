@@ -6,3 +6,5 @@ export { FeatureSelect } from "./components/FeatureSelect";
 export { ObsSelect } from "./components/ObsSelect";
 export { AnndataController } from "./components/AnndataController";
 export type { LabelType, labelColor } from "./components/AnndataController";
+export type { ObservationControlsProps } from "./components/ObsSelect";
+export type { ColourProps, ObservationMetadata } from "./hooks";

@@ -1,0 +1,46 @@
+name: Build docs
+
+# Builds, does not publish. Publishing happens on release, which is too late to
+# discover that typedoc cannot resolve a type. Runs on pull requests into any branch,
+# including dev, where most work lands.
+#
+# A path filter is safe here in a way it was not for the deploy: missing a run only
+# means this check did not happen, not that the published site silently drifts.
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "viewer/src/**"
+      - "roi-selector/src/**"
+      - "anndata-zarr/src/**"
+      - "typedoc.json"
+      - "*/typedoc.json"
+      - ".github/workflows/docs.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.5.0
+          run_install: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # typedoc.json sets treatWarningsAsErrors, so a documented type that links to
+      # an undocumented one fails here rather than reaching a reader as a dead end.
+      - name: Build docs
+        run: pnpm build:docs

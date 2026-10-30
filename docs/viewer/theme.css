@@ -1,0 +1,192 @@
+/*
+ * Vizarr's documentation theme.
+ *
+ * Layered over typedoc-github-theme rather than replacing it: that theme is a sound,
+ * well-tested base, and what it lacks is only that the site looks like GitHub rather
+ * than like vizarr. Almost everything here is a custom-property override, so a typedoc
+ * upgrade moves the markup underneath without breaking the styling.
+ *
+ * Both colour schemes are supported. The viewer itself is dark because it wraps
+ * scientific images in as little light as possible, but documentation is long-form
+ * reading and the reader's own preference should win.
+ */
+
+:root {
+  /* The three channels of the vizarr mark, which is an RGB overlay. */
+  --vz-red: #ef4136;
+  --vz-blue: #27aae1;
+  --vz-green: #39b54a;
+
+  /*
+   * The brand blue measures 2.65:1 against white, which is not legible as link text,
+   * so light mode uses a darkened version of the same hue at 5.72:1. Dark mode can
+   * use the brand colour as it is, at 6.89:1 against the page.
+   */
+  --light-color-link: #0f6e93;
+  --dark-color-link: var(--vz-blue);
+
+  --light-color-background-navbar: #fbfcfd;
+  --dark-color-background-navbar: #101317;
+  --dark-color-background: #0d1117;
+  --dark-color-background-secondary: #141920;
+
+  /* Matching the viewer's own stack, so the two read as one product. */
+  --vz-font: Inter, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --vz-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+body {
+  font-family: var(--vz-font);
+  /* The default is tight for prose at this measure. */
+  line-height: 1.65;
+}
+
+code,
+pre,
+.tsd-signature,
+.tsd-index-link code {
+  font-family: var(--vz-mono);
+}
+
+/* --- Header ------------------------------------------------------------- */
+
+/*
+ * The mark, inline before the title. It is an RGB overlay whose channels multiply
+ * where they cross, so it carries its own contrast and sits on either scheme without
+ * a backing plate.
+ */
+.tsd-page-toolbar .title::before {
+  content: "";
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.3rem;
+  margin-right: 0.55rem;
+  vertical-align: -0.25rem;
+  background: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNDUuNjUgMTI2LjEzIj4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjZWY0MTM2OwogICAgICB9CgogICAgICAuY2xzLTEsIC5jbHMtMiwgLmNscy0zIHsKICAgICAgICBtaXgtYmxlbmQtbW9kZTogbXVsdGlwbHk7CiAgICAgICAgc3Ryb2tlLXdpZHRoOiAwcHg7CiAgICAgIH0KCiAgICAgIC5jbHMtMiB7CiAgICAgICAgZmlsbDogIzI3YWFlMTsKICAgICAgfQoKICAgICAgLmNscy0zIHsKICAgICAgICBmaWxsOiAjMzliNTRhOwogICAgICB9CgogICAgICAuY2xzLTQgewogICAgICAgIGlzb2xhdGlvbjogaXNvbGF0ZTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgY2xhc3M9ImNscy00Ij4KICAgIDxnIGlkPSJMYXllcl8yIiBkYXRhLW5hbWU9IkxheWVyIDIiPgogICAgICA8ZyBpZD0iTGF5ZXJfMS0yIiBkYXRhLW5hbWU9IkxheWVyIDEiPgogICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSI3Mi44MiA0MC42MSA0OS4zOCAwIDcuNSAwIDcyLjgyIDExMy4xNCAxMzguMTUgMCA5Ni4yNyAwIDcyLjgyIDQwLjYxIi8+CiAgICAgICAgPHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjEwMi4wNiAxMi45OSA3Mi44MiA2My42MiA0My41OSAxMi45OSAxNSAxMi45OSA4MC4zMiAxMjYuMTMgMTQ1LjY1IDEyLjk5IDEwMi4wNiAxMi45OSIvPgogICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSI3Mi44MiA2My42MiA0My41OSAxMi45OSAwIDEyLjk5IDY1LjMyIDEyNi4xMyAxMzAuNjUgMTIuOTkgMTAyLjA2IDEyLjk5IDcyLjgyIDYzLjYyIi8+CiAgICAgIDwvZz4KICAgIDwvZz4KICA8L2c+Cjwvc3ZnPg==")
+    no-repeat center / contain;
+}
+
+.tsd-page-toolbar .title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* The channels again, as a hairline under the header. */
+.tsd-page-toolbar {
+  border-bottom: none;
+  box-shadow: none;
+  background-image: linear-gradient(
+    to right,
+    var(--vz-red) 0 33.33%,
+    var(--vz-green) 33.33% 66.66%,
+    var(--vz-blue) 66.66% 100%
+  );
+  background-repeat: no-repeat;
+  background-position: bottom left;
+  background-size: 100% 2px;
+}
+
+/* --- Reading ------------------------------------------------------------ */
+
+.col-content {
+  /* A comfortable measure. Full-width prose at 1400px is hard to track back from. */
+  max-width: 54rem;
+}
+
+.tsd-page-title h1,
+.tsd-typography h1,
+.tsd-typography h2,
+.tsd-typography h3 {
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.tsd-typography h2 {
+  margin-top: 2.25rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--color-accent);
+}
+
+.tsd-typography a {
+  text-underline-offset: 0.15em;
+}
+
+/* --- Code --------------------------------------------------------------- */
+
+pre {
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  background: var(--color-background-secondary);
+}
+
+:not(pre) > code {
+  padding: 0.12em 0.36em;
+  border-radius: 5px;
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-accent);
+  font-size: 0.9em;
+}
+
+/* --- Signatures and members --------------------------------------------- */
+
+/*
+ * The API reference is a wall of similar-looking blocks, so each member gets a quiet
+ * card and a channel-coloured edge to mark where one ends and the next begins.
+ */
+.tsd-panel.tsd-member {
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--color-accent);
+  border-left: 3px solid var(--vz-blue);
+  border-radius: 8px;
+  background: var(--color-background);
+}
+
+.tsd-signature {
+  border-radius: 8px;
+  border: 1px solid var(--color-accent);
+}
+
+/* The kind of thing a member is, which the reader scans for. */
+.tsd-kind-icon ~ span,
+.tsd-index-link .tsd-kind-icon {
+  vertical-align: middle;
+}
+
+/* --- Sidebar ------------------------------------------------------------ */
+
+.site-menu a.current,
+.tsd-navigation a.current {
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* --- Tables ------------------------------------------------------------- */
+
+.tsd-typography table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.tsd-typography table th,
+.tsd-typography table td {
+  border: 1px solid var(--color-accent);
+  padding: 0.45rem 0.7rem;
+}
+
+.tsd-typography table th {
+  background: var(--color-background-secondary);
+  text-align: left;
+}
+
+/* --- Footer ------------------------------------------------------------- */
+
+footer {
+  border-top: 1px solid var(--color-accent);
+  margin-top: 2.5rem;
+}
+
+footer .tsd-generator {
+  font-size: 0.85rem;
+  color: var(--color-text-aside);
+}

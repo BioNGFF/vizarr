@@ -1,16 +1,18 @@
 name: Deploy Viewer Docs
 
+# The release, not a push that might have touched the right files. Published API
+# documentation should describe the published package, and a path-filtered push has
+# no way to notice it was missed -- the site sat six weeks out of date because one
+# push produced no workflow runs at all. See #146.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "docs/viewer/**"
-      - "viewer/src/**"
-      - "roi-selector/src/**"
-      - "typedoc.json"
-      - "viewer/typedoc.json"
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to document. Defaults to the tip of main."
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -27,6 +29,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # An empty ref is the default branch, which is what an unqualified manual
+          # run should get.
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -43,8 +49,20 @@ jobs:
       - name: Build docs
         run: pnpm build:docs
 
+      # The deploy below deletes whatever is in the bucket and not in this build, so
+      # a partial build would publish itself by emptying the site. One non-empty
+      # index.html was not enough to rule that out.
       - name: Verify build output
-        run: test -s docs/build/index.html
+        run: |
+          set -euo pipefail
+          test -s docs/build/index.html
+          files=$(find docs/build -type f | wc -l)
+          bytes=$(du -sb docs/build | cut -f1)
+          echo "built $files files, $bytes bytes"
+          if [ "$files" -lt 50 ] || [ "$bytes" -lt 500000 ]; then
+            echo "::error::The build looks truncated ($files files, $bytes bytes). Refusing to deploy over the live site."
+            exit 1
+          fi
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
