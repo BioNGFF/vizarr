@@ -84,14 +84,24 @@ the pull request anyway and we will help you pick.
 pnpm test
 ```
 
-Most of the suite reads real images over the network, from IDR and elsewhere, so it
-takes a while and can fail because a server is slow rather than because your change
-is wrong. If the failures you see are all fetches, try again before assuming the
-worst.
+That is the offline suite: it runs against fixtures in this repository, needs no
+network, and takes about fifteen seconds. It is also what CI runs on your pull
+request, so if it passes locally it should pass there.
 
-We are part-way through splitting this into a fast offline suite and an opt-in one
-that reads real data. Until that lands, please avoid adding tests that fetch over the
-network where you can test the same thing without one.
+There is a second suite that reads real images over the network, from IDR and
+elsewhere:
+
+```bash
+pnpm test:remote
+```
+
+It is slow, and it can fail because a server is slow rather than because your change
+is wrong, so it is opt-in and CI does not run it. Run it if you have touched how
+images are read. If the failures you see are all fetches, try again before assuming
+the worst.
+
+A new test belongs in the offline suite wherever it can. If it genuinely needs a
+server we do not run, put it in `tests/remote/` so it stays out of everyone's way.
 
 ## Sharing Your Changes
 

@@ -1,0 +1,55 @@
+name: CI
+
+# One definition of "is this sound", used everywhere the question comes up: directly on
+# pull requests, and through `workflow_call` from the release. It used to be pasted into
+# four workflows, which meant four chances for them to drift apart.
+#
+# Note the branches: pull requests into `dev` are ordinary work and were not being
+# checked at all, because this only ever ran on pull requests into `main`.
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_call:
+
+# Pushing twice to a branch should not run the suite twice. A release that calls this
+# must never be cancelled by the next push, though, so only pull requests cancel.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          # Codecov wants the history to work out what changed.
+          fetch-depth: 0
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup
+
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test -- --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          # A Codecov outage is not a reason to fail a pull request, and still less a
+          # reason to fail a release that calls this.
+          fail_ci_if_error: false

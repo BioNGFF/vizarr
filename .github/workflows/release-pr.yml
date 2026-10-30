@@ -1,10 +1,19 @@
-name: Open release PR
+name: Release PR
 
 # Everything on dev has already been reviewed on its way in, so this pull request is
-# not another review of the code -- it is the act of publishing. Merging it pushes dev
+# not another review of the code. It is the act of publishing. Merging it pushes dev
 # to main, which runs semantic-release and cuts the version.
 on:
+  push:
+    branches:
+      - dev
   workflow_dispatch:
+
+# Several merges landing close together would otherwise race to edit the same pull
+# request; the last one is the one that describes dev, so let it win.
+concurrency:
+  group: release-pr
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -28,8 +37,17 @@ jobs:
 
           count=$(git rev-list --count origin/main..origin/dev)
           if [ "$count" -eq 0 ]; then
-            echo "::error::dev holds nothing that main does not. There is no release to make."
-            exit 1
+            # Asked for by hand, this is a mistake worth reporting. Reached by a push
+            # -- a dev that main already has, such as straight after a release -- it is
+            # the ordinary state of things, so do not fail and mail everyone about it.
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+              echo "::error::dev holds nothing that main does not. There is no release to make."
+              exit 1
+            fi
+            echo "dev holds nothing that main does not; no release pull request to open." \
+              >> "$GITHUB_STEP_SUMMARY"
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           echo "count=$count" >> "$GITHUB_OUTPUT"
 
@@ -62,6 +80,7 @@ jobs:
           } > body.md
 
       - name: Open or update the pull request
+        if: steps.changes.outputs.skip != '1'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |

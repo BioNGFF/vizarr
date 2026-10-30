@@ -1,5 +1,9 @@
 name: Release
 
+# `main` only moves by merging the release pull request, so what lands here is the same
+# merge commit CI already passed on. The verification below is the gate before anything
+# is tagged and published, which is worth paying for twice; what is not worth paying for
+# is a third copy after the release exists, which is why the deploy no longer has one.
 on:
   push:
     branches:
@@ -10,40 +14,30 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
   release:
+    needs: verify
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # semantic-release pushes the version bump back, which the default token is
+          # not allowed to do past branch protection.
           token: ${{ secrets.GH_PAT }}
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.5.0
-          run_install: true
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Typecheck
-        run: pnpm check
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Test
-        run: pnpm test
+      - name: Set up the workspace
+        uses: ./.github/actions/setup
 
       - name: Build
         run: pnpm build
