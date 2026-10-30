@@ -1,13 +1,16 @@
 name: Build docs
 
 # Builds, does not publish. Publishing happens on release, which is too late to
-# discover that typedoc cannot resolve a type. Runs on pull requests into any branch,
-# including dev, where most work lands.
+# discover that typedoc cannot resolve a type.
 #
 # A path filter is safe here in a way it was not for the deploy: missing a run only
-# means this check did not happen, not that the published site silently drifts.
+# means this check did not happen, not that the published site silently drifts. It
+# has to cover the setup action too, since the build now depends on it.
 on:
   pull_request:
+    branches:
+      - main
+      - dev
     paths:
       - "docs/**"
       - "viewer/src/**"
@@ -15,7 +18,12 @@ on:
       - "anndata-zarr/src/**"
       - "typedoc.json"
       - "*/typedoc.json"
-      - ".github/workflows/docs.yml"
+      - ".github/workflows/build-docs.yml"
+      - ".github/actions/setup/**"
+
+concurrency:
+  group: build-docs-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -28,17 +36,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.5.0
-          run_install: true
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
+      - name: Set up the workspace
+        uses: ./.github/actions/setup
 
       # typedoc.json sets treatWarningsAsErrors, so a documented type that links to
       # an undocumented one fails here rather than reaching a reader as a dead end.

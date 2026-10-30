@@ -55,6 +55,14 @@ jobs:
             exit 1
           fi
 
+      # This now runs at a tag ref rather than a branch, and the token it exchanges
+      # carries that ref. The Pages deploy failed exactly here -- its environment
+      # allowed `main` and `dev` and no tags, so every release deploy was rejected
+      # after a clean build (#139). The equivalent gate for this one lives in Google:
+      # the workload identity provider's attribute condition, and the principalSet on
+      # the service account. If either keys on `attribute.ref` rather than
+      # `attribute.repository`, release deploys will fail to authenticate. This
+      # workflow has only ever run from branches, so that path is untested.
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
