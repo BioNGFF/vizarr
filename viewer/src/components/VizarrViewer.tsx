@@ -17,10 +17,15 @@ import {
   type ViewState,
   type ViewportSize,
   addSourceWarningAtom,
+  beginLoadAtom,
   currentImageBoundsAtom,
   currentTInfoAtom,
   currentZInfoAtom,
+  decodeNavigationStep,
+  encodeNavigationStep,
+  endLoadAtom,
   interactionModeAtom,
+  isLoadingAtom,
   redirectObjAtom,
   setLabelColorsAtom,
   setTSliceAtom,
@@ -33,12 +38,17 @@ import {
 } from "../state";
 import defaultTheme from "../theme";
 import { REPOSITORY_URL } from "../utils";
+import LoadingIndicator from "./LoadingIndicator";
 import Menu from "./Menu";
 import { InfoSnackbar, SnackbarHost } from "./Snackbar";
 import Viewer from "./Viewer";
 
 /** Viewer state snapshot exposed to the host application via onViewerStateChange. */
 export interface ViewerInfo {
+  /**
+   * The source currently on screen, which drilling into a plate changes. Falls back to
+   * the first url the host supplied until something has loaded.
+   */
   sourceUrl: string;
   imageBounds: { xMin: number; yMin: number; xMax: number; yMax: number; spatialUnit: string } | null;
   zInfo: { zValue: number; zMax: number } | null;
@@ -50,12 +60,30 @@ export interface ViewerInfo {
   /** Pointer tool selected in the viewer toolbar; plugins implement the behaviour. */
   interactionMode: InteractionMode;
   setInteractionMode: (mode: InteractionMode) => void;
+  /**
+   * Whether any source is still loading. Reported so a host can show its own treatment;
+   * the viewer already shows a quiet indicator of its own.
+   */
+  isLoading: boolean;
+  /**
+   * Ancestors of the source on screen, oldest first, in the form the `trail` prop takes.
+   * A host that mirrors this into its URL keeps Back, refresh and sharing working.
+   */
+  trail: string[];
 }
 
 export interface VizarrViewerProps {
   /**  Source image urls*/
   sources?: string[];
   labels?: string[];
+  /**
+   * Ancestors of the source, oldest first, as `encodeNavigationStep` writes them.
+   *
+   * Drilling into a plate records where it came from, but that trail lives in the viewer
+   * and so cannot survive a reload, the browser's Back, or a shared link. A host that
+   * keeps the trail in its URL hands it back here, and the breadcrumb is whole again.
+   */
+  trail?: string[];
   /** View state of the viewer*/
   viewState?: ViewState;
   /** Callback to execute side effects when view state changes */
@@ -93,6 +121,7 @@ export interface VizarrViewerProps {
  */
 function ViewerBridge({
   sourceUrls,
+  trail,
   onViewStateChange,
   onViewerStateChange,
   additionalLayers = [],
@@ -103,6 +132,8 @@ function ViewerBridge({
   children,
 }: {
   sourceUrls: string[];
+  /** The trail the host supplied, reported back until a load replaces it. */
+  trail: string[];
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
   additionalLayers?: Layer[];
@@ -122,6 +153,19 @@ function ViewerBridge({
   const interactionMode = useAtomValue(interactionModeAtom);
   const setInteractionMode = useSetAtom(interactionModeAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
+  const isLoading = useAtomValue(isLoadingAtom);
+  const sourceInfo = useAtomValue(sourceInfoAtom);
+  // Reported from what is loaded rather than from the props, so a host following along
+  // -- the ROI plugin looks up its tables by this -- sees the well, not the plate it
+  // was reached from.
+  const currentSourceUrl = sourceInfo.find((entry) => typeof entry.config?.source === "string")?.config?.source;
+  // Until something has loaded there is no history to report, and reporting none would
+  // tell a host its URL trail was wrong -- which would wipe the trail that URL arrived
+  // with. Once loaded, the entry's own history is the truth, empty included.
+  const loadedEntry = sourceInfo.find((entry) => typeof entry.config?.source === "string");
+  const currentTrail = loadedEntry ? (loadedEntry.history ?? []).map(encodeNavigationStep) : trail;
+  // Compared by value so a host effect watching it is not woken by a new empty array.
+  const reportedTrail = useStableArray(currentTrail);
   // Both overlays imply nothing is on screen: an error is only set when every source
   // failed, and no urls means nothing was asked for.
   const nothingToShow = sourceUrls.length === 0 || sourceError !== null;
@@ -129,7 +173,7 @@ function ViewerBridge({
   // Notify host application when viewer state changes
   React.useEffect(() => {
     onViewerStateChange?.({
-      sourceUrl: sourceUrls[0] ?? "",
+      sourceUrl: (typeof currentSourceUrl === "string" ? currentSourceUrl : undefined) ?? sourceUrls[0] ?? "",
       imageBounds,
       zInfo,
       tInfo,
@@ -139,9 +183,12 @@ function ViewerBridge({
       setTSlice,
       interactionMode,
       setInteractionMode,
+      isLoading,
+      trail: reportedTrail,
     });
   }, [
     sourceUrls,
+    currentSourceUrl,
     imageBounds,
     zInfo,
     tInfo,
@@ -151,6 +198,8 @@ function ViewerBridge({
     setTSlice,
     interactionMode,
     setInteractionMode,
+    isLoading,
+    reportedTrail,
     onViewerStateChange,
   ]);
 
@@ -183,6 +232,7 @@ function useStableArray(value: string[]): string[] {
 function VizarrViewerComponent({
   sources = [],
   labels = [],
+  trail,
   viewState: initialViewState,
   onViewStateChange,
   onViewerStateChange,
@@ -199,7 +249,10 @@ function VizarrViewerComponent({
   // reload every source, which resets all layer state.
   const stableSources = useStableArray(sources);
   const stableLabels = useStableArray(labels);
+  const stableTrail = useStableArray(trail ?? []);
 
+  const beginLoad = useSetAtom(beginLoadAtom);
+  const endLoad = useSetAtom(endLoadAtom);
   const setSourceInfo = useSetAtom(sourceInfoAtom);
   const setViewStateAtom = useSetAtom(viewStateAtom);
   const sourceError = useAtomValue(sourceErrorAtom);
@@ -249,13 +302,27 @@ function VizarrViewerComponent({
       },
     ),
   );
+  // What is on screen, mirrored so the load effect can see it without depending on it.
+  const shownSourcesRef = React.useRef<string[]>([]);
   React.useEffect(() => {
+    shownSourcesRef.current = sourceInfo.map((entry) =>
+      typeof entry.config?.source === "string" ? entry.config.source : "",
+    );
+  }, [sourceInfo]);
+
+  React.useEffect(() => {
+    // The viewer navigates itself when a plate is drilled into, so a host syncing its
+    // own state to follow would otherwise ask for a reload of what is already shown.
+    if (shownSourcesRef.current.join("\u0000") === stableSources.join("\u0000")) {
+      return;
+    }
     if (stableSources.length === 0) {
       log.debug("No sources provided, nothing to load");
       return;
     }
     let cancelled = false;
     log.debug("Loading sources", { sources: stableSources, labels: stableLabels });
+    beginLoad();
     loadSources(stableSources, stableLabels)
       .then((results) => {
         if (cancelled) {
@@ -285,7 +352,13 @@ function VizarrViewerComponent({
             addSourceWarning(warning);
           }
         }
-        setSourceInfo(loaded);
+        // Only for a single source: a trail describes one drill-down, and there is no
+        // way to say which of several sources it belongs to.
+        const withTrail =
+          stableTrail.length > 0 && loaded.length === 1
+            ? [{ ...loaded[0], history: stableTrail.map(decodeNavigationStep) }]
+            : loaded;
+        setSourceInfo(withTrail);
       })
       .catch((err: unknown) => {
         if (cancelled) {
@@ -294,11 +367,14 @@ function VizarrViewerComponent({
         const error = err instanceof Error ? err : Error(String(err));
         log.error("Failed to load sources", error);
         setSourceError(writeUserErrorMessage(error));
-      });
+      })
+      // Runs even when the effect was cancelled, so a source list that changes mid-load
+      // cannot leave the count raised and the indicator stuck on.
+      .finally(() => endLoad());
     return () => {
       cancelled = true;
     };
-  }, [stableSources, stableLabels, setSourceInfo, setSourceError, addSourceWarning]);
+  }, [stableSources, stableLabels, stableTrail, setSourceInfo, setSourceError, addSourceWarning, beginLoad, endLoad]);
 
   // Recolouring is applied to the loaded layer state, so it must also run once the
   // sources themselves arrive (colours can be selected before the image has loaded).
@@ -311,10 +387,12 @@ function VizarrViewerComponent({
 
   return (
     <>
+      <LoadingIndicator />
       {redirectObj === null && (
         <ViewStateContext.Provider value={viewStateAtomWithEffect}>
           <ViewerBridge
             sourceUrls={stableSources}
+            trail={stableTrail}
             onViewStateChange={onViewStateChange}
             onViewerStateChange={onViewerStateChange}
             additionalLayers={additionalLayers}
