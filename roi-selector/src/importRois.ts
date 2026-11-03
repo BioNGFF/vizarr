@@ -1,3 +1,4 @@
+import { resolveCloudUri } from "@biongff/vizarr";
 import * as zarr from "zarrita";
 import { log } from "./logger";
 import type { ImageBounds, RoiCorner, SavedRoi } from "./state";
@@ -26,7 +27,9 @@ interface PhysicalRoi {
 // ---- Store helpers ----
 
 function openZarrLocation(sourceUrl: string): zarr.Location<zarr.Readable> {
-  const url = new URL(sourceUrl);
+  // The same resolution the viewer applies to an image, so a table on an `s3://` bucket
+  // is reachable from a link that reaches the image beside it.
+  const url = new URL(resolveCloudUri(sourceUrl));
   const path = url.pathname as `/${string}`;
   url.pathname = "/";
   const store = new zarr.FetchStore(url.href);

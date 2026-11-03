@@ -1,3 +1,4 @@
+import { resolveCloudUri } from "@biongff/vizarr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
@@ -21,7 +22,9 @@ export const AnndataController = ({
 }: { adata: string; callback: (colorData: labelColor[]) => void }) => {
   const [selectedLabel, setSelectedLabel] = useState<{ labelIndex: string; type: LabelType } | undefined>(undefined);
 
-  const url = useMemo(() => new URL(adata), [adata]);
+  // Resolved as the viewer resolves an image source, so a table addressed with a cloud
+  // storage URI opens from the same kind of link the image beside it came from.
+  const url = useMemo(() => new URL(resolveCloudUri(adata)), [adata]);
 
   const handleLabelSelect = useCallback((labelIndex: string, labelType: LabelType) => {
     setSelectedLabel({ labelIndex, type: labelType });

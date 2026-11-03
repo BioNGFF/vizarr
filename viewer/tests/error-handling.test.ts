@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, test } from "vitest";
 
 import type { Server } from "node:http";
 import { createSourceData } from "../src/io";
-import { HttpError, MetadataNotFoundError } from "../src/services/http";
+import { HttpError, MetadataNotFoundError, UnsupportedSchemeError } from "../src/services/http";
 
 let server: Server<typeof http.IncomingMessage, typeof http.ServerResponse>;
 let port: number;
@@ -100,4 +100,15 @@ test("Server handles zarr files with no metadata", async () => {
     expect(result.status).toBe("rejected");
     expect(result.reason).toBeInstanceOf(MetadataNotFoundError);
   });
+});
+
+test("A scheme the browser cannot fetch is named rather than blamed on CORS", async () => {
+  // An unknown scheme throws the same TypeError a blocked request does, so this used to
+  // be reported as "most likely a CORs issue" -- advice that sends someone to look at a
+  // bucket policy for a request that never left the browser.
+  const [result] = await Promise.allSettled([createSourceData({ source: "az://container/image.zarr" })]);
+  expect(result.status).toBe("rejected");
+  expect(result.reason).toBeInstanceOf(UnsupportedSchemeError);
+  expect(result.reason.message).toContain("s3://");
+  expect(result.reason.message).not.toMatch(/cors/i);
 });

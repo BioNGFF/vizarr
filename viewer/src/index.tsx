@@ -21,5 +21,6 @@ export type {
 export { useViewState, ViewStateContext } from "./hooks";
 
 export { REPOSITORY_URL } from "./utils";
+export { resolveCloudUri, SUPPORTED_SCHEMES } from "./cloud-uri";
 export { createLogger, setLogger } from "./logger";
 export type { Logger, LogFunction } from "./logger";

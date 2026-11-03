@@ -1,4 +1,5 @@
 import * as zarr from "zarrita";
+import { resolveCloudUri } from "./cloud-uri";
 
 import type * as viv from "@vivjs/types";
 import ZipFileStore from "@zarrita/storage/zip";
@@ -93,28 +94,33 @@ export async function normalizeStore(source: string | zarr.Readable): Promise<za
   if (typeof source === "string") {
     let store: zarr.Readable;
     let path: `/${string}` = "/";
-    if (source.endsWith(".json")) {
+    // A cloud storage URI is not something a browser can fetch, so it becomes an https
+    // url here, before any store sees it. Resolving once at the front rather than inside
+    // each branch is also what lets `s3://bucket/image.zarr.zip` reach ZipFileStore as a
+    // url it can make range requests against.
+    const href = resolveCloudUri(source);
+    if (href.endsWith(".json")) {
       // import custom store implementation
       const [{ default: ReferenceStore }, json] = await Promise.all([
         import("@zarrita/storage/ref"),
-        fetch(source).then((res) => res.json()),
+        fetch(href).then((res) => res.json()),
       ]);
       store = ReferenceStore.fromSpec(json);
-      log.debug("Store resolved", { source, store: "ReferenceStore" });
+      log.debug("Store resolved", { source, href, store: "ReferenceStore" });
     } else {
       // try ZipFileStore first, fallback to FetchStore
       try {
-        const zipStore = ZipFileStore.fromUrl(source);
+        const zipStore = ZipFileStore.fromUrl(href);
         await zipStore.has("/"); // will throw an error for non-zipped
         store = zipStore;
-        log.debug("Store resolved", { source, store: "ZipFileStore" });
+        log.debug("Store resolved", { source, href, store: "ZipFileStore" });
       } catch {
-        const url = new URL(source);
+        const url = new URL(href);
         // grab the path and then set the URL to the root
         path = ensureAbsolutePath(url.pathname);
         url.pathname = "/";
         store = new zarr.FetchStore(url.href);
-        log.debug("Store resolved", { source, store: "FetchStore" });
+        log.debug("Store resolved", { source, href, store: "FetchStore" });
       }
     }
 
