@@ -12,7 +12,6 @@ import type { DeckGLRef, OrthographicViewState, PickingInfo } from "deck.gl";
 import { type GrayscaleBitmapLayerPickingInfo, LabelLayer } from "../layers/label-layer";
 import type { ViewState, VizarrLayer } from "../state";
 import OrientationCompass from "./OrientationCompass";
-import OrientationOverlay from "./OrientationOverlay";
 
 /**
  * Styling for deck.gl's tooltip, which is a plain DOM node outside the MUI tree and so
@@ -272,7 +271,6 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
         }}
         onResize={({ width, height }: { width: number; height: number }) => setViewport({ width, height })}
       />
-      <OrientationOverlay />
       <OrientationCompass />
       {axisNavigationSnackbar}
     </>

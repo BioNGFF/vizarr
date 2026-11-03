@@ -22,7 +22,7 @@ function AxisSlider({ axisIndex, max }: Props) {
   }
 
   // RFC-4 orientation for an axis that points out of the view, which is the only place
-  // it can be shown: the edge labels can only speak for the two axes on screen. The
+  // it can be shown: the compass can only speak for the two axes lying in the view. The
   // ends are ordered the way the slider travels, so the arrow reads with the handle
   // rather than against it.
   const direction = React.useMemo(

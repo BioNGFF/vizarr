@@ -1,17 +1,16 @@
-import ForwardIcon from "@mui/icons-material/Forward";
 import { Box } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type * as React from "react";
 import type { OrientationEnds } from "../orientation";
 import { tokens } from "../theme";
+import { InlineArrow } from "./OrientationArrow";
 
 /**
- * The look of an RFC-4 anatomical term, wherever it is shown.
+ * The look of an RFC-4 anatomical term beside a slider.
  *
- * One definition rather than two, so a term beside a slider reads as the same kind of
- * thing as a term at the edge of the image. They describe the same axis, and the only
- * reason they are drawn in different places is that one of the axes is pointing at the
- * viewer and cannot be labelled on the image at all.
+ * Set in a pill rather than as bare text, which is what the compass uses: there the
+ * bordered box already separates the terms from everything around them, while here they
+ * share a line with the axis name and its index and would otherwise read as part of it.
  */
 const LABEL_SX: SxProps<Theme> = {
   display: "inline-block",
@@ -28,15 +27,9 @@ const LABEL_SX: SxProps<Theme> = {
   userSelect: "none",
 };
 
-export function OrientationLabel({
-  children,
-  sx,
-}: {
-  children: React.ReactNode;
-  sx?: Record<string, unknown>;
-}) {
+function OrientationLabel({ children }: { children: React.ReactNode }) {
   return (
-    <Box component="span" sx={{ ...LABEL_SX, ...sx }}>
+    <Box component="span" sx={LABEL_SX}>
       {children}
     </Box>
   );
@@ -45,17 +38,15 @@ export function OrientationLabel({
 /**
  * Both ends of an axis that points out of the view, with the direction between them.
  *
- * The arrow is drawn rather than typed, and solid rather than a thin stem: a glyph in
- * the middle of a caption sits on the text baseline and reads as punctuation, and a
- * hairline arrow at caption size is barely legible as an arrow at all. This is the one
- * part of the label whose whole job is to say *direction*, so it is the one part worth
- * making unmistakable.
+ * The arrow is the compass's, so the two displays say the same thing the same way --
+ * the only reason this axis is described here rather than on the compass is that it
+ * points at the viewer and has no direction to draw on a flat legend.
  */
 export function OrientationDirection({ ends }: { ends: OrientationEnds }) {
   return (
-    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: "3px", verticalAlign: "middle" }}>
+    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: "4px", verticalAlign: "middle" }}>
       <OrientationLabel>{ends.from}</OrientationLabel>
-      <ForwardIcon sx={{ fontSize: 20, opacity: 0.75 }} />
+      <InlineArrow />
       <OrientationLabel>{ends.to}</OrientationLabel>
     </Box>
   );
