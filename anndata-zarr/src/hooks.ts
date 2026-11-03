@@ -1,7 +1,15 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import _ from "lodash";
 
-import { fetchDataFromZarr, getFeatureDataPath, getLabels, getObservationDataPath } from "./anndata";
+import {
+  fetchDataFromZarr,
+  getFeatureDataPath,
+  getInstanceValues,
+  getLabels,
+  getObservationDataPath,
+  getRegionsTable,
+} from "./anndata";
+import type { RegionsTable } from "./anndata";
 import type { LabelType, labelColor } from "./components/AnndataController";
 import { COLORSCALES } from "./constants/colorscales";
 import { getColors } from "./utils";
@@ -12,6 +20,8 @@ interface ColourData {
   max: number;
   categories?: string[];
   colorscale?: string[];
+  /** Something the reader should know about the colouring, short enough to show. */
+  warning?: string;
 }
 
 export interface ColourProps {
@@ -51,12 +61,18 @@ export const getAnndataColors = async (
     colorscale = colorProps?.colorscale;
   }
 
+  // Which label each row is about. A SpatialData regions table says so; a plain AnnData
+  // table does not, and there position is all there is.
+  const regions = await getRegionsTable(url);
+  const labelValues = regions ? await getInstanceValues(url, regions.instanceKey) : undefined;
+
   const colours = getColors({
     data: data.data,
     max,
     min,
     colorscale,
     categories,
+    labelValues,
   });
   return {
     colors: colours,
@@ -64,8 +80,24 @@ export const getAnndataColors = async (
     min,
     categories,
     colorscale,
+    warning: regionsWarning(regions),
   };
 };
+
+/**
+ * What cannot be honoured about a table's own account of itself.
+ *
+ * One table may annotate several elements, and an instance id is only unique within its
+ * region, so rows from different regions collide on a single mask. Which region to keep
+ * would need the plugin to know which labels element it is colouring, which it does not.
+ * Saying so beats drawing a picture that looks right.
+ */
+function regionsWarning(regions: RegionsTable | undefined): string | undefined {
+  if (regions && Array.isArray(regions.region) && regions.region.length > 1) {
+    return `This table annotates ${regions.region.length} elements at once (${regions.region.join(", ")}). Rows from all of them are being coloured together, which is unlikely to be what you want.`;
+  }
+  return undefined;
+}
 
 type LabelQueryParameters = {
   type: LabelType;

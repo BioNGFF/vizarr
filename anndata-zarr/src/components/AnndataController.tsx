@@ -1,3 +1,5 @@
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
@@ -62,6 +64,14 @@ export const AnndataController = ({
 
   return (
     <Stack sx={{ height: "100%" }}>
+      {colourData?.warning && (
+        // Shown rather than logged: this one says the colours on screen cannot be trusted,
+        // which is not something to leave in a console.
+        <Typography variant="caption" sx={{ display: "flex", gap: "6px", px: 1, py: 0.75, opacity: 0.85 }}>
+          <WarningAmberIcon sx={{ fontSize: 16, flexShrink: 0 }} />
+          {colourData.warning}
+        </Typography>
+      )}
       <Box sx={{ height: "50%" }}>
         {labels.data && (
           <FeatureSelect

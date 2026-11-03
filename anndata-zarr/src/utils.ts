@@ -52,15 +52,32 @@ export const getColor = ({
 export const normalise = (value: number, min: number, max: number): number =>
   max === min ? 0 : (value - min) / (max - min);
 
+/**
+ * A colour per row, against the label each row describes.
+ *
+ * `labelValues` is that mapping where the table declares one. Without it the row's
+ * position stands in, which is right only for a table whose rows are a dense run from 1
+ * covering every object in the mask -- and real tables are routinely neither, because
+ * segmentations drop objects at the border and tables get filtered. A table that names
+ * its instances should never be read by position.
+ */
 export const getColors = ({
   data,
   max,
   min,
   colorscale,
   categories,
-}: { data: number[]; max: number; min: number; colorscale?: string[]; categories?: string[] }): labelColor[] => {
+  labelValues,
+}: {
+  data: number[];
+  max: number;
+  min: number;
+  colorscale?: string[];
+  categories?: string[];
+  labelValues?: number[];
+}): labelColor[] => {
   return _.map(data, (v: number, i: number) => ({
-    labelValue: i + 1,
+    labelValue: labelValues?.[i] ?? i + 1,
     rgba: getColor({ value: normalise(v, min, max), colorscale }),
     value: categories ? (categories[v] ?? v) : v,
   }));
