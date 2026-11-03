@@ -1,0 +1,10 @@
+{
+  "zarr_format": 3,
+  "node_type": "group",
+  "attributes": {
+    "encoding_type": "ngff:shapes",
+    "spatialdata_attrs": {
+      "version": "0.2"
+    }
+  }
+}

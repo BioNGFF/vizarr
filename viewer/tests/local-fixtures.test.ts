@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
+import { getSourceDataWarnings } from "../src/error";
 import { createSourceData } from "../src/io";
 import { startFixtureServer } from "./fixture-server";
 
@@ -79,4 +80,68 @@ test("A well lays out every field it holds", async () => {
 
 test("A missing source is reported as an error rather than an empty image", async () => {
   await expect(createSourceData({ source: `${origin}/not-here.zarr` })).rejects.toThrow();
+});
+
+test("A SpatialData image is read as the OME-NGFF it is", async () => {
+  const [source] = await createSourceData({ source: `${origin}/image-spatialdata.zarr` });
+
+  // The version said `0.5-dev-spatialdata`, which is 0.5 plus things we do not read.
+  expect(source.axis_labels).toEqual(["t", "c", "z", "y", "x"]);
+  expect(source.loader).toHaveLength(2);
+  expect(source.loader[0].shape).toEqual([1, 2, 1, 32, 32]);
+  expect(source.channel_axis).toBe(1);
+  // Names from omero, which gave them; everything else worked out from the pixels,
+  // because omero gave no colour and no window to draw with.
+  expect(source.names).toEqual(["ch0", "ch1"]);
+  expect(source.colors).toHaveLength(2);
+  expect(source.contrast_limits).toHaveLength(2);
+  // A measured range, not the [0, 255] a fixture's omero would have declared.
+  expect(source.contrast_limits[0]?.[1]).toBeGreaterThan(0);
+});
+
+test("A SpatialData image is placed in the space its elements share", async () => {
+  // The fixture maps to `element` with an identity and to `global` with a scale of 2.
+  // Nothing was asked for, so `global` wins, and the scale has to reach the matrix: it
+  // is the element's position relative to everything else in the sample.
+  const [source] = await createSourceData({ source: `${origin}/image-spatialdata.zarr` });
+
+  expect(source.model_matrix[0]).toBe(2);
+  expect(source.model_matrix[5]).toBe(2);
+});
+
+test("A SpatialData image can be asked for a different space", async () => {
+  const [source] = await createSourceData({
+    source: `${origin}/image-spatialdata.zarr`,
+    coordinateSystem: "element",
+  });
+
+  expect(source.model_matrix[0]).toBe(1);
+  expect(source.model_matrix[5]).toBe(1);
+});
+
+test("A space the image does not have is refused rather than substituted", async () => {
+  // Drawing in a different space than the one asked for moves the image somewhere else
+  // entirely. Saying so beats doing it quietly.
+  await expect(
+    createSourceData({ source: `${origin}/image-spatialdata.zarr`, coordinateSystem: "nowhere" }),
+  ).rejects.toThrow(/nowhere/);
+});
+
+test("A SpatialData container opens by its root, with every image it holds", async () => {
+  // The root carries no multiscales. What makes this possible is the consolidated index,
+  // which is not an optimisation here but the only way to find out what is inside.
+  const sources = await createSourceData({ source: `${origin}/spatialdata.zarr` });
+
+  expect(sources).toHaveLength(2);
+  expect(sources.map((source) => source.name)).toEqual(["first", "second"]);
+  // Both in the space they share, which is where the scale of 2 comes from.
+  expect(sources.map((source) => source.model_matrix[0])).toEqual([2, 2]);
+});
+
+test("A SpatialData container says what it holds that is not shown", async () => {
+  const [source] = await createSourceData({ source: `${origin}/spatialdata.zarr` });
+
+  // Reported rather than ignored: someone who opens a sample and sees only its images
+  // should not be left wondering whether the rest is missing from the file.
+  expect(getSourceDataWarnings(source).join(" ")).toMatch(/1 shape/);
 });

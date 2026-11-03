@@ -238,3 +238,52 @@ export async function getObservationDataPath(name: string): Promise<{ path: stri
     slice: undefined,
   };
 }
+
+/**
+ * What a SpatialData regions table says about the element it annotates.
+ *
+ * The three fields arrive together or not at all -- the specification requires it -- so a
+ * table either states its mapping completely or leaves it entirely to the reader.
+ */
+export interface RegionsTable {
+  /** The element the rows annotate, or the elements where one table covers several. */
+  region: string | string[];
+  /** The `obs` column saying which region a row belongs to. Only meaningful for a list. */
+  regionKey: string;
+  /** The `obs` column holding the label value each row describes. */
+  instanceKey: string;
+}
+
+/**
+ * The region mapping a table declares, or undefined where it declares none.
+ *
+ * Plain AnnData tables carry none of this, and are the case the plugin was written for.
+ * A table that does carry it is telling us which label each of its rows is about, which
+ * is not something that can be inferred from row order.
+ */
+export async function getRegionsTable(url: URL): Promise<RegionsTable | undefined> {
+  const root = await fetchZarrGroup(url);
+  const attrs = root.attrs as Record<string, unknown>;
+  const { region, region_key: regionKey, instance_key: instanceKey } = attrs;
+  if (typeof instanceKey !== "string" || typeof regionKey !== "string") {
+    return undefined;
+  }
+  if (typeof region !== "string" && !Array.isArray(region)) {
+    return undefined;
+  }
+  return { region: region as string | string[], regionKey, instanceKey };
+}
+
+/**
+ * The label value each row of the table describes.
+ *
+ * Read straight from the column rather than through `fetchDataFromZarr`, which parses for
+ * display: these are identifiers, and an int64 column arrives as BigInt, which is exact
+ * where a float is not. Label values are small enough that narrowing to a number loses
+ * nothing.
+ */
+export async function getInstanceValues(url: URL, instanceKey: string): Promise<number[]> {
+  const root = await fetchZarrGroup(url);
+  const { data } = await getData(root, `obs/${instanceKey}`);
+  return data.map((value) => Number(value));
+}

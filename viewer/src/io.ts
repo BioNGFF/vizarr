@@ -3,6 +3,8 @@ import type { z } from "zod";
 import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
 import { parse } from "./parsers/parse";
+import { isSpatialDataRoot } from "./parsers/spatialdata";
+import { loadSpatialData } from "./providers/spatialdata";
 import * as utils from "./utils";
 
 import { DEFAULT_LABEL_OPACITY, type OmeColor } from "./layers/label-layer";
@@ -107,6 +109,13 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     if (utils.isMultiscales(attrs)) {
       const sources = [await loadOmeMultiscales(config, node, attrs)];
       return sources;
+    }
+
+    // A SpatialData container, which is a group of elements rather than an image. Its
+    // own root carries no multiscales, so without this it reaches the assertion below
+    // and reports a missing specification it was never going to have.
+    if (isSpatialDataRoot(attrs) && typeof config.source === "string") {
+      return await loadSpatialData(config, node);
     }
 
     if (Object.keys(attrs).length === 0 && node.path) {
@@ -224,17 +233,11 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
     };
   }
 
-  if (source.loader.length === 1) {
-    return {
-      kind: "image",
-      layerProps: {
-        ...layerProps,
-        loader: source.loader[0],
-      },
-      on: true,
-    };
-  }
-
+  // Worked out before the two kinds part company. Whether an image arrived as a pyramid
+  // or as a single resolution says nothing about whether it has labels over it, and a
+  // SpatialData element is routinely written with one resolution -- so attaching them
+  // only to the multiscale kind meant a label that loaded correctly and was then dropped
+  // on the floor, with no error and no labels section to show for it.
   let labels = undefined;
   if (source.labels && source.labels.length > 0) {
     labels = source.labels.map((label, i) => ({
@@ -249,6 +252,19 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
       },
     }));
   }
+
+  if (source.loader.length === 1) {
+    return {
+      kind: "image",
+      layerProps: {
+        ...layerProps,
+        loader: source.loader[0],
+      },
+      on: true,
+      labels,
+    };
+  }
+
   return {
     kind: "multiscale",
     layerProps: {
@@ -318,12 +334,13 @@ export function applyLabelColors<T extends LayerState>(layerState: T, colors: Re
  * array. `sourceIndex` records which entry of `sources` an image came from, which callers
  * need because that mapping is no longer positional once the results are flattened.
  */
-export async function loadSources(sources: string[], labels: string[] = []) {
+export async function loadSources(sources: string[], labels: string[] = [], coordinateSystems: string[] = []) {
   return await Promise.allSettled(
     sources.map(async (source, index) => {
-      const sourceData = await createSourceData({ source: source, label: labels[index] });
+      const coordinateSystem = coordinateSystems[index];
+      const sourceData = await createSourceData({ source: source, label: labels[index], coordinateSystem });
       return sourceData.map((data, subIndex) => {
-        const config = { source, label: labels[index] };
+        const config = { source, label: labels[index], coordinateSystem };
         const id = utils.sourceId(source, index, subIndex, { label: labels[index] });
         if (!data.name) {
           // Named for where it sits rather than `image_0`, so a link straight to a field

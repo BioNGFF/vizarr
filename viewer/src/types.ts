@@ -4,11 +4,15 @@ declare namespace Ome {
   interface Channel {
     active: boolean;
     coefficient: number;
-    color: string;
+    // Optional because a writer may name its channels without describing how to render
+    // them: SpatialData emits `{"label": "r"}` and nothing more. The specification asks
+    // for both, and the schemas agree, but a reader that insists on them refuses an
+    // image it could draw.
+    color?: string;
     family: string;
     inverted: boolean;
     label?: string;
-    window: {
+    window?: {
       end: number;
       max?: number;
       min?: number;
@@ -39,9 +43,19 @@ declare namespace Ome {
     axes: Axis[];
   }
 
+  /**
+   * The spaces a transformation maps between.
+   *
+   * A string in NGFF 0.6, which names a coordinate system listed elsewhere. The
+   * transformations proposal -- which SpatialData writes -- gives the whole system
+   * instead, because a transformation there declares the axes it maps between, and those
+   * may be ordered differently on each side.
+   */
+  type TransformationSide = string | { name: string; axes?: Axis[] };
+
   type TransformationMetadata = {
-    input?: string;
-    output?: string;
+    input?: TransformationSide;
+    output?: TransformationSide;
   };
 
   type SceneTransformationMetadata = {

@@ -3,6 +3,12 @@ import * as zarr from "zarrita";
 import * as utils from "./utils";
 
 import { ZarrPixelSource } from "./ZarrPixelSource";
+import {
+  SHARED_COORDINATE_SYSTEM,
+  coordinateSystemsFromTransformations,
+  outputName,
+  selectCoordinateSystem,
+} from "./coordinate-systems";
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
 import { createSourceData } from "./io";
 import { log } from "./logger";
@@ -442,6 +448,30 @@ function getImageTransformations(metadata: Ome.Multiscale[]): Ome.CoordinateTran
   return metadata[0].coordinateTransformations ? metadata[0].coordinateTransformations : [];
 }
 
+/**
+ * Every space this element can be drawn in.
+ *
+ * Three sources, in order of how much they were told us. A 0.6 image lists its systems.
+ * An element written against the transformations proposal -- SpatialData's images and
+ * labels -- names them in its own transformations instead, and that list is the useful
+ * one, because it includes the space the element shares with its neighbours. Anything
+ * else gets the single implicit system its axes describe.
+ */
+function resolveCoordinateSystems(multiscales: Ome.Multiscale[]): {
+  coordinateSystems: Ome.CoordinateSystem[];
+  /** Which to prefer by default, where the element did not list its systems itself. */
+  preferred?: string;
+} {
+  if (multiscales[0].coordinateSystems) {
+    return { coordinateSystems: multiscales[0].coordinateSystems };
+  }
+  const fallback = getDefaultCoordinateSystem(multiscales);
+  const derived = coordinateSystemsFromTransformations(multiscales[0].coordinateTransformations, fallback[0].axes);
+  return derived
+    ? { coordinateSystems: derived, preferred: SHARED_COORDINATE_SYSTEM }
+    : { coordinateSystems: fallback };
+}
+
 export function getOrderedTransformations(
   metadata: Ome.Multiscale[],
   coordinateSystem: Ome.CoordinateSystem,
@@ -451,7 +481,7 @@ export function getOrderedTransformations(
   const transformations = [
     ...resolutionTransformations,
     ...imageTransformations.filter((transformation) => {
-      return transformation.output === coordinateSystem.name;
+      return outputName(transformation) === coordinateSystem.name;
     }),
   ];
 
@@ -515,25 +545,35 @@ export async function loadOmeMultiscales(
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
   const tileSize = utils.guessTileSize(data[0]);
-  const coordinateSystems = attrs.multiscales[0].coordinateSystems
-    ? attrs.multiscales[0].coordinateSystems
-    : getDefaultCoordinateSystem(attrs.multiscales);
-  const selectedCoordinateSystem = config.coordinateSystem
-    ? coordinateSystems.filter((coordinateSystem) => {
-        return coordinateSystem.name === config.coordinateSystem;
-      })[0]
-    : coordinateSystems[0];
+  const { coordinateSystems, preferred } = resolveCoordinateSystems(attrs.multiscales);
+  const selectedCoordinateSystem = selectCoordinateSystem(coordinateSystems, config.coordinateSystem, preferred);
+  utils.assert(
+    selectedCoordinateSystem,
+    `The image declares no coordinate system named "${config.coordinateSystem}". It has ${coordinateSystems
+      .map((system) => `"${system.name}"`)
+      .join(", ")}.`,
+  );
   const axes = selectedCoordinateSystem.axes;
 
   const axis_labels = utils.getNgffAxisLabels(axes);
-  let meta: Meta;
-  if (utils.isOmeMultiscales(attrs)) {
-    meta = parseOmeroMeta(attrs.omero, axes);
-  } else {
+  const metaFromData = async () => {
     const lowresArray = data.at(-1);
     utils.assert(lowresArray, "Expected at least one resolution in multiscales, found none.");
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
-    meta = await defaultMeta(lowresSource, axis_labels);
+    return defaultMeta(lowresSource, axis_labels);
+  };
+
+  let meta: Meta;
+  if (utils.isOmeMultiscales(attrs) && describesRendering(attrs.omero)) {
+    meta = parseOmeroMeta(attrs.omero, axes);
+  } else if (utils.isOmeMultiscales(attrs)) {
+    // An omero block that names its channels without describing them -- SpatialData
+    // writes `{"label": "r"}` and nothing else -- has no colour and no window to render
+    // from. Work them out from the pixels, as an image carrying no omero at all would,
+    // and keep the names, which are the part it did give us.
+    meta = { ...(await metaFromData()), names: channelNames(attrs.omero) };
+  } else {
+    meta = await metaFromData();
   }
 
   const loader = await getImageLoader(attrs.multiscales, grp, axes);
@@ -572,7 +612,11 @@ export async function loadOmeMultiscales(
     ...meta,
     name: meta.name ?? name,
     labels: await Promise.all(
-      labels.map((name) => loadOmeImageLabel(labelGroup.resolve(labelPath).resolve(name), name)),
+      // In the image's space, not the label's own first choice. A label is drawn over an
+      // image; placing the two in different spaces puts one of them somewhere else.
+      labels.map((name) =>
+        loadOmeImageLabel(labelGroup.resolve(labelPath).resolve(name), name, selectedCoordinateSystem.name),
+      ),
     ),
   };
 }
@@ -604,27 +648,28 @@ async function loadOmeImageLabel(
   const store = root.store as zarr.FetchStore;
   const url = new URL(root.path.replace(/^\/+/, ""), store.url).href;
   const node = await openZarrRoot(url);
-  const parsedAttrs = parse(node.attrs);
+  // The element's own attributes, as an image's are read, rather than the copy the
+  // schemas return. That copy has had every key the schema does not know dropped from
+  // it, which for a SpatialData element means the transformations placing it in the
+  // spaces it shares -- so a label read from it would be positioned by its own pyramid
+  // scale alone and sit wherever that happened to put it.
+  const attrs = utils.resolveAttrs(node.attrs) as unknown as Ome.LabelImage;
   // Unlike the callers that only probe what a group is, this one cannot proceed without
-  // an answer. Saying so is what stops the unchecked cast below reaching the user as
+  // an answer. Saying so is what stops the unchecked cast above reaching the user as
   // "Cannot read properties of undefined".
-  if (!parsedAttrs) {
+  if (!utils.isMultiscales(attrs as unknown as zarr.Attributes)) {
     throw new MetadataError(
-      `The label image at ${url} does not match any supported OME-NGFF version.`,
-      "No OME-NGFF schema matched the group attributes.",
+      `The label image at ${url} does not describe a multiscale image.`,
+      "No multiscales in the label group attributes.",
     );
   }
-
-  //@to-do temporary until transformation layer implemented
-  const attrs = parsedAttrs.data as Ome.LabelImage;
-  const coordinateSystems = attrs.multiscales[0].coordinateSystems
-    ? attrs.multiscales[0].coordinateSystems
-    : getDefaultCoordinateSystem(attrs.multiscales);
-  const selectedCoordinateSystem = coordinateSystem
-    ? coordinateSystems.filter((system) => {
-        return system.name === coordinateSystem;
-      })[0]
-    : coordinateSystems[0];
+  const { coordinateSystems, preferred } = resolveCoordinateSystems(attrs.multiscales);
+  // A label is drawn over its image, so it follows the image's choice of space where it
+  // has that space. Where it does not, its own default rather than nothing at all.
+  const selectedCoordinateSystem =
+    selectCoordinateSystem(coordinateSystems, coordinateSystem, preferred) ??
+    selectCoordinateSystem(coordinateSystems, undefined, preferred) ??
+    coordinateSystems[0];
   const loader = await getImageLoader(attrs.multiscales, node, selectedCoordinateSystem.axes);
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
   const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);
@@ -706,6 +751,22 @@ function setVisibilities(channels: Ome.Channel[]): boolean[] {
   return visibilities;
 }
 
+/**
+ * Whether an omero block says how to draw its channels, rather than only what they are.
+ *
+ * Both fields or neither, per channel: a half-described channel would mean mixing a
+ * declared colour with a measured window, and a reader guessing which half to trust is
+ * worse than one that measures both.
+ */
+function describesRendering({ channels }: Ome.Omero): boolean {
+  return channels.every((channel) => channel.color !== undefined && channel.window !== undefined);
+}
+
+/** The labels an omero block gives its channels, numbered where it gives none. */
+function channelNames({ channels }: Ome.Omero): string[] {
+  return channels.map((channel, index) => channel.label || `channel_${index}`);
+}
+
 function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]): Meta {
   const t = rdefs?.defaultT ?? 0;
   const z = rdefs?.defaultZ ?? 0;
@@ -717,6 +778,7 @@ function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]):
   const names: string[] = [];
 
   channels.forEach((c, index) => {
+    utils.assert(c.color !== undefined && c.window !== undefined, "Expected omero to describe every channel.");
     colors.push(c.color);
     contrast_limits.push([c.window.start, c.window.end]);
     names.push(c.label || `${index}`);

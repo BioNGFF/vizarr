@@ -44,6 +44,7 @@ export default function App() {
     sources: initialSources,
     trail: initialTrail,
     labels,
+    coordinateSystems,
     viewState,
     enableRoi,
     tableURLs,
@@ -55,6 +56,9 @@ export default function App() {
       // browser's Back and a shared link.
       trail: searchParams.getAll("from"),
       labels: searchParams.getAll("label"),
+      // Which space to draw each source in, for metadata that names more than one.
+      // Paired with `source` by position, as `label` is.
+      coordinateSystems: searchParams.getAll("coordinateSystem"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
       tableURLs: searchParams.getAll("anndata"),
@@ -209,6 +213,7 @@ export default function App() {
             theme={null}
             sources={sources}
             labels={labels}
+            coordinateSystems={coordinateSystems}
             trail={trail}
             viewState={viewState}
             onViewerStateChange={setViewerInfo}
