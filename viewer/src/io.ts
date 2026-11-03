@@ -3,6 +3,8 @@ import type { z } from "zod";
 import { ZarrPixelSource } from "./ZarrPixelSource";
 import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
 import { parse } from "./parsers/parse";
+import { isSpatialDataRoot } from "./parsers/spatialdata";
+import { loadSpatialData } from "./providers/spatialdata";
 import * as utils from "./utils";
 
 import { DEFAULT_LABEL_OPACITY, type OmeColor } from "./layers/label-layer";
@@ -107,6 +109,13 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     if (utils.isMultiscales(attrs)) {
       const sources = [await loadOmeMultiscales(config, node, attrs)];
       return sources;
+    }
+
+    // A SpatialData container, which is a group of elements rather than an image. Its
+    // own root carries no multiscales, so without this it reaches the assertion below
+    // and reports a missing specification it was never going to have.
+    if (isSpatialDataRoot(attrs) && typeof config.source === "string") {
+      return await loadSpatialData(config, node);
     }
 
     if (Object.keys(attrs).length === 0 && node.path) {

@@ -117,6 +117,12 @@ export type ImageLabels = Array<{
 }>;
 
 export type SourceData = {
+  /**
+   * Things worth telling the reader that are not failures: what a container holds and
+   * this does not show, metadata that had to be worked around. Surfaced beside the
+   * warnings derived from the data itself.
+   */
+  warnings?: string[];
   loader: ZarrPixelSource[];
   loaders?: GridLoader[]; // for OME plates
   rows?: number;

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
+import { getSourceDataWarnings } from "../src/error";
 import { createSourceData } from "../src/io";
 import { startFixtureServer } from "./fixture-server";
 
@@ -124,4 +125,23 @@ test("A space the image does not have is refused rather than substituted", async
   await expect(
     createSourceData({ source: `${origin}/image-spatialdata.zarr`, coordinateSystem: "nowhere" }),
   ).rejects.toThrow(/nowhere/);
+});
+
+test("A SpatialData container opens by its root, with every image it holds", async () => {
+  // The root carries no multiscales. What makes this possible is the consolidated index,
+  // which is not an optimisation here but the only way to find out what is inside.
+  const sources = await createSourceData({ source: `${origin}/spatialdata.zarr` });
+
+  expect(sources).toHaveLength(2);
+  expect(sources.map((source) => source.name)).toEqual(["first", "second"]);
+  // Both in the space they share, which is where the scale of 2 comes from.
+  expect(sources.map((source) => source.model_matrix[0])).toEqual([2, 2]);
+});
+
+test("A SpatialData container says what it holds that is not shown", async () => {
+  const [source] = await createSourceData({ source: `${origin}/spatialdata.zarr` });
+
+  // Reported rather than ignored: someone who opens a sample and sees only its images
+  // should not be left wondering whether the rest is missing from the file.
+  expect(getSourceDataWarnings(source).join(" ")).toMatch(/1 shape/);
 });

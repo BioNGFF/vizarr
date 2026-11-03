@@ -183,17 +183,17 @@ function writeImageV3(dir, { name, channels = 2, size = 32, depth = 2 }) {
  * are here too -- vizarr does not read them yet, and this fixture is what would notice if
  * their presence ever started breaking the images that carry them.
  */
-function writeImageSpatialData(dir, { name, channels = 2, size = 32, depth = 2 }) {
+function writeImageSpatialData(dir, { name, channels = 2, size = 32, depth = 2, intrinsic = "element" }) {
   const levels = levelsFor({ size, depth });
   const scales = multiscales({ levels, version: undefined, name });
   // Two systems, as a real element has: its own pixel grid under a name, and the space it
   // shares with every other element of the sample. The shared one is where the scale is,
   // which is what makes selecting the wrong one visible rather than merely wrong.
-  const intrinsic = { name: "element", axes: AXES };
+  const own = { name: intrinsic, axes: AXES };
   const shared = { name: "global", axes: AXES };
   const input = { name: "tczyx", axes: AXES };
   scales[0].coordinateTransformations = [
-    { type: "identity", input, output: intrinsic },
+    { type: "identity", input, output: own },
     { type: "scale", scale: [1, 1, 1, 2, 2], input, output: shared },
   ];
   writeJson(path.join(dir, "zarr.json"), {
@@ -211,6 +211,42 @@ function writeImageSpatialData(dir, { name, channels = 2, size = 32, depth = 2 }
   });
   levels.forEach((edge, index) => {
     writeArrayV3(path.join(dir, String(index)), { channels, height: edge, width: edge });
+  });
+}
+
+/**
+ * A SpatialData container: a root that holds elements rather than pixels.
+ *
+ * The root carries no multiscales of its own, so the only way to find what is inside is
+ * the consolidated index -- a zarr group served over HTTP cannot be asked what it
+ * contains. This writes the v3 form, where the index lives inside the root node, and
+ * includes a shapes element so that there is something for the viewer to report as not
+ * shown.
+ */
+function writeSpatialDataContainer(dir, { images, shapes = ["roi"] }) {
+  const metadata = {};
+  for (const name of images) {
+    const imageDir = path.join(dir, "images", name);
+    // Each element's own space is its own: naming them all alike would make the shared
+    // one impossible to tell apart by counting, which is how it is found.
+    writeImageSpatialData(imageDir, { name, intrinsic: `${name}-pixels` });
+    metadata[`images/${name}`] = JSON.parse(fs.readFileSync(path.join(imageDir, "zarr.json"), "utf8"));
+  }
+  for (const name of shapes) {
+    // Enough of a shapes element to be counted. Its contents are parquet, which is not
+    // something the viewer reads, so there is nothing else worth writing here.
+    writeJson(path.join(dir, "shapes", name, "zarr.json"), {
+      zarr_format: 3,
+      node_type: "group",
+      attributes: { encoding_type: "ngff:shapes", spatialdata_attrs: { version: "0.2" } },
+    });
+    metadata[`shapes/${name}`] = JSON.parse(fs.readFileSync(path.join(dir, "shapes", name, "zarr.json"), "utf8"));
+  }
+  writeJson(path.join(dir, "zarr.json"), {
+    zarr_format: 3,
+    node_type: "group",
+    attributes: { spatialdata_attrs: { version: "0.2", spatialdata_software_version: "0.7.3" } },
+    consolidated_metadata: { kind: "inline", must_understand: false, metadata },
   });
 }
 
@@ -284,6 +320,7 @@ const fixtures = [
   ["image-v04.zarr", (dir) => writeImageV2(dir, { name: "Local image v0.4" })],
   ["image-v05.zarr", (dir) => writeImageV3(dir, { name: "Local image v0.5" })],
   ["image-spatialdata.zarr", (dir) => writeImageSpatialData(dir, { name: "Local SpatialData image" })],
+  ["spatialdata.zarr", (dir) => writeSpatialDataContainer(dir, { images: ["first", "second"] })],
   ["plate-v04.zarr", (dir) => writePlateV2(dir, { name: "Local plate v0.4" })],
 ];
 

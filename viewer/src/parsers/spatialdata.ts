@@ -64,3 +64,75 @@ export function normalizeSpatialDataVersions<T extends object>(attrs: T): T {
   log.debug("Read a SpatialData element as OME-NGFF", { version: rewritten });
   return result;
 }
+
+/** The five groups a SpatialData container holds its elements in. */
+export const ELEMENT_KINDS = ["images", "labels", "points", "shapes", "tables"] as const;
+
+export type ElementKind = (typeof ELEMENT_KINDS)[number];
+
+export interface SpatialDataElement {
+  kind: ElementKind;
+  /** The element's own name, which is what a user picked when they wrote it. */
+  name: string;
+  /** Where it sits in the container, as a path from the root. */
+  path: string;
+  /** Its metadata, taken from the index rather than fetched again. */
+  attributes: Record<string, unknown>;
+}
+
+/** Whether a group is the root of a SpatialData container rather than an element of one. */
+export function isSpatialDataRoot(attrs: object): boolean {
+  return "spatialdata_attrs" in attrs && !("multiscales" in attrs) && !("ome" in attrs);
+}
+
+/**
+ * A zarr v2 index keys an element by its metadata file; v3 keys it by the node. One
+ * strips to the other, and nothing else in the index ends in a `.z` name.
+ */
+function nodePath(key: string): string {
+  return key.replace(/\/\.z[a-z]+$/, "");
+}
+
+/** What an index entry holds as its attributes, which the two zarr formats disagree on. */
+function attributesOf(entry: unknown, key: string): Record<string, unknown> | undefined {
+  if (!entry || typeof entry !== "object") {
+    return undefined;
+  }
+  // v2: the entry at `<path>/.zattrs` is the attributes. v3: the entry is the node, and
+  // the attributes are a field of it.
+  if (key.endsWith("/.zattrs")) {
+    return entry as Record<string, unknown>;
+  }
+  const attributes = (entry as { attributes?: unknown }).attributes;
+  return attributes && typeof attributes === "object" ? (attributes as Record<string, unknown>) : undefined;
+}
+
+/**
+ * The elements a consolidated index describes, in the order the index lists them.
+ *
+ * Consolidated metadata is not an optimisation here, it is the only way: a zarr group
+ * served over HTTP cannot be asked what it contains, and a SpatialData container names
+ * its elements freely. Reading the index also means every element's metadata is already
+ * in hand, so choosing which to show costs no further requests.
+ *
+ * Entries at any other depth are ignored. An index describes every array and every group
+ * beneath the elements as well, and none of those is an element.
+ */
+export function listSpatialDataElements(metadata: Record<string, unknown>): SpatialDataElement[] {
+  const elements: SpatialDataElement[] = [];
+  const seen = new Set<string>();
+  for (const [key, entry] of Object.entries(metadata)) {
+    const path = nodePath(key);
+    const [kind, name, ...rest] = path.split("/");
+    if (rest.length > 0 || !name || !ELEMENT_KINDS.includes(kind as ElementKind)) {
+      continue;
+    }
+    const attributes = attributesOf(entry, key);
+    if (!attributes || seen.has(path)) {
+      continue;
+    }
+    seen.add(path);
+    elements.push({ kind: kind as ElementKind, name, path, attributes });
+  }
+  return elements;
+}
