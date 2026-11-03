@@ -104,7 +104,7 @@ class LabelTileset2D extends Tileset2D {
   }
 }
 
-export class LabelLayer extends TileLayer<LabelPixelData, LabelLayerProps> {
+export class LabelLayer extends TileLayer<LabelPixelData | null, LabelLayerProps> {
   static layerName = "VizarrLabelLayer";
   // @ts-expect-error - only way to extend the base state type
   state!: { colorTexture: Texture; valueMap?: Map<number, string | number | null> } & TileLayer["state"];
@@ -136,6 +136,14 @@ export class LabelLayer extends TileLayer<LabelPixelData, LabelLayerProps> {
       async getTileData({ index, signal }) {
         const { x, y, z } = index;
         const resolution = resolutions[Math.round(-z)];
+        // Deck asks for whatever tiles cover the viewport in the layer's own space, and
+        // a model matrix that rotates or scales the labels makes that a larger box than
+        // the labels occupy. A tile past the edge has nothing in it; asking the store for
+        // one raises, which is a loud way of saying "empty" and takes the layer down with
+        // it. The edge has to be checked here, where the extent is known.
+        if (!resolution || !coversData(resolution, tileSize, index)) {
+          return null;
+        }
         const request = { x, y, signal, selection: selection };
         let { data, width, height } = await resolution.getTile(request);
         utils.assert(
@@ -150,14 +158,18 @@ export class LabelLayer extends TileLayer<LabelPixelData, LabelLayerProps> {
 
   renderSubLayers(
     params: TileLayer["props"] & {
-      data: LabelPixelData;
+      data: LabelPixelData | null;
       tile: {
         index: { x: number; y: number; z: number };
         boundingBox: [min: Array<number>, max: Array<number>];
       };
     },
-  ): Layer {
+  ): Layer | null {
     const { tile, data, ...props } = params;
+    if (!data) {
+      // A tile beyond the edge of the labels. Nothing to draw, and nothing wrong.
+      return null;
+    }
     const [[left, bottom], [right, top]] = tile.boundingBox;
     utils.assert(props.extent, "missing extent");
     const [_x0, _y0, width, height] = props.extent;
@@ -358,6 +370,19 @@ void main() {
     }
     super.draw(opts);
   }
+}
+
+/**
+ * Whether a tile index names a tile the data actually has.
+ *
+ * Only the near edges need testing: a negative index, or one whose first pixel is already
+ * past the end. A tile that merely runs over the far edge is clipped by the store and is
+ * a real, partial tile.
+ */
+function coversData(resolution: { shape: Array<number> }, tileSize: number, index: { x: number; y: number }): boolean {
+  const height = resolution.shape.at(-2) ?? 0;
+  const width = resolution.shape.at(-1) ?? 0;
+  return index.x >= 0 && index.y >= 0 && index.x * tileSize < width && index.y * tileSize < height;
 }
 
 function getTileSizeForResolutions(resolutions: Array<ZarrPixelSource>): number {
