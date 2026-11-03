@@ -1,8 +1,21 @@
 {
   "entryPointStrategy": "packages",
-  "entryPoints": ["./viewer", "./roi-selector"],
+  "entryPoints": ["./viewer", "./roi-selector", "./anndata-zarr"],
   "packageOptions": {
     "entryPoints": ["src/index.tsx"]
   },
+  "name": "Vizarr",
+  "titleLink": "https://biongff.github.io/vizarr/",
+  "favicon": "./assets/favicon.png",
+  "customCss": "./docs/viewer/theme.css",
+  "navigationLinks": {
+    "Viewer": "https://biongff.github.io/vizarr/",
+    "GitHub": "https://github.com/BioNGFF/vizarr"
+  },
+  "highlightLanguages": ["bash", "console", "css", "html", "javascript", "json", "jsx", "python", "tsx", "typescript"],
+  // A warning here means a documented type links to something that is not
+  // documented, which reaches the reader as a dead end. Pull requests build the
+  // docs, so these surface before they are published.
+  "treatWarningsAsErrors": true,
   "out": "./docs/build"
 }
