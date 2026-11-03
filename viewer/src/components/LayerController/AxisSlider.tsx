@@ -1,7 +1,8 @@
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
 import { resolveScreenOrientation } from "../../orientation";
+import { OrientationDirection } from "../OrientationLabel";
 import DimensionOptions from "./AxisOptions";
 import { ControlLabel, DenseSlider } from "./controls";
 
@@ -62,9 +63,9 @@ function AxisSlider({ axisIndex, max }: Props) {
             <ControlLabel>
               {axisLabel} ({value}/{max})
               {direction && (
-                <Typography component="span" variant="caption" sx={{ opacity: 0.6, ml: 0.75 }}>
-                  {direction.from} &rarr; {direction.to}
-                </Typography>
+                <Box component="span" sx={{ ml: 0.75 }}>
+                  <OrientationDirection ends={direction} />
+                </Box>
               )}
             </ControlLabel>
           </Grid>

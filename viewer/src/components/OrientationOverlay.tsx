@@ -3,7 +3,7 @@ import { useAtomValue } from "jotai";
 import * as React from "react";
 import { hasScreenOrientation, resolveScreenOrientation } from "../orientation";
 import { panelInsetAtom, sourceInfoAtom } from "../state";
-import { tokens } from "../theme";
+import { OrientationLabel } from "./OrientationLabel";
 
 /**
  * RFC-4 anatomical orientation, written against the edges of the view.
@@ -17,6 +17,9 @@ import { tokens } from "../theme";
  * Read from the first source, as the scale bar is. Several images at once can disagree
  * about orientation, and a single frame of reference cannot honestly describe them.
  */
+/** Lifted out of the component so the four labels share one positioning rule. */
+const EDGE = { position: "absolute" as const };
+
 function OrientationOverlay() {
   const sources = useAtomValue(sourceInfoAtom);
   const panelInset = useAtomValue(panelInsetAtom);
@@ -34,20 +37,6 @@ function OrientationOverlay() {
   }
 
   const { edges } = orientation;
-  const label = {
-    position: "absolute" as const,
-    color: "rgba(255, 255, 255, 0.85)",
-    background: tokens.panel.background,
-    border: `1px solid ${tokens.panel.inset}`,
-    borderRadius: `${tokens.panel.radius / 2}px`,
-    padding: "2px 7px",
-    fontSize: 11,
-    lineHeight: 1.4,
-    letterSpacing: "0.04em",
-    textTransform: "lowercase" as const,
-    whiteSpace: "nowrap" as const,
-    userSelect: "none" as const,
-  };
 
   return (
     <Box
@@ -64,12 +53,26 @@ function OrientationOverlay() {
         pointerEvents: "none",
       }}
     >
-      {edges.top && <Box sx={{ ...label, top: 8, left: "50%", transform: "translateX(-50%)" }}>{edges.top}</Box>}
-      {edges.bottom && (
-        <Box sx={{ ...label, bottom: 8, left: "50%", transform: "translateX(-50%)" }}>{edges.bottom}</Box>
+      {edges.top && (
+        <OrientationLabel sx={{ ...EDGE, top: 8, left: "50%", transform: "translateX(-50%)" }}>
+          {edges.top}
+        </OrientationLabel>
       )}
-      {edges.left && <Box sx={{ ...label, left: 8, top: "50%", transform: "translateY(-50%)" }}>{edges.left}</Box>}
-      {edges.right && <Box sx={{ ...label, right: 8, top: "50%", transform: "translateY(-50%)" }}>{edges.right}</Box>}
+      {edges.bottom && (
+        <OrientationLabel sx={{ ...EDGE, bottom: 8, left: "50%", transform: "translateX(-50%)" }}>
+          {edges.bottom}
+        </OrientationLabel>
+      )}
+      {edges.left && (
+        <OrientationLabel sx={{ ...EDGE, left: 8, top: "50%", transform: "translateY(-50%)" }}>
+          {edges.left}
+        </OrientationLabel>
+      )}
+      {edges.right && (
+        <OrientationLabel sx={{ ...EDGE, right: 8, top: "50%", transform: "translateY(-50%)" }}>
+          {edges.right}
+        </OrientationLabel>
+      )}
     </Box>
   );
 }
