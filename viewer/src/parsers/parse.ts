@@ -4,7 +4,7 @@ import { log } from "../logger";
 
 import { v01, v02, v03, v04, v05, v06 } from "zod-ome-ngff";
 import { narrowVersionAndType } from "./shallow-parse";
-import { normalizeSpatialDataVersions } from "./spatialdata";
+import { normalizeSpatialDataVersions, stripExtendedTransformations } from "./spatialdata";
 import {
   transformImagev01,
   transformImagev02,
@@ -102,7 +102,7 @@ export function parse(attrs: object, schemas = schemaList): ParseResult | undefi
   // SpatialData's images and labels are OME-NGFF wearing a vendor suffix on the version.
   // Taking the suffix off here means every schema below, and the version narrowing above
   // them, go on describing the specification rather than one writer's spelling of it.
-  const data = normalizeSpatialDataVersions(attrs);
+  const data = stripExtendedTransformations(normalizeSpatialDataVersions(attrs));
   const versionAndType = narrowVersionAndType(data);
   if (versionAndType.version && versionAndType.type) {
     const schema = findEntry(versionAndType.version, versionAndType.type);

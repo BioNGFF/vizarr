@@ -612,7 +612,11 @@ export async function loadOmeMultiscales(
     ...meta,
     name: meta.name ?? name,
     labels: await Promise.all(
-      labels.map((name) => loadOmeImageLabel(labelGroup.resolve(labelPath).resolve(name), name)),
+      // In the image's space, not the label's own first choice. A label is drawn over an
+      // image; placing the two in different spaces puts one of them somewhere else.
+      labels.map((name) =>
+        loadOmeImageLabel(labelGroup.resolve(labelPath).resolve(name), name, selectedCoordinateSystem.name),
+      ),
     ),
   };
 }
@@ -644,19 +648,21 @@ async function loadOmeImageLabel(
   const store = root.store as zarr.FetchStore;
   const url = new URL(root.path.replace(/^\/+/, ""), store.url).href;
   const node = await openZarrRoot(url);
-  const parsedAttrs = parse(node.attrs);
+  // The element's own attributes, as an image's are read, rather than the copy the
+  // schemas return. That copy has had every key the schema does not know dropped from
+  // it, which for a SpatialData element means the transformations placing it in the
+  // spaces it shares -- so a label read from it would be positioned by its own pyramid
+  // scale alone and sit wherever that happened to put it.
+  const attrs = utils.resolveAttrs(node.attrs) as unknown as Ome.LabelImage;
   // Unlike the callers that only probe what a group is, this one cannot proceed without
-  // an answer. Saying so is what stops the unchecked cast below reaching the user as
+  // an answer. Saying so is what stops the unchecked cast above reaching the user as
   // "Cannot read properties of undefined".
-  if (!parsedAttrs) {
+  if (!utils.isMultiscales(attrs as unknown as zarr.Attributes)) {
     throw new MetadataError(
-      `The label image at ${url} does not match any supported OME-NGFF version.`,
-      "No OME-NGFF schema matched the group attributes.",
+      `The label image at ${url} does not describe a multiscale image.`,
+      "No multiscales in the label group attributes.",
     );
   }
-
-  //@to-do temporary until transformation layer implemented
-  const attrs = parsedAttrs.data as Ome.LabelImage;
   const { coordinateSystems, preferred } = resolveCoordinateSystems(attrs.multiscales);
   // A label is drawn over its image, so it follows the image's choice of space where it
   // has that space. Where it does not, its own default rather than nothing at all.

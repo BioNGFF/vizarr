@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { parse } from "../src/parsers/parse";
-import { normalizeSpatialDataVersions } from "../src/parsers/spatialdata";
+import { normalizeSpatialDataVersions, stripExtendedTransformations } from "../src/parsers/spatialdata";
 
 /**
  * Taking SpatialData's suffix off the NGFF version.
@@ -95,5 +95,92 @@ describe("parsing a SpatialData element", () => {
     const future = structuredClone(image);
     future.ome.version = "0.9-dev-spatialdata";
     expect(parse(future)).toBeUndefined();
+  });
+});
+
+describe("stripExtendedTransformations", () => {
+  /** A `sequence`, which no released version has, mapping into a named space. */
+  const extended = {
+    type: "sequence",
+    transformations: [{ type: "affine", affine: [[1, 0, 0]] }],
+    input: { name: "yx", axes: [] },
+    output: { name: "sample", axes: [] },
+  };
+
+  test("takes out the transformations the released schemas have no types for", () => {
+    // A rasterized Visium HD label carries three of these. With them in place it fails
+    // every schema and the whole element is refused, although every other thing about it
+    // is an ordinary NGFF label.
+    const attrs = {
+      multiscales: [
+        {
+          datasets: [{ path: "0", coordinateTransformations: [{ type: "scale", scale: [1, 1] }] }],
+          coordinateTransformations: [extended],
+        },
+      ],
+    };
+    const stripped = stripExtendedTransformations(attrs) as typeof attrs;
+    expect(stripped.multiscales[0]).not.toHaveProperty("coordinateTransformations");
+    // The pyramid scales are untouched: they are part of every released version, and they
+    // are what places the resolutions against each other.
+    expect(stripped.multiscales[0]?.datasets[0]?.coordinateTransformations).toEqual([{ type: "scale", scale: [1, 1] }]);
+  });
+
+  test("keeps the ones NGFF 0.6 defines, which name their output with a string", () => {
+    const attrs = { multiscales: [{ coordinateTransformations: [{ type: "scale", scale: [2], output: "global" }] }] };
+    expect(stripExtendedTransformations(attrs)).toBe(attrs);
+  });
+
+  test("reaches inside `ome`, where 0.5 and later keep everything", () => {
+    const attrs = { ome: { version: "0.5", multiscales: [{ coordinateTransformations: [extended] }] } };
+    const stripped = stripExtendedTransformations(attrs) as typeof attrs;
+    expect(stripped.ome.multiscales[0]).not.toHaveProperty("coordinateTransformations");
+    expect(stripped.ome.version).toBe("0.5");
+  });
+
+  test("keeps the rest of a mixed list", () => {
+    const attrs = {
+      multiscales: [{ coordinateTransformations: [extended, { type: "scale", scale: [2], output: "global" }] }],
+    };
+    const stripped = stripExtendedTransformations(attrs) as typeof attrs;
+    expect(stripped.multiscales[0]?.coordinateTransformations).toEqual([
+      { type: "scale", scale: [2], output: "global" },
+    ]);
+  });
+
+  test("returns the input untouched where there is nothing to take out", () => {
+    const attrs = { multiscales: [{ datasets: [] }] };
+    expect(stripExtendedTransformations(attrs)).toBe(attrs);
+  });
+});
+
+describe("a rasterized SpatialData label", () => {
+  /** As spatialdata writes one: a `sequence` into each space the sample uses. */
+  const label = {
+    "image-label": { version: "0.4-dev-spatialdata" },
+    multiscales: [
+      {
+        name: "/labels/rasterized_016um",
+        version: "0.4-dev-spatialdata",
+        axes: [
+          { name: "y", type: "space" },
+          { name: "x", type: "space" },
+        ],
+        datasets: [{ path: "0", coordinateTransformations: [{ type: "scale", scale: [1, 1] }] }],
+        coordinateTransformations: [
+          {
+            type: "sequence",
+            transformations: [{ type: "affine", affine: [[-0.389, 58.43, 257.1]] }],
+            output: { name: "Visium_HD_Mouse_Small_Intestine", axes: [] },
+          },
+        ],
+      },
+    ],
+  };
+
+  test("is recognised, although its transformations are not NGFF 0.4", () => {
+    // Before, every schema refused it and the image it belongs over failed to open with
+    // "does not match any supported OME-NGFF version".
+    expect(parse(label)?.version).toBe("0.4");
   });
 });

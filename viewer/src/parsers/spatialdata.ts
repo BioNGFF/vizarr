@@ -136,3 +136,65 @@ export function listSpatialDataElements(metadata: Record<string, unknown>): Spat
   }
   return elements;
 }
+
+/**
+ * Whether a transformation is written in the proposal's shape rather than a released one.
+ *
+ * The transformations proposal gives each transformation a whole coordinate system as its
+ * `output`, where NGFF 0.6 names one with a string and 0.4 and 0.5 have no concept of a
+ * named output at all. An object is therefore the reliable tell, and the only one that
+ * does not depend on the transformation's type.
+ */
+function namesItsOutput(transformation: unknown): boolean {
+  if (!transformation || typeof transformation !== "object") {
+    return false;
+  }
+  const { output } = transformation as { output?: unknown };
+  return Boolean(output) && typeof output === "object";
+}
+
+/**
+ * The same attributes without the element transformations the released schemas reject.
+ *
+ * A SpatialData element relates itself to the spaces it shares through transformations on
+ * its `multiscales`, written against the proposal. They use types the released versions do
+ * not have -- `sequence` and `affine` among them -- and 0.4 does define this field, with a
+ * closed list of types, so an element carrying them fails every schema and is refused
+ * outright. A rasterized Visium HD label is refused for exactly this reason.
+ *
+ * Nothing is lost by taking them out here. This copy is only ever shown to the schemas, to
+ * find out what version and kind of thing the element is; the geometry is read from the
+ * element's own attributes, where these transformations stay untouched.
+ *
+ * Per-dataset transformations are left alone. Those are the pyramid scales, they are part
+ * of every released version, and they are what places the resolutions against each other.
+ */
+export function stripExtendedTransformations<T extends object>(attrs: T): T {
+  // 0.5 and later put everything under `ome`; before that it sits at the top. Both shapes
+  // reach here, because this runs before anything has decided which version it is.
+  const ome = (attrs as { ome?: unknown }).ome;
+  if (ome && typeof ome === "object") {
+    const rewritten = stripExtendedTransformations(ome as object);
+    return rewritten === ome ? attrs : { ...attrs, ome: rewritten };
+  }
+  const multiscales = (attrs as { multiscales?: unknown }).multiscales;
+  if (!Array.isArray(multiscales)) {
+    return attrs;
+  }
+  let stripped = false;
+  const rewritten = multiscales.map((entry) => {
+    const transformations = (entry as { coordinateTransformations?: unknown })?.coordinateTransformations;
+    if (!Array.isArray(transformations) || !transformations.some(namesItsOutput)) {
+      return entry;
+    }
+    stripped = true;
+    const kept = transformations.filter((transformation) => !namesItsOutput(transformation));
+    const { coordinateTransformations: _dropped, ...rest } = entry as Record<string, unknown>;
+    return kept.length > 0 ? { ...rest, coordinateTransformations: kept } : rest;
+  });
+  if (!stripped) {
+    return attrs;
+  }
+  log.debug("Hid element coordinate transformations from the schemas");
+  return { ...attrs, multiscales: rewritten };
+}
