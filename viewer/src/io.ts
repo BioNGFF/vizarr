@@ -233,17 +233,11 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
     };
   }
 
-  if (source.loader.length === 1) {
-    return {
-      kind: "image",
-      layerProps: {
-        ...layerProps,
-        loader: source.loader[0],
-      },
-      on: true,
-    };
-  }
-
+  // Worked out before the two kinds part company. Whether an image arrived as a pyramid
+  // or as a single resolution says nothing about whether it has labels over it, and a
+  // SpatialData element is routinely written with one resolution -- so attaching them
+  // only to the multiscale kind meant a label that loaded correctly and was then dropped
+  // on the floor, with no error and no labels section to show for it.
   let labels = undefined;
   if (source.labels && source.labels.length > 0) {
     labels = source.labels.map((label, i) => ({
@@ -258,6 +252,19 @@ export function initLayerStateFromSource(source: SourceData & { id: string }): L
       },
     }));
   }
+
+  if (source.loader.length === 1) {
+    return {
+      kind: "image",
+      layerProps: {
+        ...layerProps,
+        loader: source.loader[0],
+      },
+      on: true,
+      labels,
+    };
+  }
+
   return {
     kind: "multiscale",
     layerProps: {

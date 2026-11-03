@@ -8,11 +8,14 @@ import { ControlLabel, DenseSlider, inlineIconButtonSx } from "./controls";
 export default function Labels({ labelIndex }: { labelIndex: number }) {
   const [source] = useSourceData();
   const [layer, setLayer] = useLayerState();
-  assert(source.labels && layer.kind === "multiscale" && layer.labels, "Missing image labels");
+  // Labels, not the kind of image beneath them. A single-resolution image can carry
+  // labels as readily as a pyramid -- SpatialData writes plenty of both -- and asserting
+  // on the kind here turned that into a failed render rather than a missing section.
+  assert(source.labels && layer.labels, "Missing image labels");
 
   const handleOpacityChange = (_: unknown, value: number | number[]) => {
     setLayer((prev) => {
-      assert(prev.kind === "multiscale" && prev.labels, "Missing image labels");
+      assert(prev.labels, "Missing image labels");
       return {
         ...prev,
         labels: prev.labels.with(labelIndex, {
@@ -41,7 +44,7 @@ export default function Labels({ labelIndex }: { labelIndex: number }) {
             inputProps={{ "aria-label": `Toggle label ${name}` }}
             onChange={() => {
               setLayer((prev) => {
-                assert(prev.kind === "multiscale" && prev.labels, "Missing image labels");
+                assert(prev.labels, "Missing image labels");
                 return {
                   ...prev,
                   labels: prev.labels.with(labelIndex, {
