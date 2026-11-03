@@ -23,6 +23,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@biongff/vizarr": "workspace:*",
     "@tanstack/react-query": "^5.85.3",
     "lodash": "^4.17.21",
     "react-window": "^2.0.2",

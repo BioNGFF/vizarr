@@ -18,7 +18,15 @@ export default defineConfig({
       fileName: (format) => `biongff-anndata-zarr.${format}.js`,
     },
     rollupOptions: {
-      external: ["react", "react-dom", "@mui/material", "@mui/icons-material", "@emotion/react", "@emotion/styled"],
+      external: [
+        "react",
+        "react-dom",
+        "@mui/material",
+        "@mui/icons-material",
+        "@emotion/react",
+        "@emotion/styled",
+        "@biongff/vizarr",
+      ],
       output: {
         globals: {
           react: "React",
