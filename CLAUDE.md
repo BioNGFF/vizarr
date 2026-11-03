@@ -110,6 +110,12 @@ fetch anywhere that has to succeed.
 
 - **`CONTRIBUTING.md` covers the same ground for outside contributors.** Keep the two
   in step; if you change the workflow here, change it there.
+- **`docs/rfcs/` holds a page per OME-NGFF RFC**, saying what the viewer does with that
+  metadata, where it deliberately departs from the spec, and which sample images and
+  tests cover it. Change what the viewer does with an RFC and the page changes in the
+  same pull request. The two sections worth the care are the ones a reader cannot get
+  from the specification: what vizarr actually does, and why it declines any part of it.
+  A new page goes in the `children` list and the support table in `docs/rfcs/index.md`.
 - **Versions in `package.json` are not edited by hand.** semantic-release owns them.
 - **`main` is the default branch**, so a `gh` command without an explicit base will
   target it. Pass `--base dev`.
