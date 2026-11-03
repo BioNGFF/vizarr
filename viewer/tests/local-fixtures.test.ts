@@ -80,3 +80,20 @@ test("A well lays out every field it holds", async () => {
 test("A missing source is reported as an error rather than an empty image", async () => {
   await expect(createSourceData({ source: `${origin}/not-here.zarr` })).rejects.toThrow();
 });
+
+test("A SpatialData image is read as the OME-NGFF it is", async () => {
+  const [source] = await createSourceData({ source: `${origin}/image-spatialdata.zarr` });
+
+  // The version said `0.5-dev-spatialdata`, which is 0.5 plus things we do not read.
+  expect(source.axis_labels).toEqual(["t", "c", "z", "y", "x"]);
+  expect(source.loader).toHaveLength(2);
+  expect(source.loader[0].shape).toEqual([1, 2, 1, 32, 32]);
+  expect(source.channel_axis).toBe(1);
+  // Names from omero, which gave them; everything else worked out from the pixels,
+  // because omero gave no colour and no window to draw with.
+  expect(source.names).toEqual(["ch0", "ch1"]);
+  expect(source.colors).toHaveLength(2);
+  expect(source.contrast_limits).toHaveLength(2);
+  // A measured range, not the [0, 255] a fixture's omero would have declared.
+  expect(source.contrast_limits[0]?.[1]).toBeGreaterThan(0);
+});

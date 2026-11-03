@@ -526,14 +526,24 @@ export async function loadOmeMultiscales(
   const axes = selectedCoordinateSystem.axes;
 
   const axis_labels = utils.getNgffAxisLabels(axes);
-  let meta: Meta;
-  if (utils.isOmeMultiscales(attrs)) {
-    meta = parseOmeroMeta(attrs.omero, axes);
-  } else {
+  const metaFromData = async () => {
     const lowresArray = data.at(-1);
     utils.assert(lowresArray, "Expected at least one resolution in multiscales, found none.");
     const lowresSource = new ZarrPixelSource(lowresArray, { labels: axis_labels, tileSize });
-    meta = await defaultMeta(lowresSource, axis_labels);
+    return defaultMeta(lowresSource, axis_labels);
+  };
+
+  let meta: Meta;
+  if (utils.isOmeMultiscales(attrs) && describesRendering(attrs.omero)) {
+    meta = parseOmeroMeta(attrs.omero, axes);
+  } else if (utils.isOmeMultiscales(attrs)) {
+    // An omero block that names its channels without describing them -- SpatialData
+    // writes `{"label": "r"}` and nothing else -- has no colour and no window to render
+    // from. Work them out from the pixels, as an image carrying no omero at all would,
+    // and keep the names, which are the part it did give us.
+    meta = { ...(await metaFromData()), names: channelNames(attrs.omero) };
+  } else {
+    meta = await metaFromData();
   }
 
   const loader = await getImageLoader(attrs.multiscales, grp, axes);
@@ -706,6 +716,22 @@ function setVisibilities(channels: Ome.Channel[]): boolean[] {
   return visibilities;
 }
 
+/**
+ * Whether an omero block says how to draw its channels, rather than only what they are.
+ *
+ * Both fields or neither, per channel: a half-described channel would mean mixing a
+ * declared colour with a measured window, and a reader guessing which half to trust is
+ * worse than one that measures both.
+ */
+function describesRendering({ channels }: Ome.Omero): boolean {
+  return channels.every((channel) => channel.color !== undefined && channel.window !== undefined);
+}
+
+/** The labels an omero block gives its channels, numbered where it gives none. */
+function channelNames({ channels }: Ome.Omero): string[] {
+  return channels.map((channel, index) => channel.label || `channel_${index}`);
+}
+
 function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]): Meta {
   const t = rdefs?.defaultT ?? 0;
   const z = rdefs?.defaultZ ?? 0;
@@ -717,6 +743,7 @@ function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]):
   const names: string[] = [];
 
   channels.forEach((c, index) => {
+    utils.assert(c.color !== undefined && c.window !== undefined, "Expected omero to describe every channel.");
     colors.push(c.color);
     contrast_limits.push([c.window.start, c.window.end]);
     names.push(c.label || `${index}`);

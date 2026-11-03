@@ -4,11 +4,15 @@ declare namespace Ome {
   interface Channel {
     active: boolean;
     coefficient: number;
-    color: string;
+    // Optional because a writer may name its channels without describing how to render
+    // them: SpatialData emits `{"label": "r"}` and nothing more. The specification asks
+    // for both, and the schemas agree, but a reader that insists on them refuses an
+    // image it could draw.
+    color?: string;
     family: string;
     inverted: boolean;
     label?: string;
-    window: {
+    window?: {
       end: number;
       max?: number;
       min?: number;

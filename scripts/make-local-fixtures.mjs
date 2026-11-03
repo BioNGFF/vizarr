@@ -174,6 +174,40 @@ function writeImageV3(dir, { name, channels = 2, size = 32, depth = 2 }) {
   });
 }
 
+/**
+ * A SpatialData image element.
+ *
+ * OME-NGFF with two liberties taken, both of which a reader meets in real Visium HD and
+ * Xenium data: a vendor suffix on the version, and an omero block that names its channels
+ * without saying how to draw them. The named `input`/`output` coordinate transformations
+ * are here too -- vizarr does not read them yet, and this fixture is what would notice if
+ * their presence ever started breaking the images that carry them.
+ */
+function writeImageSpatialData(dir, { name, channels = 2, size = 32, depth = 2 }) {
+  const levels = levelsFor({ size, depth });
+  const scales = multiscales({ levels, version: undefined, name });
+  const coordinateSystem = { name: "global", axes: AXES };
+  scales[0].coordinateTransformations = [
+    { type: "identity", input: { name: "tczyx", axes: AXES }, output: coordinateSystem },
+  ];
+  writeJson(path.join(dir, "zarr.json"), {
+    zarr_format: 3,
+    node_type: "group",
+    attributes: {
+      ome: {
+        version: "0.5-dev-spatialdata",
+        multiscales: scales.map(({ version, ...rest }) => rest),
+        // Labels and nothing else, which is what SpatialData writes.
+        omero: { name, channels: Array.from({ length: channels }, (_, c) => ({ label: `ch${c}` })) },
+      },
+      spatialdata_attrs: { version: "0.3" },
+    },
+  });
+  levels.forEach((edge, index) => {
+    writeArrayV3(path.join(dir, String(index)), { channels, height: edge, width: edge });
+  });
+}
+
 // ---------------------------------------------------------------------------
 // A plate, which is the path that costs the most to test against a real server:
 // one plate fixture in the corpus describes 3,457 remote nodes.
@@ -243,6 +277,7 @@ function writePlateV2(dir, { name, version = "0.4", size = 16, depth = 2 }) {
 const fixtures = [
   ["image-v04.zarr", (dir) => writeImageV2(dir, { name: "Local image v0.4" })],
   ["image-v05.zarr", (dir) => writeImageV3(dir, { name: "Local image v0.5" })],
+  ["image-spatialdata.zarr", (dir) => writeImageSpatialData(dir, { name: "Local SpatialData image" })],
   ["plate-v04.zarr", (dir) => writePlateV2(dir, { name: "Local plate v0.4" })],
 ];
 
