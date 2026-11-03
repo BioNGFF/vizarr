@@ -236,6 +236,7 @@ export async function loadWell(
     loaders,
     ...meta,
     axis_labels,
+    axes,
     loader: loaders[0].sources.filter((source): source is ZarrPixelSource => Boolean(source)),
     model_matrix: utils.parseMatrix(config.model_matrix),
     defaults: {
@@ -379,6 +380,7 @@ export async function loadPlate(
     loaders,
     ...meta,
     axis_labels,
+    axes,
     loader: loaders[0].sources.filter((source): source is ZarrPixelSource => Boolean(source)),
     model_matrix: utils.parseMatrix(config.model_matrix),
     defaults: {
@@ -563,6 +565,7 @@ export async function loadOmeMultiscales(
   return {
     loader: loader,
     axis_labels,
+    axes,
     model_matrix: modelMatrix,
     defaults: {
       selection: meta.defaultSelection,

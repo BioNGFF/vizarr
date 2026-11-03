@@ -14,17 +14,29 @@
         },
         {
           "name": "z",
-          "type": "space"
+          "type": "space",
+          "orientation": {
+            "type": "anatomical",
+            "value": "superior-to-inferior"
+          }
         },
         {
           "name": "y",
           "type": "space",
-          "unit": "micrometer"
+          "unit": "micrometer",
+          "orientation": {
+            "type": "anatomical",
+            "value": "anterior-to-posterior"
+          }
         },
         {
           "name": "x",
           "type": "space",
-          "unit": "micrometer"
+          "unit": "micrometer",
+          "orientation": {
+            "type": "anatomical",
+            "value": "right-to-left"
+          }
         }
       ],
       "datasets": [
