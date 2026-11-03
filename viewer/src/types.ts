@@ -43,9 +43,19 @@ declare namespace Ome {
     axes: Axis[];
   }
 
+  /**
+   * The spaces a transformation maps between.
+   *
+   * A string in NGFF 0.6, which names a coordinate system listed elsewhere. The
+   * transformations proposal -- which SpatialData writes -- gives the whole system
+   * instead, because a transformation there declares the axes it maps between, and those
+   * may be ordered differently on each side.
+   */
+  type TransformationSide = string | { name: string; axes?: Axis[] };
+
   type TransformationMetadata = {
-    input?: string;
-    output?: string;
+    input?: TransformationSide;
+    output?: TransformationSide;
   };
 
   type SceneTransformationMetadata = {

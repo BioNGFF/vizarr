@@ -77,3 +77,35 @@ describe("a rotation, which is square and carries no translation", () => {
     expect(matrix.getScale().map(Math.round)).toEqual([1, 1, 1]);
   });
 });
+
+describe("an affine whose two sides order their axes differently", () => {
+  // What a rasterized SpatialData label carries: `yx -> xy`. The rows are indexed by the
+  // axes it produces and the columns by the ones it consumes, and those are not the same
+  // list. Reading either with the element's own order swaps x for y, which on top of a
+  // quarter turn reads as a half turn -- the whole label upside down over its image.
+  const quarterTurn = {
+    type: "affine" as const,
+    affine: [
+      [0, 2, 10],
+      [-2, 0, 20],
+    ],
+    input: { name: "yx", axes: YX },
+    output: { name: "global", axes: [YX[1], YX[0]] as Ome.Axis[] },
+  };
+
+  test("reads the rows as the axes it produces", () => {
+    const matrix = coordinateTransformationsToMatrix([quarterTurn], YX);
+    // Row 0 is x: x' = 0*y + 2*x + 10. Row 1 is y: y' = -2*y + 0*x + 20.
+    expect(matrix.transformAsPoint([3, 1, 0], [])).toEqual([16, 18, 0]);
+  });
+
+  test("is not what the element's own order would give", () => {
+    const asElementOrder = {
+      type: "affine" as const,
+      affine: quarterTurn.affine,
+    };
+    const declared = coordinateTransformationsToMatrix([quarterTurn], YX);
+    const assumed = coordinateTransformationsToMatrix([asElementOrder], YX);
+    expect(Array.from(declared)).not.toEqual(Array.from(assumed));
+  });
+});
