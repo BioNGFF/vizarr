@@ -1,4 +1,4 @@
-import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
+import ForwardIcon from "@mui/icons-material/Forward";
 import { Box } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type * as React from "react";
@@ -45,15 +45,17 @@ export function OrientationLabel({
 /**
  * Both ends of an axis that points out of the view, with the direction between them.
  *
- * The arrow is drawn rather than typed: a glyph in the middle of a caption sits on the
- * text baseline and reads as punctuation, where this is the one part of the label that
- * has to say *direction*.
+ * The arrow is drawn rather than typed, and solid rather than a thin stem: a glyph in
+ * the middle of a caption sits on the text baseline and reads as punctuation, and a
+ * hairline arrow at caption size is barely legible as an arrow at all. This is the one
+ * part of the label whose whole job is to say *direction*, so it is the one part worth
+ * making unmistakable.
  */
 export function OrientationDirection({ ends }: { ends: OrientationEnds }) {
   return (
     <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: "3px", verticalAlign: "middle" }}>
       <OrientationLabel>{ends.from}</OrientationLabel>
-      <ArrowRightAltIcon sx={{ fontSize: 16, opacity: 0.55 }} />
+      <ForwardIcon sx={{ fontSize: 20, opacity: 0.75 }} />
       <OrientationLabel>{ends.to}</OrientationLabel>
     </Box>
   );
