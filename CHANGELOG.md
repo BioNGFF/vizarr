@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/BioNGFF/vizarr/compare/v1.4.1...v1.4.2) (2026-10-30)
+
+
+### Bug Fixes
+
+* **tests:** restore the viewer build, which metadata.ts was breaking ([cbe75f6](https://github.com/BioNGFF/vizarr/commit/cbe75f6bbfd04cf1963b9e526ae58709f99286ce)), closes [#130](https://github.com/BioNGFF/vizarr/issues/130) [#148](https://github.com/BioNGFF/vizarr/issues/148)
+
 ## [1.4.1](https://github.com/BioNGFF/vizarr/compare/v1.4.0...v1.4.1) (2026-10-30)
 
 
