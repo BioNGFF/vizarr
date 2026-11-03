@@ -54,6 +54,22 @@ function googleUrl(uri: URL): string {
 }
 
 /**
+ * Put back the `+` that a query string turns into a space.
+ *
+ * `?source=s3+https://host/bucket/key` is how anyone will write the link, and by the time
+ * `URLSearchParams` has decoded it the scheme reads `s3 https:` -- a `+` in a query string
+ * means a space, and nothing warns you. Neuroglancer does not meet this because it keeps
+ * its state in the fragment; vizarr takes a query parameter, so it does.
+ *
+ * Unambiguous to undo: no scheme contains a space, so a source beginning `s3 http` can
+ * only ever be this. A link vizarr writes itself is already correct, since
+ * `URLSearchParams` escapes the plus on the way out; this is for the ones people type.
+ */
+function restorePlus(source: string): string {
+  return source.startsWith("s3 http") ? `s3+${source.slice("s3 ".length)}` : source;
+}
+
+/**
  * Resolve a cloud storage URI to an HTTPS URL, or return the source untouched.
  *
  * Total and pure: anything that is not a URI we understand comes back exactly as it was
@@ -73,7 +89,7 @@ function googleUrl(uri: URL): string {
 export function resolveCloudUri(source: string): string {
   let uri: URL;
   try {
-    uri = new URL(source);
+    uri = new URL(restorePlus(source));
   } catch {
     // Not a URL at all. A relative path, or something another store will make sense of;
     // either way not ours to rewrite.

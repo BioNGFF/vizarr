@@ -64,6 +64,17 @@ describe("s3+https:// and s3+http://", () => {
     );
   });
 
+  test("survives a query string turning its plus into a space", () => {
+    // `?source=s3+https://…` arrives from `URLSearchParams` as `s3 https://…`, because a
+    // plus in a query string means a space. Left alone it is not a scheme at all.
+    expect(resolveCloudUri("s3 https://uk1s3.embassy.ebi.ac.uk/idr/x.zarr")).toBe(
+      "https://uk1s3.embassy.ebi.ac.uk/idr/x.zarr",
+    );
+    expect(resolveCloudUri("s3 http://localhost:9000/my-bucket/image.zarr")).toBe(
+      "http://localhost:9000/my-bucket/image.zarr",
+    );
+  });
+
   test("does not treat the host as a bucket", () => {
     // The ambiguity neuroglancer documents and resolves by probing. We resolve it by
     // declaring one reading: the first path segment after the host is always the bucket.
