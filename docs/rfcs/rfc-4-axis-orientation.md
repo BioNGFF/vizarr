@@ -11,7 +11,7 @@ is left without them having to know how the file was written.
 | | |
 | --- | --- |
 | **RFC** | Accepted (S1, SPEC updates). Last changed 2026-09-01. |
-| **Vizarr** | In progress. Nothing in the viewer reads orientation yet. |
+| **Vizarr** | In progress. The reader carries orientation through ([#163](https://github.com/BioNGFF/vizarr/pull/163)) and the viewer draws it ([#164](https://github.com/BioNGFF/vizarr/pull/164)); neither has reached `dev`. |
 | **Tracked in** | [#158](https://github.com/BioNGFF/vizarr/issues/158) |
 
 Images carrying orientation open normally today — the metadata is simply ignored.
@@ -62,12 +62,16 @@ it should reorient images to a canonical frame. Vizarr will not, for four reason
 
 What that means in practice:
 
-- **Axes in the plane of the view** get their direction labelled at the edge of the
-  canvas, computed through the image's model matrix rather than from axis order, since a
-  transform can already rotate or flip the image.
-- **Axes through the plane** — usually z — get their direction on the slider, so scrolling
-  tells you that you are moving superior to inferior rather than only that a number is
-  rising.
+- **Axes in the plane of the view** go on a compass in the bottom-left corner: a four-way
+  arrow with the term each direction leads to set around it. Which side gets which term is
+  computed through the image's model matrix rather than from axis order, since a transform
+  can already rotate or flip the image. Only the arms with something to say are drawn, so
+  an image that annotates one in-plane axis gets a double-headed arrow rather than a cross
+  with two blank ends.
+- **Axes through the plane** — usually z — have no direction to draw on a flat legend, so
+  they go on the slider that scrolls through them, ordered the way the handle travels. The
+  arrow is the compass's, drawn from one definition, because the two are saying the same
+  thing about different axes.
 - **Missing orientation** is reported rather than assumed. The RFC permits a viewer to
   assume a default but asks it to warn; vizarr warns and assumes nothing.
 
@@ -83,8 +87,11 @@ the metadata layer, which prefers a warning to an error wherever an image can st
 drawn. The conformance corpus ships a case for exactly this
 (`TC-D_orientation_on_time_axis`), and vizarr opens it.
 
-The related question — whether an orientation value outside the controlled vocabulary
-should cost the reader the whole image — is open, and tracked in
+A value outside the controlled vocabulary is treated differently: it fails the schema, and
+the image does not open at all. The corpus case `TC-C_invalid_vocabulary` is unopenable in
+vizarr today for that reason. This is accepted for now rather than defended — an enum is
+the thing that makes the other 23 values trustworthy, and relaxing it would mean carrying a
+value no part of the viewer knows what to do with. Revisiting it is tracked in
 [#158](https://github.com/BioNGFF/vizarr/issues/158).
 
 ## Sample images
@@ -137,9 +144,11 @@ physical size unit is read where a case declares one. Separately it checks that 
 still declares the orientations recorded in the test, since third-party data changing
 underneath a test would otherwise leave it passing for the wrong reason.
 
-Two things it does not assert. Orientation is not yet checked through the viewer, because
-it does not reach the viewer yet. And `TC-C_invalid_vocabulary` is left untested while the
-question above is open.
+One thing it does not assert: `TC-C_invalid_vocabulary` is not opened, because it cannot
+be. What the viewer draws from orientation is tested offline instead, in
+`viewer/tests/orientation.test.ts`, against hand-written matrices — a negative scale, a
+quarter turn, a reversed through-plane axis — rather than against real images, so the part
+most likely to be subtly wrong does not depend on a network.
 
 ## References
 
