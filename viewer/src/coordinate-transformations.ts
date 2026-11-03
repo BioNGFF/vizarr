@@ -104,16 +104,36 @@ function getCartesianMatrixTransformation(axes: Ome.Axis[], transformation: Arra
     return axes.findIndex((axisObj) => axisObj.type === "space" && axisObj.name === name);
   }) as Tuple3;
 
-  const mat = xyzIndices.map((outerIndex) => {
-    return xyzIndices.map((innerIndex) => {
-      return outerIndex >= 0 && innerIndex >= 0 ? transformation[outerIndex][innerIndex] : 0;
-    });
-  });
+  // An affine is declared with one more column than it has rows: the linear part, then a
+  // translation. A rotation is square and has none. Both arrive here, so which it is has
+  // to be read off the shape rather than assumed.
+  const rank = transformation.length;
+  const hasTranslation = (transformation[0]?.length ?? 0) > rank;
 
-  mat[0] = [...mat[0], 0];
-  mat[1] = [...mat[1], 0];
-  mat[2] = [...mat[2], 0];
-  mat[3] = [0, 0, 0, 1];
+  // Starting from the identity, so that an axis the element does not have is left alone
+  // rather than zeroed. Zeroing it makes the matrix singular -- a 2D affine on a `yx`
+  // label used to produce a z scale of 0, which collapses the layer and cannot be
+  // inverted -- when what an absent axis means is that nothing happens to it.
+  const mat = [
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1],
+  ];
+
+  xyzIndices.forEach((outerIndex, row) => {
+    if (outerIndex < 0) {
+      return;
+    }
+    xyzIndices.forEach((innerIndex, column) => {
+      if (innerIndex >= 0) {
+        mat[row][column] = transformation[outerIndex][innerIndex];
+      }
+    });
+    if (hasTranslation) {
+      mat[row][3] = transformation[outerIndex][rank];
+    }
+  });
 
   //Flatten it for consumption by Matrix4
   const flatMatrix = mat.flatMap((row, i) => {
