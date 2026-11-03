@@ -3,6 +3,12 @@ import * as zarr from "zarrita";
 import * as utils from "./utils";
 
 import { ZarrPixelSource } from "./ZarrPixelSource";
+import {
+  SHARED_COORDINATE_SYSTEM,
+  coordinateSystemsFromTransformations,
+  outputName,
+  selectCoordinateSystem,
+} from "./coordinate-systems";
 import { coordinateTransformationsToMatrix, getPhysicalSizes } from "./coordinate-transformations";
 import { createSourceData } from "./io";
 import { log } from "./logger";
@@ -442,6 +448,30 @@ function getImageTransformations(metadata: Ome.Multiscale[]): Ome.CoordinateTran
   return metadata[0].coordinateTransformations ? metadata[0].coordinateTransformations : [];
 }
 
+/**
+ * Every space this element can be drawn in.
+ *
+ * Three sources, in order of how much they were told us. A 0.6 image lists its systems.
+ * An element written against the transformations proposal -- SpatialData's images and
+ * labels -- names them in its own transformations instead, and that list is the useful
+ * one, because it includes the space the element shares with its neighbours. Anything
+ * else gets the single implicit system its axes describe.
+ */
+function resolveCoordinateSystems(multiscales: Ome.Multiscale[]): {
+  coordinateSystems: Ome.CoordinateSystem[];
+  /** Which to prefer by default, where the element did not list its systems itself. */
+  preferred?: string;
+} {
+  if (multiscales[0].coordinateSystems) {
+    return { coordinateSystems: multiscales[0].coordinateSystems };
+  }
+  const fallback = getDefaultCoordinateSystem(multiscales);
+  const derived = coordinateSystemsFromTransformations(multiscales[0].coordinateTransformations, fallback[0].axes);
+  return derived
+    ? { coordinateSystems: derived, preferred: SHARED_COORDINATE_SYSTEM }
+    : { coordinateSystems: fallback };
+}
+
 export function getOrderedTransformations(
   metadata: Ome.Multiscale[],
   coordinateSystem: Ome.CoordinateSystem,
@@ -451,7 +481,7 @@ export function getOrderedTransformations(
   const transformations = [
     ...resolutionTransformations,
     ...imageTransformations.filter((transformation) => {
-      return transformation.output === coordinateSystem.name;
+      return outputName(transformation) === coordinateSystem.name;
     }),
   ];
 
@@ -515,14 +545,14 @@ export async function loadOmeMultiscales(
   const { name, opacity = 1, colormap = "" } = config;
   const data = await utils.loadMultiscales(grp, attrs.multiscales);
   const tileSize = utils.guessTileSize(data[0]);
-  const coordinateSystems = attrs.multiscales[0].coordinateSystems
-    ? attrs.multiscales[0].coordinateSystems
-    : getDefaultCoordinateSystem(attrs.multiscales);
-  const selectedCoordinateSystem = config.coordinateSystem
-    ? coordinateSystems.filter((coordinateSystem) => {
-        return coordinateSystem.name === config.coordinateSystem;
-      })[0]
-    : coordinateSystems[0];
+  const { coordinateSystems, preferred } = resolveCoordinateSystems(attrs.multiscales);
+  const selectedCoordinateSystem = selectCoordinateSystem(coordinateSystems, config.coordinateSystem, preferred);
+  utils.assert(
+    selectedCoordinateSystem,
+    `The image declares no coordinate system named "${config.coordinateSystem}". It has ${coordinateSystems
+      .map((system) => `"${system.name}"`)
+      .join(", ")}.`,
+  );
   const axes = selectedCoordinateSystem.axes;
 
   const axis_labels = utils.getNgffAxisLabels(axes);
@@ -627,14 +657,13 @@ async function loadOmeImageLabel(
 
   //@to-do temporary until transformation layer implemented
   const attrs = parsedAttrs.data as Ome.LabelImage;
-  const coordinateSystems = attrs.multiscales[0].coordinateSystems
-    ? attrs.multiscales[0].coordinateSystems
-    : getDefaultCoordinateSystem(attrs.multiscales);
-  const selectedCoordinateSystem = coordinateSystem
-    ? coordinateSystems.filter((system) => {
-        return system.name === coordinateSystem;
-      })[0]
-    : coordinateSystems[0];
+  const { coordinateSystems, preferred } = resolveCoordinateSystems(attrs.multiscales);
+  // A label is drawn over its image, so it follows the image's choice of space where it
+  // has that space. Where it does not, its own default rather than nothing at all.
+  const selectedCoordinateSystem =
+    selectCoordinateSystem(coordinateSystems, coordinateSystem, preferred) ??
+    selectCoordinateSystem(coordinateSystems, undefined, preferred) ??
+    coordinateSystems[0];
   const loader = await getImageLoader(attrs.multiscales, node, selectedCoordinateSystem.axes);
   const orderedTransformations = getOrderedTransformations(attrs.multiscales, selectedCoordinateSystem);
   const modelMatrix = coordinateTransformationsToMatrix(orderedTransformations, coordinateSystems[0].axes);

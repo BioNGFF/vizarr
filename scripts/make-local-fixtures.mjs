@@ -186,9 +186,15 @@ function writeImageV3(dir, { name, channels = 2, size = 32, depth = 2 }) {
 function writeImageSpatialData(dir, { name, channels = 2, size = 32, depth = 2 }) {
   const levels = levelsFor({ size, depth });
   const scales = multiscales({ levels, version: undefined, name });
-  const coordinateSystem = { name: "global", axes: AXES };
+  // Two systems, as a real element has: its own pixel grid under a name, and the space it
+  // shares with every other element of the sample. The shared one is where the scale is,
+  // which is what makes selecting the wrong one visible rather than merely wrong.
+  const intrinsic = { name: "element", axes: AXES };
+  const shared = { name: "global", axes: AXES };
+  const input = { name: "tczyx", axes: AXES };
   scales[0].coordinateTransformations = [
-    { type: "identity", input: { name: "tczyx", axes: AXES }, output: coordinateSystem },
+    { type: "identity", input, output: intrinsic },
+    { type: "scale", scale: [1, 1, 1, 2, 2], input, output: shared },
   ];
   writeJson(path.join(dir, "zarr.json"), {
     zarr_format: 3,

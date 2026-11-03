@@ -89,6 +89,15 @@ export interface VizarrViewerProps {
   /** Callback to execute side effects when view state changes */
   onViewStateChange?: (viewState: ViewState) => void;
   onViewerStateChange?: (info: ViewerInfo) => void;
+  /**
+   * Which coordinate system to draw each source in, indexed in parallel with `sources`.
+   *
+   * Only an image declaring more than one has anything to choose. Left out, each source
+   * uses `global` if it names one and its first otherwise -- which is right for a single
+   * image and a guess for several, since two images only mean something together when
+   * they are drawn in the same space.
+   */
+  coordinateSystems?: string[];
   /** Label colours per source, indexed in parallel with `sources`. */
   labelColours?: ReadonlyArray<ReadonlyArray<OmeColor>>;
   additionalLayers?: Layer[];
@@ -232,6 +241,7 @@ function useStableArray(value: string[]): string[] {
 function VizarrViewerComponent({
   sources = [],
   labels = [],
+  coordinateSystems = [],
   trail,
   viewState: initialViewState,
   onViewStateChange,
@@ -249,6 +259,7 @@ function VizarrViewerComponent({
   // reload every source, which resets all layer state.
   const stableSources = useStableArray(sources);
   const stableLabels = useStableArray(labels);
+  const stableCoordinateSystems = useStableArray(coordinateSystems);
   const stableTrail = useStableArray(trail ?? []);
 
   const beginLoad = useSetAtom(beginLoadAtom);
@@ -323,7 +334,7 @@ function VizarrViewerComponent({
     let cancelled = false;
     log.debug("Loading sources", { sources: stableSources, labels: stableLabels });
     beginLoad();
-    loadSources(stableSources, stableLabels)
+    loadSources(stableSources, stableLabels, stableCoordinateSystems)
       .then((results) => {
         if (cancelled) {
           return;
@@ -374,7 +385,17 @@ function VizarrViewerComponent({
     return () => {
       cancelled = true;
     };
-  }, [stableSources, stableLabels, stableTrail, setSourceInfo, setSourceError, addSourceWarning, beginLoad, endLoad]);
+  }, [
+    stableSources,
+    stableLabels,
+    stableCoordinateSystems,
+    stableTrail,
+    setSourceInfo,
+    setSourceError,
+    addSourceWarning,
+    beginLoad,
+    endLoad,
+  ]);
 
   // Recolouring is applied to the loaded layer state, so it must also run once the
   // sources themselves arrive (colours can be selected before the image has loaded).

@@ -318,12 +318,13 @@ export function applyLabelColors<T extends LayerState>(layerState: T, colors: Re
  * array. `sourceIndex` records which entry of `sources` an image came from, which callers
  * need because that mapping is no longer positional once the results are flattened.
  */
-export async function loadSources(sources: string[], labels: string[] = []) {
+export async function loadSources(sources: string[], labels: string[] = [], coordinateSystems: string[] = []) {
   return await Promise.allSettled(
     sources.map(async (source, index) => {
-      const sourceData = await createSourceData({ source: source, label: labels[index] });
+      const coordinateSystem = coordinateSystems[index];
+      const sourceData = await createSourceData({ source: source, label: labels[index], coordinateSystem });
       return sourceData.map((data, subIndex) => {
-        const config = { source, label: labels[index] };
+        const config = { source, label: labels[index], coordinateSystem };
         const id = utils.sourceId(source, index, subIndex, { label: labels[index] });
         if (!data.name) {
           // Named for where it sits rather than `image_0`, so a link straight to a field

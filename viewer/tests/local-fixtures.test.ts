@@ -97,3 +97,31 @@ test("A SpatialData image is read as the OME-NGFF it is", async () => {
   // A measured range, not the [0, 255] a fixture's omero would have declared.
   expect(source.contrast_limits[0]?.[1]).toBeGreaterThan(0);
 });
+
+test("A SpatialData image is placed in the space its elements share", async () => {
+  // The fixture maps to `element` with an identity and to `global` with a scale of 2.
+  // Nothing was asked for, so `global` wins, and the scale has to reach the matrix: it
+  // is the element's position relative to everything else in the sample.
+  const [source] = await createSourceData({ source: `${origin}/image-spatialdata.zarr` });
+
+  expect(source.model_matrix[0]).toBe(2);
+  expect(source.model_matrix[5]).toBe(2);
+});
+
+test("A SpatialData image can be asked for a different space", async () => {
+  const [source] = await createSourceData({
+    source: `${origin}/image-spatialdata.zarr`,
+    coordinateSystem: "element",
+  });
+
+  expect(source.model_matrix[0]).toBe(1);
+  expect(source.model_matrix[5]).toBe(1);
+});
+
+test("A space the image does not have is refused rather than substituted", async () => {
+  // Drawing in a different space than the one asked for moves the image somewhere else
+  // entirely. Saying so beats doing it quietly.
+  await expect(
+    createSourceData({ source: `${origin}/image-spatialdata.zarr`, coordinateSystem: "nowhere" }),
+  ).rejects.toThrow(/nowhere/);
+});
