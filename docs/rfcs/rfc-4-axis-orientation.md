@@ -14,7 +14,8 @@ is left without them having to know how the file was written.
 | **Vizarr** | In progress. The reader carries orientation through ([#163](https://github.com/BioNGFF/vizarr/pull/163)) and the viewer draws it ([#164](https://github.com/BioNGFF/vizarr/pull/164)); neither has reached `dev`. |
 | **Tracked in** | [#158](https://github.com/BioNGFF/vizarr/issues/158) |
 
-Images carrying orientation open normally today — the metadata is simply ignored.
+In the current release the field is discarded while the metadata is parsed, so an image
+carrying orientation opens normally and shows nothing of it.
 
 ## What RFC-4 adds
 
@@ -88,10 +89,14 @@ drawn. The conformance corpus ships a case for exactly this
 (`TC-D_orientation_on_time_axis`), and vizarr opens it.
 
 A value outside the controlled vocabulary is treated differently: it fails the schema, and
-the image does not open at all. The corpus case `TC-C_invalid_vocabulary` is unopenable in
-vizarr today for that reason. This is accepted for now rather than defended — an enum is
-the thing that makes the other 23 values trustworthy, and relaxing it would mean carrying a
-value no part of the viewer knows what to do with. Revisiting it is tracked in
+the image does not open at all. That follows from reading orientation rather than from
+drawing it, so it arrives with the reader ([#163](https://github.com/BioNGFF/vizarr/pull/163))
+and is not true of the current release, where the field is discarded before anything can
+object to it. The corpus case `TC-C_invalid_vocabulary` is the one this costs.
+
+It is accepted for now rather than defended — an enum is the thing that makes the other 23
+values trustworthy, and relaxing it would mean carrying a value no part of the viewer knows
+what to do with. Revisiting it is tracked in
 [#158](https://github.com/BioNGFF/vizarr/issues/158).
 
 ## Sample images
@@ -144,8 +149,11 @@ physical size unit is read where a case declares one. Separately it checks that 
 still declares the orientations recorded in the test, since third-party data changing
 underneath a test would otherwise leave it passing for the wrong reason.
 
-One thing it does not assert: `TC-C_invalid_vocabulary` is not opened, because it cannot
-be. What the viewer draws from orientation is tested offline instead, in
+One case is deliberately left alone: `TC-C_invalid_vocabulary`. Asserting on it would
+pin down the behaviour described above, which is accepted rather than settled, and a test
+is a poor place to record a decision still open.
+
+What the viewer draws from orientation is tested offline instead, in
 `viewer/tests/orientation.test.ts`, against hand-written matrices — a negative scale, a
 quarter turn, a reversed through-plane axis — rather than against real images, so the part
 most likely to be subtly wrong does not depend on a network.
