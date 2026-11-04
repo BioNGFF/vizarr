@@ -41,8 +41,14 @@ export const OVERVIEW_DEFAULTS = {
   maximumWidth: 350,
   /** The box is shrunk to fit inside these, keeping its shape. */
   maximumHeight: 350,
-  /** Room left inside the overview so the image does not touch its border. */
-  padding: 8,
+  /**
+   * Room left between the image and the edge of the overview.
+   *
+   * None. The overview's viewport is cleared, so any room left here shows as a band of
+   * background between the outline and the edge of the corner it occupies -- a margin
+   * around a margin. The outline is the edge.
+   */
+  padding: 0,
 };
 
 /** What a layer covers once its model matrix has been applied. */

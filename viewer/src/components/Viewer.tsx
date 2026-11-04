@@ -107,9 +107,16 @@ const OVERVIEW_SUFFIX = "-overview";
 /** The outlines layer, which exists only inside the overview. */
 const OVERVIEW_OUTLINES_ID = "overview-outlines";
 
-/** Viv's colours for the two outlines, so an overview here looks like one elsewhere. */
-const IMAGE_OUTLINE: [number, number, number] = [255, 0, 0];
-const VIEWPORT_OUTLINE: [number, number, number] = [255, 190, 0];
+/**
+ * The two outlines in the overview.
+ *
+ * The viewport is Viv's amber, which is the convention and is the one that carries
+ * information: it says where you are. The image edge is not Viv's red -- here it is the
+ * frame of the overview itself, since the image is fitted to the corner exactly, and a
+ * frame should look like the rest of the interface rather than like a warning.
+ */
+const IMAGE_OUTLINE: [number, number, number, number] = [255, 255, 255, 97]; // 0.38, as the panel borders are.
+const VIEWPORT_OUTLINE: [number, number, number, number] = [255, 190, 0, 255];
 
 interface ViewerProps {
   additionalLayers?: Layer[];
@@ -322,13 +329,13 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
       new PolygonLayer({
         id: OVERVIEW_OUTLINES_ID,
         data: [
-          { polygon: extentCorners(overview.extent), color: IMAGE_OUTLINE, width: 1 },
+          { polygon: extentCorners(overview.extent), color: IMAGE_OUTLINE, width: 2 },
           { polygon: viewportCorners(viewState), color: VIEWPORT_OUTLINE, width: 2 },
         ],
         filled: false,
         stroked: true,
         getPolygon: (d: { polygon: Array<[number, number]> }) => d.polygon,
-        getLineColor: (d: { color: [number, number, number] }) => d.color,
+        getLineColor: (d: { color: [number, number, number, number] }) => d.color,
         getLineWidth: (d: { width: number }) => d.width,
         lineWidthUnits: "pixels",
         pickable: false,
