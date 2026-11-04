@@ -158,6 +158,33 @@ function getObservationNamesPath(encoding: EncodingType): string {
   return "";
 }
 
+/** One obs column, or `undefined` where it is not something the viewer can colour by. */
+async function readObservationColumn(root: Group<Readable>, col: string): Promise<ObservationMetadata | undefined> {
+  const dataNodeOrGroup = await open(root.resolve(`${OBSERVATION_NAMES_PATH}/${col}`));
+  const parsedAttrs = parseZarrAttrs(dataNodeOrGroup.attrs);
+  const colEncoding = encodingType(parsedAttrs);
+  const dataPath = `${OBSERVATION_NAMES_PATH}/${col}/${getObservationNamesPath(colEncoding)}`;
+  const dataNode = await open(root.resolve(dataPath), { kind: "array" });
+
+  const metadata: ObservationMetadata = { type: "observation", labelIndex: col };
+  if (dataNode.dtype === "bool") {
+    metadata.categories = ["false", "true"];
+    return metadata;
+  }
+
+  if (colEncoding === "array") {
+    return metadata;
+  }
+
+  if (colEncoding === "categorical") {
+    const { data } = await getData(root, dataPath);
+    const parsedCategories = AnndataCategoriesSchema.parse(data);
+    metadata.categories = parsedCategories;
+    return metadata;
+  }
+  return undefined;
+}
+
 export const getObservationNames = async (url: URL): Promise<Array<ObservationMetadata>> => {
   try {
     const root = await fetchZarrGroup(url);
@@ -165,34 +192,25 @@ export const getObservationNames = async (url: URL): Promise<Array<ObservationMe
     const node = await open(root.resolve(OBSERVATION_NAMES_PATH), { kind: "group" });
     const attrs = parseZarrObservationAttrs(node.attrs);
     const cols = attrs["column-order"];
-    const obs = await Promise.all(
-      cols.map(async (col) => {
-        const dataNodeOrGroup = await open(root.resolve(`${OBSERVATION_NAMES_PATH}/${col}`));
-        const parsedAttrs = parseZarrAttrs(dataNodeOrGroup.attrs);
-        const colEncoding = encodingType(parsedAttrs);
-        const dataPath = `${OBSERVATION_NAMES_PATH}/${col}/${getObservationNamesPath(colEncoding)}`;
-        const dataNode = await open(root.resolve(dataPath), { kind: "array" });
+    // Settled rather than all: `Promise.all` rejects on the first column that throws, so
+    // one column the reader cannot open used to discard every column that it could. A
+    // text column is enough to do it -- zarrita has no v3 `string` dtype, and it throws
+    // while parsing the array's metadata, before anything is read.
+    const results = await Promise.allSettled(cols.map((col) => readObservationColumn(root, col)));
 
-        const metadata: ObservationMetadata = { type: "observation", labelIndex: col };
-        if (dataNode.dtype === "bool") {
-          metadata.categories = ["false", "true"];
-          return metadata;
+    const obs: ObservationMetadata[] = [];
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        if (result.value !== undefined) {
+          obs.push(result.value);
         }
-
-        if (colEncoding === "array") {
-          return metadata;
-        }
-
-        if (colEncoding === "categorical") {
-          const { data } = await getData(root, dataPath);
-          const parsedCategories = AnndataCategoriesSchema.parse(data);
-          metadata.categories = parsedCategories;
-          return metadata;
-        }
-        return undefined;
-      }),
-    );
-    return obs.filter((observation) => observation !== undefined);
+        return;
+      }
+      // Named, because a column that is simply absent from the panel is otherwise
+      // indistinguishable from one the table never had.
+      log.warn(`Observation "${cols[index]}" could not be read and will not be offered`, result.reason);
+    });
+    return obs;
   } catch (error) {
     log.error("Could not read observation names; none will be offered", error);
     return [];

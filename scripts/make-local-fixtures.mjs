@@ -238,12 +238,205 @@ function writePlateV2(dir, { name, version = "0.4", size = 16, depth = 2 }) {
   }
 }
 
+/**
+ * AnnData tables, in each zarr format.
+ *
+ * Named for the zarr format rather than a spec version, because unlike the images
+ * above these answer to no OME-NGFF version at all -- an AnnData table carries an
+ * `encoding-version` and nothing else, and `table-v02` beside `image-v04` would read
+ * as a spec number it does not have.
+ *
+ * These exist because the plugin had no offline coverage at all. One table reads
+ * cleanly, the other carries two columns that cannot be read, so a test can say what an
+ * unreadable column costs: itself, or every other column.
+ *
+ * The two bad columns fail for reasons no version of zarrita can paper over -- a node
+ * that is not there, and a dtype that is in nobody's table. That matters more than it
+ * looks. `anndata-zarr` declares zarrita 0.5.0 and the viewer declares 0.6.2, and the
+ * application bundles a single copy for both, so a fixture that failed on a dtype
+ * 0.6.2 happens to support would be testing something no user could ever meet.
+ *
+ * Hand-written like the images above, for the same reason: a fixture produced by the
+ * library under test is not evidence about the library under test.
+ */
+const ROWS = 4;
+
+/** numcodecs' `vlen-utf8`: a count, then each string's byte length and its bytes. */
+function vlenUtf8(values) {
+  const encoded = values.map((value) => Buffer.from(value, "utf8"));
+  const size = 4 + encoded.reduce((total, bytes) => total + 4 + bytes.length, 0);
+  const out = Buffer.alloc(size);
+  out.writeUInt32LE(values.length, 0);
+  let at = 4;
+  for (const bytes of encoded) {
+    out.writeUInt32LE(bytes.length, at);
+    at += 4;
+    bytes.copy(out, at);
+    at += bytes.length;
+  }
+  return out;
+}
+
+function writeTableV2(dir) {
+  const zarray = (shape, dtype, { fillValue = 0, filters = null } = {}) => ({
+    shape,
+    chunks: shape,
+    dtype,
+    fill_value: fillValue,
+    order: "C",
+    filters,
+    dimension_separator: ".",
+    compressor: null,
+    zarr_format: 2,
+  });
+
+  /** A v2 array: metadata, encoding, and its single chunk. */
+  const array = (at, meta, attrs, chunk) => {
+    writeJson(path.join(dir, ...at, ".zarray"), meta);
+    writeJson(path.join(dir, ...at, ".zattrs"), attrs);
+    write(path.join(dir, ...at, "0"), chunk);
+  };
+
+  const TEXT = { fillValue: "", filters: [{ id: "vlen-utf8" }] };
+
+  writeJson(path.join(dir, ".zgroup"), { zarr_format: 2 });
+  writeJson(path.join(dir, ".zattrs"), { "encoding-type": "anndata", "encoding-version": "0.1.0" });
+
+  writeJson(path.join(dir, "obs", ".zgroup"), { zarr_format: 2 });
+  writeJson(path.join(dir, "obs", ".zattrs"), {
+    "encoding-type": "dataframe",
+    "encoding-version": "0.2.0",
+    "column-order": ["cell_type", "region", "area", "passed"],
+    _index: "_index",
+  });
+
+  // Free text. Readable, but nothing can be coloured by it, so it is dropped on
+  // purpose rather than because it failed -- a distinction worth being able to test.
+  array(
+    ["obs", "cell_type"],
+    zarray([ROWS], "|O", TEXT),
+    { "encoding-type": "string-array", "encoding-version": "0.2.0" },
+    vlenUtf8(["T cell", "B cell", "T cell", "monocyte"]),
+  );
+
+  // Categorical: codes into categories, which is how a column becomes colourable.
+  writeJson(path.join(dir, "obs", "region", ".zgroup"), { zarr_format: 2 });
+  writeJson(path.join(dir, "obs", "region", ".zattrs"), {
+    "encoding-type": "categorical",
+    "encoding-version": "0.2.0",
+    ordered: false,
+  });
+  array(["obs", "region", "codes"], zarray([ROWS], "|i1"), {}, Buffer.from(Int8Array.from([0, 1, 1, 0]).buffer));
+  array(["obs", "region", "categories"], zarray([2], "|O", TEXT), {}, vlenUtf8(["cortex", "medulla"]));
+
+  array(
+    ["obs", "area"],
+    zarray([ROWS], "<f8"),
+    { "encoding-type": "array", "encoding-version": "0.2.0" },
+    Buffer.from(Float64Array.from([10.5, 20.25, 30, 40.75]).buffer),
+  );
+
+  // Boolean, which the reader turns into two categories of its own making.
+  array(
+    ["obs", "passed"],
+    zarray([ROWS], "|b1"),
+    { "encoding-type": "array", "encoding-version": "0.2.0" },
+    Buffer.from(Uint8Array.from([1, 0, 1, 1]).buffer),
+  );
+}
+
+function writeTableV3(dir) {
+  const group = (attributes) => ({ zarr_format: 3, node_type: "group", attributes });
+
+  const array = (at, { shape, dataType, fillValue, codecs, attributes }, chunk) => {
+    writeJson(path.join(dir, ...at, "zarr.json"), {
+      zarr_format: 3,
+      node_type: "array",
+      shape,
+      data_type: dataType,
+      chunk_grid: { name: "regular", configuration: { chunk_shape: shape } },
+      chunk_key_encoding: { name: "default" },
+      fill_value: fillValue,
+      codecs,
+      attributes,
+    });
+    if (chunk) write(path.join(dir, ...at, "c", "0"), chunk);
+  };
+
+  const BYTES = [{ name: "bytes", configuration: { endian: "little" } }];
+
+  writeJson(path.join(dir, "zarr.json"), group({ "encoding-type": "anndata", "encoding-version": "0.1.0" }));
+  writeJson(
+    path.join(dir, "obs", "zarr.json"),
+    group({
+      "encoding-type": "dataframe",
+      "encoding-version": "0.2.0",
+      // The two that fail come first on purpose. Fail-fast reading loses everything
+      // after the first rejection, so a fixture that put them last would let a
+      // regression pass.
+      "column-order": ["region", "collected", "area", "passed"],
+      _index: "_index",
+    }),
+  );
+
+  // A categorical column whose `categories` array is absent -- a partial copy, or an
+  // upload that stopped early. The codes below are intact and say nothing without it.
+  // Opening the missing node is a 404, which is a rejection rather than an empty result.
+  writeJson(
+    path.join(dir, "obs", "region", "zarr.json"),
+    group({ "encoding-type": "categorical", "encoding-version": "0.2.0", ordered: false }),
+  );
+  array(
+    ["obs", "region", "codes"],
+    { shape: [ROWS], dataType: "int8", fillValue: 0, codecs: BYTES, attributes: {} },
+    Buffer.from(Int8Array.from([0, 1, 1, 0]).buffer),
+  );
+
+  // A dtype no zarrita knows. It stands for every column written by something that
+  // reaches further than this reader does, and the error arrives while the metadata is
+  // parsed, so no care taken at the read stage can avoid it. No chunk is written
+  // because none is ever asked for.
+  array(["obs", "collected"], {
+    shape: [ROWS],
+    dataType: "complex64",
+    fillValue: 0,
+    codecs: BYTES,
+    attributes: { "encoding-type": "array", "encoding-version": "0.2.0" },
+  });
+
+  array(
+    ["obs", "area"],
+    {
+      shape: [ROWS],
+      dataType: "float64",
+      fillValue: 0,
+      codecs: BYTES,
+      attributes: { "encoding-type": "array", "encoding-version": "0.2.0" },
+    },
+    Buffer.from(Float64Array.from([10.5, 20.25, 30, 40.75]).buffer),
+  );
+
+  array(
+    ["obs", "passed"],
+    {
+      shape: [ROWS],
+      dataType: "bool",
+      fillValue: false,
+      codecs: BYTES,
+      attributes: { "encoding-type": "array", "encoding-version": "0.2.0" },
+    },
+    Buffer.from(Uint8Array.from([1, 0, 1, 1]).buffer),
+  );
+}
+
 // ---------------------------------------------------------------------------
 
 const fixtures = [
   ["image-v04.zarr", (dir) => writeImageV2(dir, { name: "Local image v0.4" })],
   ["image-v05.zarr", (dir) => writeImageV3(dir, { name: "Local image v0.5" })],
   ["plate-v04.zarr", (dir) => writePlateV2(dir, { name: "Local plate v0.4" })],
+  ["table-zarr2.zarr", (dir) => writeTableV2(dir)],
+  ["table-zarr3.zarr", (dir) => writeTableV3(dir)],
 ];
 
 for (const [name, build] of fixtures) {
@@ -263,5 +456,5 @@ for (const [name, build] of fixtures) {
     }
   };
   walk(dir);
-  console.log(`${name.padEnd(16)} ${String(files).padStart(4)} files  ${(bytes / 1024).toFixed(1).padStart(7)} KiB`);
+  console.log(`${name.padEnd(18)} ${String(files).padStart(4)} files  ${(bytes / 1024).toFixed(1).padStart(7)} KiB`);
 }

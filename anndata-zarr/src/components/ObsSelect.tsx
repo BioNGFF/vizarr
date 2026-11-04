@@ -98,6 +98,20 @@ export const ObsSelect = ({
     }
   }, [legendData]);
 
+  // Split once rather than filtered twice at render, so each heading can be drawn only
+  // when something falls under it. A table may legitimately hold one kind and not the
+  // other, and a column that could not be read is simply absent from both.
+  const { categorical, numerical } = useMemo(() => {
+    const groups: { categorical: ObservationMetadata[]; numerical: ObservationMetadata[] } = {
+      categorical: [],
+      numerical: [],
+    };
+    for (const observation of observations ?? []) {
+      groups["categories" in observation ? "categorical" : "numerical"].push(observation);
+    }
+    return groups;
+  }, [observations]);
+
   return (
     <Box
       sx={{
@@ -115,23 +129,19 @@ export const ObsSelect = ({
               value={selectedObservation}
               onChange={(e) => onObservationSelect(e.target.value, "observation")}
             >
-              <Divider>Categorical</Divider>
-              {observations
-                ?.filter((obs) => "categories" in obs)
-                .map((observation) => (
-                  <CategoricalCol
-                    key={observation.labelIndex}
-                    name={observation.labelIndex}
-                    categories={observation.categories ? observation.categories : []}
-                    showColor={selectedObservation === observation.labelIndex}
-                  />
-                ))}
-              <Divider>Numerical</Divider>
-              {observations
-                ?.filter((obs) => !("categories" in obs))
-                .map((observation) => (
-                  <NumericalCol key={observation.labelIndex} name={observation.labelIndex} />
-                ))}
+              {categorical.length > 0 && <Divider>Categorical</Divider>}
+              {categorical.map((observation) => (
+                <CategoricalCol
+                  key={observation.labelIndex}
+                  name={observation.labelIndex}
+                  categories={observation.categories ? observation.categories : []}
+                  showColor={selectedObservation === observation.labelIndex}
+                />
+              ))}
+              {numerical.length > 0 && <Divider>Numerical</Divider>}
+              {numerical.map((observation) => (
+                <NumericalCol key={observation.labelIndex} name={observation.labelIndex} />
+              ))}
             </RadioGroup>
           </FormControl>
         </Box>
