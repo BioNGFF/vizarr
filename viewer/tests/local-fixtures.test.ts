@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { createSourceData } from "../src/io";
+import { scaleBarUnit } from "../src/scale-bar";
 import { startFixtureServer } from "./fixture-server";
 
 /**
@@ -79,4 +80,14 @@ test("A well lays out every field it holds", async () => {
 
 test("A missing source is reported as an error rather than an empty image", async () => {
   await expect(createSourceData({ source: `${origin}/not-here.zarr` })).rejects.toThrow();
+});
+
+test("The unit a fixture declares arrives as something the scale bar can measure in", async () => {
+  const [source] = await createSourceData({ source: `${origin}/image-v05.zarr` });
+
+  // The fixture says `micrometer`, which is how NGFF spells units and is not what viv's
+  // scale bar accepts. This is the whole journey the mapping has to cover: what a writer
+  // puts on disk, through the loader, to the symbol the layer is handed.
+  expect(source.loader[0].meta?.physicalSizes?.x?.unit).toBe("micrometer");
+  expect(scaleBarUnit(source.loader[0].meta?.physicalSizes?.x?.unit)).toBe("\u00B5m");
 });
