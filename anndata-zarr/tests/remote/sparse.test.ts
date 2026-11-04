@@ -39,6 +39,12 @@ test("a row-compressed matrix is read whole, while it is small", async () => {
   expect(colors.every((colour) => Number.isFinite(Number(colour.value)))).toBe(true);
 });
 
-// Which label each colour belongs to is a separate question, answered by #171 on another
-// branch: there the value read here lands on the instance its row names rather than on
-// its position. Asserting that from here would make this change depend on that one.
+test("the colour lands on the label its row names, not on its position", async () => {
+  // The two halves together. #171 settled which label a row's colour belongs to; this
+  // reads the value from a sparse matrix. The ids of this table skip 7, 14, 21 and 28,
+  // so a colour on label 7 would mean the value had been placed by row order after all.
+  const { colors } = await getAnndataColors(BLOBS, { type: "feature", labelIndex: "channel_0_sum" });
+
+  expect(colors.map((colour) => colour.labelValue)).not.toContain(7);
+  expect(colors.at(-1)?.labelValue).toBe(30);
+});
