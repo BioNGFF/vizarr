@@ -225,6 +225,14 @@ export type InteractionMode = "pan" | "select";
 export const interactionModeAtom = atom<InteractionMode>("pan");
 
 /**
+ * Whether the overview of the whole image is shown in the corner.
+ *
+ * Off by default. It is a second view of everything already loaded, and an image small
+ * enough to see in one screen has nothing to be oriented within.
+ */
+export const overviewOnAtom = atom(false);
+
+/**
  * Append a warning, ignoring one that is already displayed, so it is only shown once.
  * Uses the updater form so that concurrent writes in a single commit cannot each append
  * against a stale list.

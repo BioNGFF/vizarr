@@ -1,4 +1,14 @@
-import { Add, ChevronLeft, ChevronRight, Fullscreen, GitHub, HighlightAlt, PanTool, Remove } from "@mui/icons-material";
+import {
+  Add,
+  ChevronLeft,
+  ChevronRight,
+  Fullscreen,
+  GitHub,
+  HighlightAlt,
+  PanTool,
+  PictureInPictureAlt,
+  Remove,
+} from "@mui/icons-material";
 import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
@@ -7,7 +17,14 @@ import { useReducer } from "react";
 import { version } from "../../../package.json";
 
 import { SourceDataContext, useViewState } from "../hooks";
-import { firstLayerFitAtom, interactionModeAtom, panelInsetAtom, sourceInfoAtom, sourceInfoAtomAtoms } from "../state";
+import {
+  firstLayerFitAtom,
+  interactionModeAtom,
+  overviewOnAtom,
+  panelInsetAtom,
+  sourceInfoAtom,
+  sourceInfoAtomAtoms,
+} from "../state";
 import { tokens } from "../theme";
 import { REPOSITORY_URL } from "../utils";
 import LayerController from "./LayerController";
@@ -42,6 +59,9 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
   const [interactionMode, setInteractionMode] = useAtom(interactionModeAtom);
   const [, setViewState] = useViewState();
   const fitViewState = useAtomValue(firstLayerFitAtom);
+  const [overviewOn, setOverviewOn] = useAtom(overviewOnAtom);
+  // A grid is already an overview of itself, so the button has nothing to offer there.
+  const canOverview = !sourceInfo.some((source) => source.loaders);
 
   const zoomBy = (delta: number) =>
     setViewState((current) => (current ? { ...current, zoom: current.zoom + delta } : current));
@@ -220,6 +240,18 @@ function Menu({ open, enableSelectTool = false }: { open?: boolean; enableSelect
               <Remove />
             </IconButton>
           </Tooltip>
+          {canOverview && (
+            <Tooltip title={overviewOn ? "Hide overview" : "Show overview"} placement="right">
+              <IconButton
+                sx={{ ...railGroupButtonSx, ...railDividerSx }}
+                onClick={() => setOverviewOn((on) => !on)}
+                aria-label="Show overview"
+                aria-pressed={overviewOn}
+              >
+                <PictureInPictureAlt />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title="Fit image to view" placement="right">
             {/* A disabled button fires no events, so Tooltip has nothing to listen on and
                 warns. The span is the wrapper MUI asks for; display:flex keeps it from

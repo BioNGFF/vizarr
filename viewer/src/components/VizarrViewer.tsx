@@ -26,6 +26,7 @@ import {
   endLoadAtom,
   interactionModeAtom,
   isLoadingAtom,
+  overviewOnAtom,
   redirectObjAtom,
   setLabelColorsAtom,
   setTSliceAtom,
@@ -103,6 +104,13 @@ export interface VizarrViewerProps {
    * enabled but does nothing is worse than no button.
    */
   enableSelectTool?: boolean;
+  /**
+   * Show the overview of the whole image in the corner from the start.
+   *
+   * The button in the toolbar is the usual way in; this is for a host that wants a link
+   * to arrive with it already open.
+   */
+  overview?: boolean;
   /**
    * Theme for the viewer and anything rendered inside it, defaulting to vizarr's own.
    *
@@ -242,6 +250,7 @@ function VizarrViewerComponent({
   onPluginClick,
   onPluginHover,
   enableSelectTool,
+  overview,
   children,
   logger,
 }: VizarrViewerProps) {
@@ -263,10 +272,18 @@ function VizarrViewerComponent({
   const setLabelColors = useSetAtom(setLabelColorsAtom);
   const addSourceWarning = useSetAtom(addSourceWarningAtom);
 
+  const setOverviewOn = useSetAtom(overviewOnAtom);
+
   React.useEffect(() => {
     setLogger(logger);
     return () => setLogger(undefined);
   }, [logger]);
+
+  React.useEffect(() => {
+    if (overview !== undefined) {
+      setOverviewOn(overview);
+    }
+  }, [overview, setOverviewOn]);
 
   React.useEffect(() => {
     if (initialViewState) {

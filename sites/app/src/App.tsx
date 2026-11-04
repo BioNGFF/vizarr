@@ -46,6 +46,7 @@ export default function App() {
     labels,
     viewState,
     enableRoi,
+    overview,
     tableURLs,
   } = React.useMemo(() => {
     const { searchParams } = new URL(window.location.href);
@@ -57,6 +58,9 @@ export default function App() {
       labels: searchParams.getAll("label"),
       viewState: parseViewStateFromUrl(),
       enableRoi: searchParams.get("roi") === "1",
+      // Opens with the overview already showing, so a link can point at a region and say
+      // where it sits.
+      overview: searchParams.get("overview") === "1",
       tableURLs: searchParams.getAll("anndata"),
     };
   }, []);
@@ -221,6 +225,7 @@ export default function App() {
             onPluginHover={selecting ? onHover : undefined}
             labelColours={labelColours}
             enableSelectTool={enableRoi}
+            overview={overview}
           />
         </AnndataProvider>
       </ThemeProvider>
