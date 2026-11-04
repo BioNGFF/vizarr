@@ -101,6 +101,12 @@ export function describeHover(info: GrayscaleBitmapLayerPickingInfo | PickingInf
 /** The id deck knows the overview viewport by, used to route layers and clicks. */
 const OVERVIEW_VIEW_ID = "overview";
 
+/** Marks the copy of a layer that belongs to the overview. */
+const OVERVIEW_SUFFIX = "-overview";
+
+/** The outlines layer, which exists only inside the overview. */
+const OVERVIEW_OUTLINES_ID = "overview-outlines";
+
 /** Viv's colours for the two outlines, so an overview here looks like one elsewhere. */
 const IMAGE_OUTLINE: [number, number, number] = [255, 0, 0];
 const VIEWPORT_OUTLINE: [number, number, number] = [255, 190, 0];
@@ -314,7 +320,7 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
     }
     return [
       new PolygonLayer({
-        id: "overview-outlines",
+        id: OVERVIEW_OUTLINES_ID,
         data: [
           { polygon: extentCorners(overview.extent), color: IMAGE_OUTLINE, width: 1 },
           { polygon: viewportCorners(viewState), color: VIEWPORT_OUTLINE, width: 2 },
@@ -330,6 +336,36 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
     ];
   }, [overview, viewState]);
 
+  /**
+   * The overview's own copies of the layers.
+   *
+   * Deck will draw one layer instance into several views, and for most layers that is
+   * what you want. A tiled layer is the exception: it resolves which resolution to fetch
+   * from the viewport it is updated against, and keeps one tileset. Shared between a
+   * detail view and an overview, the overview's zoom wins and the detail view is left
+   * drawing the lowest level of the pyramid -- an 8-level Xenium slide goes visibly soft
+   * the moment the overview is opened, while a single-tile image shows nothing wrong
+   * because it has nothing to drop to.
+   *
+   * So the overview gets its own instances. They are cheap: the tiles they ask for are
+   * the small ones.
+   */
+  const overviewLayers = React.useMemo(() => {
+    if (!overview) {
+      return [];
+    }
+    return layers
+      .filter((layer): layer is VizarrLayer => Boolean(layer))
+      .map((layer) =>
+        // `clone` is deck's own, and handles the async props a layer may be holding. It
+        // is missing from the published types rather than from the class.
+        (layer as unknown as { clone(props: object): Layer }).clone({
+          id: `${layer.id}${OVERVIEW_SUFFIX}`,
+          pickable: false,
+        }),
+      );
+  }, [overview, layers]);
+
   const views = React.useMemo(() => {
     const ortho = new OrthographicView({ id: "ortho", controller: true, near, far });
     if (!overview) {
@@ -341,27 +377,20 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
   /**
    * Which layers belong in which viewport.
    *
-   * The same layer instance is drawn in both views -- deck does that by default, and
-   * duplicating them would mean keeping two copies of every channel setting in step. Only
-   * the things that make no sense twice are filtered: the scale bar, which measures the
-   * view it was computed for, and the outlines, which exist only for the overview.
+   * Everything carrying the overview's suffix goes to the overview and nothing else does,
+   * which keeps the scale bar and any plugin's layers -- measurements and annotations,
+   * both of which belong to the view they were made in -- out of the corner by default.
    */
   const layerFilter = React.useCallback(({ layer, viewport: vp }: { layer: Layer; viewport: { id: string } }) => {
-    const inOverview = vp.id === OVERVIEW_VIEW_ID;
-    if (layer.id === "overview-outlines") {
-      return inOverview;
-    }
-    if (layer.id === "scalebar") {
-      return !inOverview;
-    }
-    return true;
+    const forOverview = layer.id.endsWith(OVERVIEW_SUFFIX) || layer.id === OVERVIEW_OUTLINES_ID;
+    return (vp.id === OVERVIEW_VIEW_ID) === forOverview;
   }, []);
 
   return (
     <>
       <DeckGL
         ref={deckRef}
-        layers={[...deckLayers, ...additionalLayers, ...overviewOutlines]}
+        layers={[...deckLayers, ...additionalLayers, ...overviewLayers, ...overviewOutlines]}
         viewState={viewState && { ortho: viewState, ...(overview ? { [OVERVIEW_VIEW_ID]: overview.viewState } : {}) }}
         controller={{ keyboard: true }}
         onViewStateChange={(e: { viewState: OrthographicViewState }) =>
