@@ -1,4 +1,4 @@
-import { FetchStore, type Group, type Readable, get, open } from "zarrita";
+import { FetchStore, type Group, type Readable, type Slice, get, open } from "zarrita";
 import { z } from "zod";
 import { log } from "./logger";
 
@@ -11,10 +11,13 @@ export async function fetchZarrGroup(url: URL): Promise<Group<Readable>> {
   return await open(store, { kind: "group" });
 }
 
+/** What zarrita accepts for one axis: an index, a range, or the whole thing. */
+export type Selection = number | Slice | null;
+
 export async function getData(
   root: Group<Readable>,
   path: string,
-  slice?: (number | null)[],
+  slice?: Selection[],
 ): Promise<{ data: unknown[]; dtype: string }> {
   log.debug("Opening array", { path });
   const dataNode = await open(root.resolve(path), { kind: "array" });

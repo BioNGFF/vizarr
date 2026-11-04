@@ -1,7 +1,8 @@
-import { type Group, type Readable, open } from "zarrita";
+import { type Group, type Readable, open, slice as zarrSlice } from "zarrita";
 import { z } from "zod";
 import type { FeatureMetadata, ObservationMetadata } from "./hooks";
 import { log } from "./logger";
+import { CSR_VALUE_LIMIT, canReadWhole, columnFromRows, columnRange, scatterColumn } from "./sparse";
 import { fetchZarrGroup, getData } from "./zarr";
 
 const OBSERVATION_NAMES_PATH = "obs";
@@ -10,7 +11,17 @@ const CATEGORY_NAMES_PATH = "categories";
 const CATEGORY_DATA_PATH = "codes";
 const DEFAULT_INDEX_NAME = "_index";
 
-const EncodingTypeSchema = z.enum(["anndata", "dataframe", "array", "categorical", "string-array"]);
+const EncodingTypeSchema = z.enum([
+  "anndata",
+  "dataframe",
+  "array",
+  "categorical",
+  "string-array",
+  // A sparse matrix, which is how any real expression matrix is stored: the Visium HD
+  // table below is 91,033 x 19,059, and dense that is 1.7 billion floats.
+  "csr_matrix",
+  "csc_matrix",
+]);
 type EncodingType = z.infer<typeof EncodingTypeSchema>;
 
 /**
@@ -21,6 +32,8 @@ type EncodingType = z.infer<typeof EncodingTypeSchema>;
 const ZarrAttrsSchema = z.object({
   "encoding-type": EncodingTypeSchema.optional(),
   "encoding-version": z.string().optional(),
+  /** Rows and columns of a sparse matrix, which its own arrays do not carry. */
+  shape: z.array(z.number()).optional(),
 });
 
 const ZarrObservationAttrsSchema = ZarrAttrsSchema.extend({
@@ -86,6 +99,15 @@ export const fetchDataFromZarr = async (
   const attrs = parseZarrAttrs(dataNodeOrGroup.attrs);
   const encoding = encodingType(attrs);
 
+  if (encoding === "csr_matrix" || encoding === "csc_matrix") {
+    // A gene, which arrives as a slice naming its column and nothing else.
+    const column = slice?.[1];
+    if (typeof column !== "number") {
+      throw new Error(`A sparse matrix at "${path}" can only be read one column at a time.`);
+    }
+    return { data: await readSparseColumn(root, path, encoding, attrs.shape ?? [], column) };
+  }
+
   const dataPath = `${path}/${getDataPath(encoding)}`;
 
   const { data, dtype } = await getData(root, dataPath, slice);
@@ -115,6 +137,51 @@ export const fetchDataFromZarr = async (
   }
   return { data: [] };
 };
+
+/**
+ * One column of a sparse matrix, as a dense vector of length `rows`.
+ *
+ * Which of the two encodings it is decides what has to be read. A column-compressed
+ * matrix keeps the column together, so two numbers from `indptr` locate it and only that
+ * range is fetched. A row-compressed one scatters the column across every row, so there
+ * is no range to ask for and the matrix is read whole -- which is reasonable while it is
+ * small, and is refused when it is not.
+ */
+async function readSparseColumn(
+  root: Group<Readable>,
+  path: string,
+  encoding: "csr_matrix" | "csc_matrix",
+  shape: number[],
+  column: number,
+): Promise<number[]> {
+  const rows = shape[0] ?? 0;
+  log.debug("Reading a sparse column", { path, encoding, column, shape });
+
+  const indptr = parseIntegerArray((await getData(root, `${path}/indptr`)).data.map(Number));
+
+  if (encoding === "csc_matrix") {
+    const { start, end } = columnRange(indptr, column);
+    if (end <= start) {
+      // A gene with no counts anywhere. Zarr has nothing to slice, and the answer is a
+      // column of zeros rather than an error.
+      return new Array<number>(rows).fill(0);
+    }
+    const [values, indices] = await Promise.all([
+      getData(root, `${path}/data`, [zarrSlice(start, end)]),
+      getData(root, `${path}/indices`, [zarrSlice(start, end)]),
+    ]);
+    return scatterColumn(values.data.map(Number), indices.data.map(Number), rows);
+  }
+
+  const valueCount = indptr.at(-1) ?? 0;
+  if (!canReadWhole(valueCount)) {
+    throw new Error(
+      `This table stores its matrix row by row and holds ${valueCount.toLocaleString()} values, so a single gene cannot be read without fetching all of them. The limit is ${CSR_VALUE_LIMIT.toLocaleString()}.`,
+    );
+  }
+  const [values, indices] = await Promise.all([getData(root, `${path}/data`), getData(root, `${path}/indices`)]);
+  return columnFromRows(values.data.map(Number), indices.data.map(Number), indptr, column);
+}
 
 export async function getLabels(url: URL): Promise<(FeatureMetadata | ObservationMetadata)[]> {
   const featureNames = await getFeatureNames(url);
