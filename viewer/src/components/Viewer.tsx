@@ -1,10 +1,19 @@
 import { ScaleBarLayer } from "@hms-dbmi/viv";
-import DeckGL, { type Layer, OrthographicView } from "deck.gl";
+import DeckGL, { type Layer, OrthographicView, PolygonLayer } from "deck.gl";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { useAxisNavigation } from "../hooks/useAxisNavigation";
-import { layerAtoms, navigateIntoAtom, panelInsetAtom, sourceInfoAtom, viewportAtom } from "../state";
+import {
+  OVERVIEW_DEFAULTS,
+  extentCorners,
+  fitExtentToBox,
+  layerExtent,
+  overviewBox,
+  unionExtent,
+  viewportCorners,
+} from "../overview";
+import { layerAtoms, navigateIntoAtom, overviewOnAtom, panelInsetAtom, sourceInfoAtom, viewportAtom } from "../state";
 import theme, { tokens } from "../theme";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
 
@@ -89,6 +98,13 @@ export function describeHover(info: GrayscaleBitmapLayerPickingInfo | PickingInf
   return value === null || value === undefined ? `Label ${label}` : `Label ${label}\nValue ${value}`;
 }
 
+/** The id deck knows the overview viewport by, used to route layers and clicks. */
+const OVERVIEW_VIEW_ID = "overview";
+
+/** Viv's colours for the two outlines, so an overview here looks like one elsewhere. */
+const IMAGE_OUTLINE: [number, number, number] = [255, 0, 0];
+const VIEWPORT_OUTLINE: [number, number, number] = [255, 190, 0];
+
 interface ViewerProps {
   additionalLayers?: Layer[];
   pluginCursor?: string;
@@ -109,6 +125,35 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
   const fittedExtentRef = React.useRef<string | null>(null);
 
   const panelInset = useAtomValue(panelInsetAtom);
+  const overviewOn = useAtomValue(overviewOnAtom);
+
+  /**
+   * The overview, or null where there is nothing to overview.
+   *
+   * Not drawn for a plate or a well. A grid is already an overview: it shows every
+   * position at once and is navigated by clicking into one, so a smaller copy of the same
+   * arrangement in the corner offers a way to get lost rather than a way to orient.
+   */
+  const overview = React.useMemo(() => {
+    const isGrid = sourceInfo.some((source) => source.loaders);
+    if (!overviewOn || isGrid || !viewport || !viewState) {
+      return null;
+    }
+    // The union of every source, not the first. The scale bar and the compass read the
+    // first because they describe a frame of reference and several images can disagree
+    // about one; this describes where you are looking, and elements registered against
+    // each other would be cut off by framing only one of them.
+    const extent = unionExtent(
+      layers
+        .filter((layer): layer is VizarrLayer => Boolean(layer) && !(layer instanceof LabelLayer))
+        .map((layer) => layerExtent(getLayerSize(layer), layer.props.modelMatrix)),
+    );
+    if (!extent) {
+      return null;
+    }
+    const box = overviewBox(viewport, extent);
+    return { extent, box, viewState: fitExtentToBox(extent, box, OVERVIEW_DEFAULTS.padding) };
+  }, [overviewOn, sourceInfo, viewport, viewState, layers]);
   const resetViewState = React.useCallback(
     (layer: VizarrLayer) => {
       const { deck } = deckRef.current || {};
@@ -217,6 +262,15 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
     (info: PickingInfo) => {
       if (!info.coordinate) return;
       const coord: [number, number] = [info.coordinate[0], info.coordinate[1]];
+
+      // A click in the overview means "look here", and nothing else. Without this it
+      // would go on to be offered to the plugins and then to the grid, so clicking the
+      // overview of a plate would navigate into whichever well was under the pointer.
+      if (info.viewport?.id === OVERVIEW_VIEW_ID) {
+        setViewState((previous) => (previous ? { ...previous, target: coord } : previous));
+        return;
+      }
+
       // A plugin that claims the click keeps it; the select tool is not a drill-down.
       if (onPluginClick?.(coord)) return;
 
@@ -230,7 +284,7 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
         navigateInto({ id: picked.gridSourceId, source: target, name: gridCellName(picked) ?? undefined });
       }
     },
-    [onPluginClick, sourceInfo, navigateInto],
+    [onPluginClick, sourceInfo, navigateInto, setViewState],
   );
 
   // ---- Hover handler (delegates to plugins) ----
@@ -247,18 +301,75 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
     return pluginCursor ?? "grab";
   }, [pluginCursor]);
 
+  /**
+   * The two outlines drawn in the overview: everything there is, and the part on screen.
+   *
+   * A polygon rather than a positioned `div`. The rectangle is the inverse of fitting the
+   * image to the viewport, and reconciling screen pixels with image coordinates by hand
+   * is what makes that arithmetic fiddly; inside a viewport, deck does the reconciling.
+   */
+  const overviewOutlines = React.useMemo(() => {
+    if (!overview || !viewState) {
+      return [];
+    }
+    return [
+      new PolygonLayer({
+        id: "overview-outlines",
+        data: [
+          { polygon: extentCorners(overview.extent), color: IMAGE_OUTLINE, width: 1 },
+          { polygon: viewportCorners(viewState), color: VIEWPORT_OUTLINE, width: 2 },
+        ],
+        filled: false,
+        stroked: true,
+        getPolygon: (d: { polygon: Array<[number, number]> }) => d.polygon,
+        getLineColor: (d: { color: [number, number, number] }) => d.color,
+        getLineWidth: (d: { width: number }) => d.width,
+        lineWidthUnits: "pixels",
+        pickable: false,
+      }),
+    ];
+  }, [overview, viewState]);
+
+  const views = React.useMemo(() => {
+    const ortho = new OrthographicView({ id: "ortho", controller: true, near, far });
+    if (!overview) {
+      return [ortho];
+    }
+    return [ortho, new OrthographicView({ id: OVERVIEW_VIEW_ID, controller: false, clear: true, ...overview.box })];
+  }, [near, far, overview]);
+
+  /**
+   * Which layers belong in which viewport.
+   *
+   * The same layer instance is drawn in both views -- deck does that by default, and
+   * duplicating them would mean keeping two copies of every channel setting in step. Only
+   * the things that make no sense twice are filtered: the scale bar, which measures the
+   * view it was computed for, and the outlines, which exist only for the overview.
+   */
+  const layerFilter = React.useCallback(({ layer, viewport: vp }: { layer: Layer; viewport: { id: string } }) => {
+    const inOverview = vp.id === OVERVIEW_VIEW_ID;
+    if (layer.id === "overview-outlines") {
+      return inOverview;
+    }
+    if (layer.id === "scalebar") {
+      return !inOverview;
+    }
+    return true;
+  }, []);
+
   return (
     <>
       <DeckGL
         ref={deckRef}
-        layers={[...deckLayers, ...additionalLayers]}
-        viewState={viewState && { ortho: viewState }}
+        layers={[...deckLayers, ...additionalLayers, ...overviewOutlines]}
+        viewState={viewState && { ortho: viewState, ...(overview ? { [OVERVIEW_VIEW_ID]: overview.viewState } : {}) }}
         controller={{ keyboard: true }}
         onViewStateChange={(e: { viewState: OrthographicViewState }) =>
           // @ts-expect-error - deck doesn't know this should be ok
           setViewState(e.viewState)
         }
-        views={[new OrthographicView({ id: "ortho", controller: true, near, far })]}
+        views={views}
+        layerFilter={layerFilter}
         glOptions={glOptions}
         getTooltip={getTooltip}
         onClick={handleClick}
