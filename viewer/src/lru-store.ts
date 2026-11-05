@@ -34,7 +34,15 @@ export function lru<S extends zarr.Readable>(store: S, maxSize = 100) {
     const cached = cache.get(cacheKey);
     if (cached) return cached;
     const sanitizedKey = sanitizeKey(key);
-    const result = Promise.resolve(store.get(sanitizedKey, opts));
+    // Dropped on failure, as `getRange` below already does. A rejected promise is a
+    // perfectly good cache entry as far as the cache is concerned, so keeping one means
+    // the store never asks again -- and everything that is not "absent" lands here: a
+    // 401, a 403, a 502, a dropped connection. The next read is the one that would have
+    // succeeded.
+    const result = Promise.resolve(store.get(sanitizedKey, opts)).catch((err) => {
+      cache.delete(cacheKey);
+      throw err;
+    });
     cache.set(cacheKey, result);
     return result;
   }
