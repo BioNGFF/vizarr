@@ -114,7 +114,15 @@ export async function createSourceData(config: ImageLayerConfig): Promise<Source
     const sources = await loadCsv(config.source);
     if (sources.length > 0) {
       const results = await Promise.all(
-        sources.map((source) => createSourceData({ ...config, source, name: undefined, label: undefined })),
+        sources.map(async (source): Promise<SourceData[]> => {
+          // We ONLY handle multiscales for CSV sources. 
+          const node = await openZarrRoot(source);
+          const attrs = utils.resolveAttrs(node.attrs);
+          if (utils.isMultiscales(attrs)) {
+            return [await loadOmeMultiscales(config, node, attrs)];
+          }
+          return [];
+        }),
       );
       return results.flat();
     }
