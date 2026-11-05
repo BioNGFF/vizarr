@@ -6,6 +6,8 @@ import type { Theme } from "@mui/material/styles";
 import type { Layer } from "deck.gl";
 import { type PrimitiveAtom, Provider, atom, useAtomValue, useSetAtom } from "jotai";
 import React from "react";
+import type { CredentialProvider } from "../credentials";
+import { setCredentialProvider } from "../credentials";
 import { getSourceDataError, getSourceDataWarnings, sourceDataValid, writeUserErrorMessage } from "../error";
 import { ViewStateContext, useViewState } from "../hooks";
 import { loadSources } from "../io";
@@ -97,6 +99,14 @@ export interface VizarrViewerProps {
   onPluginHover?: (coordinate: [number, number] | null) => void;
   children?: React.ReactNode;
   logger?: Logger;
+  /**
+   * Supplies what a request needs to read a store that is not open to the world.
+   *
+   * Consulted for every read, so a token can be refreshed mid-session, and asked again
+   * with `retry: true` when one is refused. Note that this reaches the image only: the
+   * table and ROI plugins build their own stores and do not see it yet (issue #188).
+   */
+  credentials?: CredentialProvider;
   /**
    * Show the toolbar's pan/select tools. Off by default: the select tool only does
    * something when a plugin acts on `interactionMode`, and a button that looks
@@ -244,6 +254,7 @@ function VizarrViewerComponent({
   enableSelectTool,
   children,
   logger,
+  credentials,
 }: VizarrViewerProps) {
   // Compared by value: a host rebuilding either array each render would otherwise
   // reload every source, which resets all layer state.
@@ -267,6 +278,13 @@ function VizarrViewerComponent({
     setLogger(logger);
     return () => setLogger(undefined);
   }, [logger]);
+
+  // Declared before the effect that loads sources, so the provider is in place by the
+  // time the first request goes out. React runs effects in the order they are written.
+  React.useEffect(() => {
+    setCredentialProvider(credentials);
+    return () => setCredentialProvider(undefined);
+  }, [credentials]);
 
   React.useEffect(() => {
     if (initialViewState) {

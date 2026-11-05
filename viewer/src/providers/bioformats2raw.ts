@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { fetchWithCredentials } from "../credentials";
 import { createSourceData } from "../io";
 import * as bf2raw from "../parsers/bioformats2raw";
 import type { ImageLayerConfig, SourceData } from "../state";
@@ -111,7 +112,7 @@ export async function getBf2RawImagePaths(
 
 export async function getBf2rawOMEXML(source: string) {
   const url = `${source}/${XML_METADATA_LOCATION}/${XML_METADATA_FILE_NAME}`.replace(/([^:]\/)\/+/g, "$1");
-  const xml = await fetch(url);
+  const xml = await fetchWithCredentials(url);
 
   const xmlString = await xml.text();
   const xmlAsObject = OMEXMLToObject(xmlString);
@@ -128,7 +129,7 @@ export async function loadBf2Raw(
   }
   const url = `${config.source}/${XML_METADATA_LOCATION}/${XML_METADATA_FILE_NAME}`.replace(/([^:]\/)\/+/g, "$1");
 
-  const xml = await fetch(url);
+  const xml = await fetchWithCredentials(url);
 
   const xmlString = await xml.text();
   const xmlAsObject = OMEXMLToObject(xmlString);
