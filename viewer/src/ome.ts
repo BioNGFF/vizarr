@@ -1,5 +1,6 @@
-import Papa from "papaparse";
+import { Matrix4 } from "math.gl";
 import pMap from "p-map";
+import Papa from "papaparse";
 import * as zarr from "zarrita";
 import * as utils from "./utils";
 
@@ -746,10 +747,32 @@ function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]):
 }
 
 const CSV_SOURCE_COLUMNS = ["File Path", "uri"];
+const CSV_AFFINE_COLUMN = "affine";
 const CSV_MAX_ROWS = 20;
 
-/** Fetches a CSV and returns the first rows' "File Path" or "uri" values, or [] if no such column. */
-async function loadCsv(url: string): Promise<string[]> {
+type CsvSource = { source: string; affine?: Matrix4 };
+
+/**
+ * Parses "(a, b, ..., l)": 12 numbers as the top 3 rows (4 columns each) of a
+ * row-major 4x4 matrix. The bottom row is [0, 0, 0, 1].
+ */
+function parseAffine(value: string | undefined): Matrix4 | undefined {
+  if (!value?.trim()) return undefined;
+  const numbers = value
+    .replace(/[()[\]]/g, "")
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map(Number);
+  if (numbers.length !== 12 || numbers.some((n) => !Number.isFinite(n))) {
+    log.warn("Ignoring invalid affine, expected 12 numbers.", { value });
+    return undefined;
+  }
+  const [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = numbers;
+  return new Matrix4().setRowMajor(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, 0, 0, 0, 1);
+}
+
+/** Fetches a CSV and returns the first rows' "File Path" or "uri" values (and optional "affine"), or [] if no such column. */
+async function loadCsv(url: string): Promise<CsvSource[]> {
   if (typeof url !== "string") return [];
   if (url.startsWith("https://docs.google.com/spreadsheets/")) {
     url = url.replace(/\/edit.*$/, "/export?format=csv");
@@ -764,19 +787,27 @@ async function loadCsv(url: string): Promise<string[]> {
   });
   const column = CSV_SOURCE_COLUMNS.find((name) => meta.fields?.includes(name));
   if (!column) return [];
-  return data.map((row) => row[column]?.trim()).filter((value): value is string => !!value);
+  const hasAffine = meta.fields?.includes(CSV_AFFINE_COLUMN);
+  const rows: CsvSource[] = [];
+  for (const row of data) {
+    const source = row[column]?.trim();
+    if (source) rows.push({ source, affine: hasAffine ? parseAffine(row[CSV_AFFINE_COLUMN]) : undefined });
+  }
+  return rows;
 }
 
 export async function sourceFromCsv(config: ImageLayerConfig, csvUrl: string): Promise<SourceData[]> {
-  const sources = await loadCsv(csvUrl);
-  if (sources.length === 0) return [];
+  const rows = await loadCsv(csvUrl);
+  if (rows.length === 0) return [];
   const results = await Promise.all(
-    sources.map(async (source): Promise<SourceData[]> => {
+    rows.map(async ({ source, affine }): Promise<SourceData[]> => {
       // We ONLY handle multiscales for CSV sources.
       const node = await openZarrRoot(source);
       const attrs = utils.resolveAttrs(node.attrs);
       if (utils.isMultiscales(attrs)) {
-        return [await loadOmeMultiscales(config, node, attrs)];
+        const sourceData = await loadOmeMultiscales(config, node, attrs);
+        if (affine) sourceData.model_matrix = affine;
+        return [sourceData];
       }
       return [];
     }),
