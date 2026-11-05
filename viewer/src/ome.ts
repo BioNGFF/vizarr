@@ -1,3 +1,4 @@
+import Papa from "papaparse";
 import pMap from "p-map";
 import * as zarr from "zarrita";
 import * as utils from "./utils";
@@ -742,4 +743,43 @@ function parseOmeroMeta({ rdefs, channels, name }: Ome.Omero, axes: Ome.Axis[]):
     channel_axis,
     defaultSelection,
   };
+}
+
+const CSV_SOURCE_COLUMNS = ["File Path", "uri"];
+const CSV_MAX_ROWS = 20;
+
+/** Fetches a CSV and returns the first rows' "File Path" or "uri" values, or [] if no such column. */
+async function loadCsv(url: string): Promise<string[]> {
+  if (typeof url !== "string") return [];
+  if (url.startsWith("https://docs.google.com/spreadsheets/")) {
+    url = url.replace(/\/edit.*$/, "/export?format=csv");
+  }
+  const response = await fetch(url);
+  utils.assert(response.ok, `Failed to fetch CSV ${url}: ${response.status}`);
+  const text = await response.text();
+  const { data, meta } = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    skipEmptyLines: true,
+    preview: CSV_MAX_ROWS,
+  });
+  const column = CSV_SOURCE_COLUMNS.find((name) => meta.fields?.includes(name));
+  if (!column) return [];
+  return data.map((row) => row[column]?.trim()).filter((value): value is string => !!value);
+}
+
+export async function sourceFromCsv(config: ImageLayerConfig, csvUrl: string): Promise<SourceData[]> {
+  const sources = await loadCsv(csvUrl);
+  if (sources.length === 0) return [];
+  const results = await Promise.all(
+    sources.map(async (source): Promise<SourceData[]> => {
+      // We ONLY handle multiscales for CSV sources.
+      const node = await openZarrRoot(source);
+      const attrs = utils.resolveAttrs(node.attrs);
+      if (utils.isMultiscales(attrs)) {
+        return [await loadOmeMultiscales(config, node, attrs)];
+      }
+      return [];
+    }),
+  );
+  return results.flat();
 }
