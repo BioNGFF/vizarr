@@ -81,8 +81,11 @@ const CSV_MAX_ROWS = 20;
 
 function isCsvUrl(source: unknown): source is string {
   if (typeof source !== "string") return false;
+  if (source.startsWith("https://docs.google.com/spreadsheets/")) {
+    return true;
+  }
   try {
-    return new URL(source, "http://localhost").pathname.toLowerCase().endsWith(".csv");
+    return new URL(source).pathname.toLowerCase().endsWith(".csv");
   } catch {
     return false;
   }
@@ -90,6 +93,9 @@ function isCsvUrl(source: unknown): source is string {
 
 /** Fetches a CSV and returns the first rows' "File Path" or "uri" values, or [] if no such column. */
 async function loadCsv(url: string): Promise<string[]> {
+  if (url.startsWith("https://docs.google.com/spreadsheets/")) {
+    url = url.replace(/\/edit.*$/, "/export?format=csv");
+  }
   const response = await fetch(url);
   utils.assert(response.ok, `Failed to fetch CSV ${url}: ${response.status}`);
   const text = await response.text();
