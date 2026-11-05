@@ -23,3 +23,5 @@ export { useViewState, ViewStateContext } from "./hooks";
 export { REPOSITORY_URL } from "./utils";
 export { createLogger, setLogger } from "./logger";
 export type { Logger, LogFunction } from "./logger";
+export { setCredentialProvider } from "./credentials";
+export type { CredentialProvider, CredentialRequest } from "./credentials";

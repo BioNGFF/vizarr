@@ -9,6 +9,7 @@ import ReactDOM from "react-dom/client";
 import Menu from "./components/Menu";
 import Viewer from "./components/Viewer";
 import "./codecs/register";
+import { type CredentialProvider, setCredentialProvider } from "./credentials";
 import { ViewStateContext } from "./hooks";
 import {
   type ImageLayerConfig,
@@ -27,7 +28,7 @@ export type Events = {
   viewStateChange: ViewState;
 };
 
-export type { ViewState, ImageLayerConfig };
+export type { ViewState, ImageLayerConfig, CredentialProvider };
 
 export interface VizarrViewer {
   addImage(config: ImageLayerConfig): void;
@@ -36,7 +37,20 @@ export interface VizarrViewer {
   destroy(): void;
 }
 
-export function createViewer(element: HTMLElement, options: { menuOpen?: boolean } = {}): Promise<VizarrViewer> {
+export function createViewer(
+  element: HTMLElement,
+  options: {
+    menuOpen?: boolean;
+    /**
+     * Supplies what a request needs to read a store that is not open to the world.
+     *
+     * Set before anything is loaded, so a provider that has to wait on a sign-in is in
+     * place before the first request. Reaches the image only for now; see issue #188.
+     */
+    credentials?: CredentialProvider;
+  } = {},
+): Promise<VizarrViewer> {
+  setCredentialProvider(options.credentials);
   const ref = React.createRef<VizarrViewer>();
   const emitter = typedEmitter<Events>();
   const viewStateAtomWithEffect: PrimitiveAtom<ViewState | null> = atom(

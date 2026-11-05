@@ -3,6 +3,7 @@ import * as zarr from "zarrita";
 import type * as viv from "@vivjs/types";
 import ZipFileStore from "@zarrita/storage/zip";
 import type { ZarrPixelSource } from "./ZarrPixelSource";
+import { credentialsFor, fetchWithCredentials, withCredentials } from "./credentials";
 import type { GridLayerProps } from "./layers/grid-layer";
 import type { LabelLayerProps } from "./layers/label-layer";
 import type { ImageLayerProps, MultiscaleImageLayerProps } from "./layers/viv-layers";
@@ -97,14 +98,19 @@ export async function normalizeStore(source: string | zarr.Readable): Promise<za
       // import custom store implementation
       const [{ default: ReferenceStore }, json] = await Promise.all([
         import("@zarrita/storage/ref"),
-        fetch(source).then((res) => res.json()),
+        // The spec itself can be guarded. The chunk urls inside it cannot be: the store
+        // fetches those against whatever origins the spec names, out of our reach.
+        fetchWithCredentials(source).then((res) => res.json()),
       ]);
       store = ReferenceStore.fromSpec(json);
       log.debug("Store resolved", { source, store: "ReferenceStore" });
     } else {
       // try ZipFileStore first, fallback to FetchStore
       try {
-        const zipStore = ZipFileStore.fromUrl(source);
+        // Static overrides, read once: the zip reader does its own ranged fetches and
+        // takes no per-request init, so a credential that expires mid-session will not
+        // refresh for a zipped store.
+        const zipStore = ZipFileStore.fromUrl(source, { overrides: await credentialsFor(source) });
         await zipStore.has("/"); // will throw an error for non-zipped
         store = zipStore;
         log.debug("Store resolved", { source, store: "ZipFileStore" });
@@ -113,7 +119,9 @@ export async function normalizeStore(source: string | zarr.Readable): Promise<za
         // grab the path and then set the URL to the root
         path = ensureAbsolutePath(url.pathname);
         url.pathname = "/";
-        store = new zarr.FetchStore(url.href);
+        // Inside the cache, so that a read refused for want of a credential is retried
+        // before the cache ever sees it, and the retry's success is what gets cached.
+        store = withCredentials(new zarr.FetchStore(url.href), url.href);
         log.debug("Store resolved", { source, store: "FetchStore" });
       }
     }

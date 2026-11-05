@@ -1,4 +1,5 @@
 import * as zarr from "zarrita";
+import { fetchWithCredentials } from "../credentials";
 import { log } from "../logger";
 import { normalizeStore } from "../utils";
 
@@ -73,7 +74,9 @@ async function explainFailure(source: string | zarr.Readable, url: string, error
   let status: number | undefined;
   let statusText = "";
   try {
-    ({ status, statusText } = await fetch(url, { method: "GET" }));
+    // Carrying the credential too, or the probe would report 403 on a store the user is
+    // in fact entitled to read, and the message would send them to check the wrong thing.
+    ({ status, statusText } = await fetchWithCredentials(url, { method: "GET" }));
   } catch (probeError) {
     if (isCorsFailure(probeError)) {
       log.debug("Open failed, probe blocked, classified as CORS", { url });
