@@ -1,3 +1,4 @@
+import Papa from "papaparse";
 import * as zarr from "zarrita";
 import type { z } from "zod";
 import { ZarrPixelSource } from "./ZarrPixelSource";
@@ -75,7 +76,43 @@ async function loadMultiChannel(
   };
 }
 
+const CSV_SOURCE_COLUMNS = ["File Path", "uri"];
+const CSV_MAX_ROWS = 20;
+
+function isCsvUrl(source: unknown): source is string {
+  if (typeof source !== "string") return false;
+  try {
+    return new URL(source, "http://localhost").pathname.toLowerCase().endsWith(".csv");
+  } catch {
+    return false;
+  }
+}
+
+/** Fetches a CSV and returns the first rows' "File Path" or "uri" values, or [] if no such column. */
+async function loadCsv(url: string): Promise<string[]> {
+  const response = await fetch(url);
+  utils.assert(response.ok, `Failed to fetch CSV ${url}: ${response.status}`);
+  const text = await response.text();
+  const { data, meta } = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    skipEmptyLines: true,
+    preview: CSV_MAX_ROWS,
+  });
+  const column = CSV_SOURCE_COLUMNS.find((name) => meta.fields?.includes(name));
+  if (!column) return [];
+  return data.map((row) => row[column]?.trim()).filter((value): value is string => !!value);
+}
+
 export async function createSourceData(config: ImageLayerConfig): Promise<SourceData[]> {
+  if (isCsvUrl(config.source)) {
+    const sources = await loadCsv(config.source);
+    if (sources.length > 0) {
+      const results = await Promise.all(
+        sources.map((source) => createSourceData({ ...config, source, name: undefined, label: undefined })),
+      );
+      return results.flat();
+    }
+  }
   const node = await openZarrRoot(config.source);
 
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
