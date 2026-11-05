@@ -806,7 +806,10 @@ export async function sourceFromCsv(config: ImageLayerConfig, csvUrl: string): P
       const attrs = utils.resolveAttrs(node.attrs);
       if (utils.isMultiscales(attrs)) {
         const sourceData = await loadOmeMultiscales(config, node, attrs);
-        if (affine) sourceData.model_matrix = affine;
+        if (affine) {
+          const modelMatrix = sourceData.model_matrix.multiplyLeft(affine);
+          sourceData.model_matrix = modelMatrix;
+        }
         return [sourceData];
       }
       return [];
