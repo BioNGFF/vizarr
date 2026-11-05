@@ -312,8 +312,8 @@ importers:
         specifier: ^2.8.2
         version: 2.8.2
       zarrita:
-        specifier: 0.6.2
-        version: 0.6.2
+        specifier: github:biongff/zarrita.js#jpeg&path:/packages/zarrita
+        version: https://codeload.github.com/biongff/zarrita.js/tar.gz/5ce3996e1b7d59e057d4eaef8f336dfb47febdad#path:/packages/zarrita
       zod-ome-ngff:
         specifier: github:biongff/zod-ome-ngff#dev
         version: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db(zod@3.21.0)
@@ -908,6 +908,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@jsquash/jpeg@1.6.0':
+    resolution: {integrity: sha512-zwN46Awh1VM6gXlIcALwb5WzqK5H2e6+Awcs1QP8AvS8ohsK/sbE4esvmH4jhlhW7+CgiUUww66vg0aTnlSIMA==}
 
   '@lit-labs/ssr-dom-shim@1.6.0':
     resolution: {integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==}
@@ -1769,6 +1772,10 @@ packages:
 
   '@zarrita/storage@0.1.4':
     resolution: {integrity: sha512-qURfJAQcQGRfDQ4J9HaCjGaj3jlJKc66bnRk6G/IeLUsM7WKyG7Bzsuf1EZurSXyc0I4LVcu6HaeQQ4d3kZ16g==}
+
+  '@zarrita/storage@https://codeload.github.com/biongff/zarrita.js/tar.gz/5ce3996e1b7d59e057d4eaef8f336dfb47febdad#path:/packages/@zarrita-storage':
+    resolution: {path: /packages/@zarrita-storage, tarball: https://codeload.github.com/biongff/zarrita.js/tar.gz/5ce3996e1b7d59e057d4eaef8f336dfb47febdad}
+    version: 0.1.4
 
   '@zip.js/zip.js@2.7.73':
     resolution: {integrity: sha512-I2UP8/rdQE5hTtVVL08B7P8XuwXiKuuMUPjNuFOVL/9b+8IsExR9S5jz2H58u0rJjU4M1BikLgqEMG8gZJZVBw==}
@@ -3880,8 +3887,9 @@ packages:
   zarrita@0.5.0:
     resolution: {integrity: sha512-wyvnnzeXh9rBCZxsn6GEW4oXDv3LD2f4KSJ6LLFjYaMNtmAtaSt3qEO3fHuuq0VZWUGb8cjTYDEtwJTa09wp6g==}
 
-  zarrita@0.6.2:
-    resolution: {integrity: sha512-8IV+2bWt5yiHNVK9GVEVK1tscpqDcJj8iz5cIKFOiWiWYUsK4V5njgMtnpkvKu6L7K+Og6zUShd8f+dwb6LvTA==}
+  zarrita@https://codeload.github.com/biongff/zarrita.js/tar.gz/5ce3996e1b7d59e057d4eaef8f336dfb47febdad#path:/packages/zarrita:
+    resolution: {path: /packages/zarrita, tarball: https://codeload.github.com/biongff/zarrita.js/tar.gz/5ce3996e1b7d59e057d4eaef8f336dfb47febdad}
+    version: 0.6.2
 
   zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db:
     resolution: {tarball: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db}
@@ -4543,6 +4551,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@jsquash/jpeg@1.6.0': {}
 
   '@lit-labs/ssr-dom-shim@1.6.0': {}
 
@@ -5694,6 +5704,11 @@ snapshots:
   '@webcomponents/shadycss@1.11.2': {}
 
   '@zarrita/storage@0.1.4':
+    dependencies:
+      reference-spec-reader: 0.2.0
+      unzipit: 1.4.3
+
+  '@zarrita/storage@https://codeload.github.com/biongff/zarrita.js/tar.gz/5ce3996e1b7d59e057d4eaef8f336dfb47febdad#path:/packages/@zarrita-storage':
     dependencies:
       reference-spec-reader: 0.2.0
       unzipit: 1.4.3
@@ -7571,9 +7586,10 @@ snapshots:
       '@zarrita/storage': 0.1.4
       numcodecs: 0.3.2
 
-  zarrita@0.6.2:
+  zarrita@https://codeload.github.com/biongff/zarrita.js/tar.gz/5ce3996e1b7d59e057d4eaef8f336dfb47febdad#path:/packages/zarrita:
     dependencies:
-      '@zarrita/storage': 0.1.4
+      '@jsquash/jpeg': 1.6.0
+      '@zarrita/storage': https://codeload.github.com/biongff/zarrita.js/tar.gz/5ce3996e1b7d59e057d4eaef8f336dfb47febdad#path:/packages/@zarrita-storage
       numcodecs: 0.3.2
 
   zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db(zod@3.21.0):
