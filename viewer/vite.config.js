@@ -23,7 +23,15 @@ export default defineConfig({
       fileName: (format) => `biongff-vizarr.${format}.js`,
     },
     rollupOptions: {
-      external: ["react", "react-dom", "@mui/material", "@mui/icons-material", "@emotion/react", "@emotion/styled"],
+      external: [
+        "react",
+        "react-dom",
+        "@mui/material",
+        "@mui/icons-material",
+        "@emotion/react",
+        "@emotion/styled",
+        "@jsquash/jpeg",
+      ],
       output: {
         globals: {
           react: "React",
