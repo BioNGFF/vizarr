@@ -1,7 +1,7 @@
 import * as zarr from "zarrita";
 import type { z } from "zod";
 import { ZarrPixelSource } from "./ZarrPixelSource";
-import { loadOmeMultiscales, loadPlate, loadScene, loadWell } from "./ome";
+import { loadOmeMultiscales, loadPlate, loadScene, loadWell, sourceFromCsv } from "./ome";
 import { parse } from "./parsers/parse";
 import * as utils from "./utils";
 
@@ -75,7 +75,22 @@ async function loadMultiChannel(
   };
 }
 
+function isCsvUrl(source: unknown): source is string {
+  if (typeof source !== "string") return false;
+  if (source.startsWith("https://docs.google.com/spreadsheets/")) {
+    return true;
+  }
+  try {
+    return new URL(source).pathname.toLowerCase().endsWith(".csv");
+  } catch {
+    return false;
+  }
+}
+
 export async function createSourceData(config: ImageLayerConfig): Promise<SourceData[]> {
+  if (isCsvUrl(config.source)) {
+    return sourceFromCsv(config, config.source);
+  }
   const node = await openZarrRoot(config.source);
 
   let data: zarr.Array<zarr.DataType, zarr.Readable>[];
