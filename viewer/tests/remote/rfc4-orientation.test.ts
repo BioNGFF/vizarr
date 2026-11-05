@@ -168,13 +168,22 @@ const byName = (name: string) => {
   return match;
 };
 
-describe.each(CASES)("$name", ({ name, axes, unit }) => {
+describe.each(CASES)("$name", ({ name, axes, orientations, unit }) => {
   test("can be read by the viewer", async () => {
     const sourceData = await createSourceData({ source: `${CORPUS}/${name}.ome.zarr` });
 
     expect(sourceData).toHaveLength(1);
     expect(sourceData[0].axis_labels).toEqual(axes);
     expect(sourceData[0].loader[0].shape).toHaveLength(axes.length);
+
+    // The orientation reaches the viewer, rather than being stripped on the way in by
+    // a schema or an axis rebuilt from the three fields someone happened to name.
+    expect(sourceData[0].axes?.map((axis) => axis.orientation?.value ?? null)).toEqual(orientations);
+    for (const axis of sourceData[0].axes ?? []) {
+      if (axis.orientation) {
+        expect(axis.orientation.type).toBe("anatomical");
+      }
+    }
 
     // Only where the case declares one: an axis with no unit is not a bug, and the
     // viewer reports "" for it.
@@ -261,5 +270,10 @@ describe("must-reject cases", () => {
     const declared = await declaredAxes("TC-D_orientation_on_time_axis");
     const time = declared.find((axis) => axis.name === "t");
     expect(time?.orientation?.value).toBe("inferior-to-superior");
+
+    // It reaches the viewer too. Nothing in the reader drops it, which is what lets the
+    // interface warn about it rather than the image simply looking unremarkable.
+    const read = sourceData[0].axes?.find((axis) => axis.name === "t");
+    expect(read?.orientation?.value).toBe("inferior-to-superior");
   });
 });

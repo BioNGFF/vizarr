@@ -315,8 +315,8 @@ importers:
         specifier: 0.6.2
         version: 0.6.2
       zod-ome-ngff:
-        specifier: github:biongff/zod-ome-ngff#dev
-        version: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db(zod@3.21.0)
+        specifier: github:biongff/zod-ome-ngff#feat/rfc4-axis-orientation
+        version: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/c1f753f69034d3b292ee54d012a04c74e4122f64(zod@3.21.0)
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
@@ -3883,8 +3883,8 @@ packages:
   zarrita@0.6.2:
     resolution: {integrity: sha512-8IV+2bWt5yiHNVK9GVEVK1tscpqDcJj8iz5cIKFOiWiWYUsK4V5njgMtnpkvKu6L7K+Og6zUShd8f+dwb6LvTA==}
 
-  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db:
-    resolution: {tarball: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db}
+  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/c1f753f69034d3b292ee54d012a04c74e4122f64:
+    resolution: {tarball: https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/c1f753f69034d3b292ee54d012a04c74e4122f64}
     version: 0.3.0
     engines: {pnpm: ^9.0.0}
     peerDependencies:
@@ -7576,7 +7576,7 @@ snapshots:
       '@zarrita/storage': 0.1.4
       numcodecs: 0.3.2
 
-  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/6305cf641dacf18afc1c902d25f6d6616ee1d1db(zod@3.21.0):
+  zod-ome-ngff@https://codeload.github.com/biongff/zod-ome-ngff/tar.gz/c1f753f69034d3b292ee54d012a04c74e4122f64(zod@3.21.0):
     dependencies:
       zod: 3.21.0
 
