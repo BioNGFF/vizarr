@@ -20,13 +20,22 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..", "fixtures", "local");
 
-/** Axis order every fixture uses, which is the order OME-NGFF requires. */
+/**
+ * Axis order every fixture uses, which is the order OME-NGFF requires.
+ *
+ * The spatial axes carry RFC-4 `orientation`, using the values from the RFC's own
+ * example so the two can be read side by side. The time and channel axes do not: the
+ * RFC permits it only on axes of type `space`.
+ *
+ * This is here so the offline suite covers orientation at all. The conformance corpus
+ * is the better test of it, and is remote, which means CI never runs it.
+ */
 const AXES = [
   { name: "t", type: "time" },
   { name: "c", type: "channel" },
-  { name: "z", type: "space" },
-  { name: "y", type: "space", unit: "micrometer" },
-  { name: "x", type: "space", unit: "micrometer" },
+  { name: "z", type: "space", orientation: { type: "anatomical", value: "superior-to-inferior" } },
+  { name: "y", type: "space", unit: "micrometer", orientation: { type: "anatomical", value: "anterior-to-posterior" } },
+  { name: "x", type: "space", unit: "micrometer", orientation: { type: "anatomical", value: "right-to-left" } },
 ];
 
 const CHANNEL_COLORS = ["FF0000", "00FF00"];

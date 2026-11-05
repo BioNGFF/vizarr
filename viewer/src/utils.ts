@@ -235,8 +235,11 @@ export function getNgffAxes(multiscales: unknown[]): Ome.Axis[] {
       if (typeof axis === "string") {
         return { name: axis, type: getDefaultType(axis) };
       }
-      const { name, type, unit } = axis;
-      return { name, type: type ?? getDefaultType(name), unit };
+      // Spread rather than name each field: this rebuilt the axis from `name`, `type`
+      // and `unit` alone, so anything else an axis carried -- RFC-4's `orientation`,
+      // and whatever the next RFC adds -- was dropped here without a word.
+      const { name, type } = axis;
+      return { ...axis, name, type: type ?? getDefaultType(name) };
     });
   }
 

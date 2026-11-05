@@ -28,10 +28,28 @@ declare namespace Ome {
     };
   }
 
+  /**
+   * Which way a spatial axis runs, from its lowest coordinate to its highest.
+   *
+   * RFC-4. `anterior-to-posterior` means coordinates increase towards the back, so this
+   * describes the coordinate system the spatial metadata establishes, not array index
+   * order; it composes with `coordinateTransformations` rather than contradicting them.
+   *
+   * https://ngff.openmicroscopy.org/rfc/4/index.html
+   */
+  interface Orientation {
+    /** Only "anatomical" is defined. The RFC reserves room for other domains. */
+    type: string;
+    /** One of the 24 direction pairs, e.g. "left-to-right". */
+    value: string;
+  }
+
   interface Axis {
     name: string;
     type?: string;
     unit?: string;
+    /** RFC-4, on spatial axes only. Absent and null mean the same thing. */
+    orientation?: Orientation | null;
   }
 
   interface CoordinateSystem {
