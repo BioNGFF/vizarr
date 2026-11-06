@@ -22,5 +22,8 @@ export default defineConfig(({ mode }) => ({
         : {}),
     },
   },
+  optimizeDeps: {
+    exclude: ["@jsquash/jpeg"],
+  },
   server: { open: `?source=${source}` },
 }));
