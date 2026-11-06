@@ -69,7 +69,7 @@ const schemaList = [
   schemaEntry("0.6", "label", v06.LabelSchema, transformImagev06),
   schemaEntry("0.6", "labels", LabelsSchemav05, transformImagev06),
   schemaEntry("0.6", "scene", v06.SceneSchema, transformImagev06),
-  //Temporary for test data based on 0.6.dev3 version
+  //Temporary for test data based on 0.6.dev3 version.
   schemaEntry("0.6.dev3", "image", v06.ImageSchema, transformImagev06),
   schemaEntry("0.6.dev3", "well", v06.WellSchema, transformImagev06),
   schemaEntry("0.6.dev3", "plate", v06.PlateSchema, transformImagev06),
