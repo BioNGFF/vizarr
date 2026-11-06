@@ -134,7 +134,7 @@ function applyCoordinateScalingToMatrix(matrix: Matrix4, scale: Array<number>): 
 }
 
 function applyCoordinateRotationToMatrix(matrix: Matrix4, rotation: FlatMatrix4): Matrix4 {
-  // Get the scale values for [x, y, z].
+  // Get the rotation values for [x, y, z]
   const rotationMat = new Matrix4();
   rotationMat.set(...rotation);
   return matrix.multiplyLeft(rotationMat);
