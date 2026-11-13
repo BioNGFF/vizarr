@@ -1,5 +1,19 @@
 # Changelog
 
+# [1.5.0](https://github.com/BioNGFF/vizarr/compare/v1.4.2...v1.5.0) (2026-10-30)
+
+
+### Bug Fixes
+
+* **ci:** open the release pull request without needing read:org ([8d28f2a](https://github.com/BioNGFF/vizarr/commit/8d28f2a39768b8242416f6eb64f7b6579a6bb579)), closes [#152](https://github.com/BioNGFF/vizarr/issues/152) [#153](https://github.com/BioNGFF/vizarr/issues/153) [#153](https://github.com/BioNGFF/vizarr/issues/153) [#154](https://github.com/BioNGFF/vizarr/issues/154)
+* **viewer:** name a source the same way whichever path it arrives by ([24b1ac8](https://github.com/BioNGFF/vizarr/commit/24b1ac8a0d395f276d2f299b0307e2e992ea0361))
+
+
+### Features
+
+* **viewer:** act on plate review feedback, and cut the time to first pixels ([1a0af6a](https://github.com/BioNGFF/vizarr/commit/1a0af6a5d647b99adcc6ad71494cb153fcba1082))
+* **viewer:** multiresolution plates, in-place navigation and acquisition selection ([baec152](https://github.com/BioNGFF/vizarr/commit/baec152f6a90aebb397810ba6d0d0bec09ca7832))
+
 ## [1.4.2](https://github.com/BioNGFF/vizarr/compare/v1.4.1...v1.4.2) (2026-10-30)
 
 
