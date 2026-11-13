@@ -43,6 +43,38 @@ test("A v0.5 image is read the same way, although it is a different zarr format"
   expect(source.names).toEqual(["Red channel", "Green channel"]);
 });
 
+// A plain image, a plate and a well reach their axes through different code, so each
+// has its own way of losing the orientation on the way. The plate and the well read
+// theirs through `getNgffAxes`, which an image does not touch at all.
+test.each([
+  ["a v0.4 image", "image-v04.zarr"],
+  ["a v0.5 image", "image-v05.zarr"],
+  ["a plate", "plate-v04.zarr"],
+  ["a well", "plate-v04.zarr/A/1"],
+])("RFC-4 axis orientation survives reading %s", async (_what, fixture) => {
+  const [source] = await createSourceData({ source: `${origin}/${fixture}` });
+
+  // Nothing between the store and here may quietly drop it: not the schema, which
+  // strips what it does not declare, and not an axis rebuilt from a named few fields.
+  expect(source.axes?.map((axis) => axis.orientation?.value ?? null)).toEqual([
+    null,
+    null,
+    "superior-to-inferior",
+    "anterior-to-posterior",
+    "right-to-left",
+  ]);
+  expect(source.axes?.map((axis) => axis.orientation?.type ?? null)).toEqual([
+    null,
+    null,
+    "anatomical",
+    "anatomical",
+    "anatomical",
+  ]);
+  // The unit travels the same path and is dropped by the same mistakes, so it is worth
+  // asserting beside the orientation rather than trusting one to stand for the other.
+  expect(source.axes?.map((axis) => axis.unit ?? null)).toEqual([null, null, null, "micrometer", "micrometer"]);
+});
+
 test("Pixels come back, and are the gradient the fixture was written with", async () => {
   const [source] = await createSourceData({ source: `${origin}/image-v04.zarr` });
   const { data, width, height } = await source.loader[0].getRaster({ selection: [0, 0, 0] });

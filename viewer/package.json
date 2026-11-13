@@ -44,7 +44,7 @@
     "xml-js": "1.6.11",
     "yaml": "^2.8.2",
     "zarrita": "0.6.2",
-    "zod-ome-ngff": "github:biongff/zod-ome-ngff#dev"
+    "zod-ome-ngff": "github:biongff/zod-ome-ngff#feat/rfc4-axis-orientation"
   },
   "peerDependencies": {
     "@emotion/react": "^11.14.0",

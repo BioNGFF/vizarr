@@ -144,6 +144,12 @@ export type SourceData = {
   };
   model_matrix: Matrix4;
   axis_labels: string[];
+  /**
+   * The axes as the metadata declared them, carrying what `axis_labels` cannot: the
+   * type, the unit, and RFC-4 orientation. Absent for sources with no OME metadata to
+   * read, which is why callers must cope with it being undefined.
+   */
+  axes?: Ome.Axis[];
   onClick?: (e: OnClickData) => void;
   /**
    * The url of the image a grid cell stands for, for drilling into it.

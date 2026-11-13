@@ -1,6 +1,8 @@
 import { Box, Grid } from "@mui/material";
 import * as React from "react";
 import { useLayerState, useSourceData } from "../../hooks";
+import { resolveScreenOrientation } from "../../orientation";
+import { OrientationDirection } from "../OrientationLabel";
 import DimensionOptions from "./AxisOptions";
 import { ControlLabel, DenseSlider } from "./controls";
 
@@ -12,11 +14,21 @@ interface Props {
 function AxisSlider({ axisIndex, max }: Props) {
   const [layer, setLayer] = useLayerState();
   const [sourceData] = useSourceData();
-  const { axis_labels } = sourceData;
-  let axisLabel = axis_labels[axisIndex];
+  const { axis_labels, axes, model_matrix } = sourceData;
+  const name = axis_labels[axisIndex];
+  let axisLabel = name;
   if (axisLabel === "t" || axisLabel === "z") {
     axisLabel = axisLabel.toUpperCase();
   }
+
+  // RFC-4 orientation for an axis that points out of the view, which is the only place
+  // it can be shown: the compass can only speak for the two axes lying in the view. The
+  // ends are ordered the way the slider travels, so the arrow reads with the handle
+  // rather than against it.
+  const direction = React.useMemo(
+    () => resolveScreenOrientation(axes, model_matrix).throughPlane[name],
+    [axes, model_matrix, name],
+  );
   // state of the slider to update UI while dragging
   const [value, setValue] = React.useState(0);
 
@@ -50,6 +62,11 @@ function AxisSlider({ axisIndex, max }: Props) {
           <Grid size={{ xs: 10 }}>
             <ControlLabel>
               {axisLabel} ({value}/{max})
+              {direction && (
+                <Box component="span" sx={{ ml: 0.75 }}>
+                  <OrientationDirection ends={direction} />
+                </Box>
+              )}
             </ControlLabel>
           </Grid>
           <Grid size={{ xs: 1 }}>
