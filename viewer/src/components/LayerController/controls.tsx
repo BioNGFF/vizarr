@@ -1,5 +1,4 @@
 import { Box, Divider, Input, Slider, Typography } from "@mui/material";
-import type { InputProps, SliderProps } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { styled } from "@mui/material/styles";
 import type React from "react";
@@ -14,7 +13,7 @@ export const sectionLabelSx: SxProps<Theme> = {
 };
 
 /** Slider sized to the panel's row height. Callers override `color` per channel. */
-export const DenseSlider: React.ComponentType<SliderProps> = styled(Slider)({
+export const DenseSlider = styled(Slider)({
   color: "#fff",
   // Inset from both ends of its column: the thumb is a circle centred on the end of the
   // track, so at the minimum or maximum it overhangs the column and the row reads as
@@ -28,7 +27,7 @@ export const DenseSlider: React.ComponentType<SliderProps> = styled(Slider)({
 });
 
 /** Numeric field in the option popovers. */
-export const DenseInput: React.ComponentType<InputProps> = styled(Input)({
+export const DenseInput = styled(Input)({
   width: "5.5em",
 });
 
