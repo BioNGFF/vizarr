@@ -4,6 +4,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import { useViewState } from "../hooks";
 import { useAxisNavigation } from "../hooks/useAxisNavigation";
+import { scaleBarUnit } from "../scale-bar";
 import { layerAtoms, navigateIntoAtom, panelInsetAtom, sourceInfoAtom, viewportAtom } from "../state";
 import theme, { tokens } from "../theme";
 import { fitImageToViewport, getLayerSize, resolveLoaderFromLayerProps } from "../utils";
@@ -162,12 +163,21 @@ export default function Viewer({ additionalLayers = [], pluginCursor, onPluginCl
     const loader = resolveLoaderFromLayerProps(firstLayer.props);
     if (Array.isArray(loader) && loader?.[0]?.meta?.physicalSizes?.x) {
       const { size, unit } = loader[0].meta.physicalSizes.x;
+      const symbol = scaleBarUnit(unit);
+      // No bar rather than a wrong one. viv reads a unit it does not know as metres, so
+      // an image that declares none -- or declares feet -- would carry a bar that looks
+      // authoritative and is out by orders of magnitude.
+      if (!symbol) {
+        return layers;
+      }
       const scalebar = new ScaleBarLayer({
         id: "scalebar",
         size: size / firstLayer.props.modelMatrix[0],
-        unit: unit,
+        unit: symbol,
         viewState: viewState,
-        snap: false,
+        // Snapped, so the bar is a round length instead of whatever 5% of the viewport
+        // happens to measure. This is only safe because `symbol` is a unit viv can read.
+        snap: true,
       });
       return [...layers, scalebar];
     }
