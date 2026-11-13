@@ -17,5 +17,9 @@
   // documented, which reaches the reader as a dead end. Pull requests build the
   // docs, so these surface before they are published.
   "treatWarningsAsErrors": true,
+  // Pages that belong to the project rather than to one package. Nested children are
+  // declared in the document's own front matter, so a new RFC page is added there and
+  // not here.
+  "projectDocuments": ["./docs/rfcs/index.md"],
   "out": "./docs/build"
 }

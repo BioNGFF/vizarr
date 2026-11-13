@@ -137,6 +137,35 @@ locally before asking for a review.
 pnpm build  # builds all packages
 ```
 
+## Documentation
+
+The docs site is built with TypeDoc from the types and the pages under `docs/`.
+
+```bash
+pnpm docs:dev    # the site, rebuilt as you edit
+pnpm build:docs  # what CI builds
+```
+
+Warnings are errors, so a link to something undocumented fails the build rather than
+reaching a reader as a dead end.
+
+### Documenting support for an OME-NGFF RFC
+
+`docs/rfcs/` holds a page per RFC, saying what vizarr does with that metadata. If your
+change alters what the viewer does with an RFC, update its page in the same pull
+request. A page that describes last month's behaviour is worse than no page, because
+someone will believe it.
+
+Copy an existing page for the shape of it. The part worth care is not the summary of
+the specification — the specification is a link away — but the two sections a reader
+cannot get anywhere else: what the viewer actually does, and where it deliberately
+departs from the spec and why. A viewer declines a MUST from time to time, usually
+because refusing an image would serve the reader worse than drawing it; write the
+reason down rather than leaving it to be rediscovered from a code comment.
+
+Adding a page means adding it to the `children` list in `docs/rfcs/index.md`, and
+giving it a row in that page's support table.
+
 ## How releases happen
 
 You do not need to do anything to release your change, and you should not edit version
