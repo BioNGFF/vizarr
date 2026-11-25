@@ -1,4 +1,5 @@
 import * as zarr from "zarrita";
+import { SUPPORTED_SCHEMES, resolveCloudUri } from "../cloud-uri";
 import { log } from "../logger";
 import { normalizeStore } from "../utils";
 
@@ -47,8 +48,32 @@ export class MetadataNotFoundError extends MetadataError {
     Object.setPrototypeOf(this, MetadataNotFoundError.prototype);
   }
 }
+export class UnsupportedSchemeError extends Error {
+  cause: string;
+  constructor(message: string, cause: string) {
+    super(message);
+    this.name = "UnsupportedSchemeError";
+    this.cause = cause;
+    Object.setPrototypeOf(this, UnsupportedSchemeError.prototype);
+  }
+}
+
 function isCorsFailure(error: unknown): error is TypeError {
   return error instanceof TypeError && MAYBE_CORS_ERROR_MESSAGES.includes(error.message);
+}
+
+/**
+ * The scheme of a url, once the cloud URIs have been resolved away, or undefined where
+ * the source is not a url at all.
+ */
+function unfetchableScheme(url: string): string | undefined {
+  let protocol: string;
+  try {
+    ({ protocol } = new URL(url));
+  } catch {
+    return undefined;
+  }
+  return protocol === "http:" || protocol === "https:" ? undefined : protocol;
 }
 
 /**
@@ -61,6 +86,19 @@ function isCorsFailure(error: unknown): error is TypeError {
  * us is a more durable way to say why it did not work.
  */
 async function explainFailure(source: string | zarr.Readable, url: string, error: unknown): Promise<Error> {
+  // Before anything else, because a scheme the browser cannot speak fails as a TypeError
+  // with the same message a blocked request produces, and would otherwise be reported as
+  // a CORS problem. It is not: nothing was sent. Telling someone to go and look at a
+  // bucket policy for a request that never left the browser costs them an afternoon.
+  const scheme = unfetchableScheme(url);
+  if (scheme) {
+    log.debug("Open failed, scheme is not fetchable", { url, scheme });
+    return new UnsupportedSchemeError(
+      `${scheme}// is not an address a browser can open. Vizarr understands ${SUPPORTED_SCHEMES.join(", ")}.`,
+      `Unsupported scheme ${scheme} in ${source}`,
+    );
+  }
+
   // A blocked request never reaches the server, so there is nothing to ask it about.
   if (isCorsFailure(error)) {
     log.debug("Open failed, classified as CORS", { url, cause: error.message });
@@ -120,7 +158,9 @@ async function explainFailure(source: string | zarr.Readable, url: string, error
 }
 
 export async function openZarrRoot(source: string | zarr.Readable): Promise<zarr.Group<zarr.Readable<unknown>>> {
-  const url = typeof source === "string" ? source : zarr.root(source).path;
+  // The resolved url, not the one the user gave us: this is what a probe has to be made
+  // against. Their own source string is what the messages quote back at them.
+  const url = typeof source === "string" ? resolveCloudUri(source) : zarr.root(source).path;
   log.debug("Opening source", { url });
 
   // zarrita first. It has to make these requests anyway, so probing the url up front

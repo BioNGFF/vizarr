@@ -17,5 +17,9 @@
   // documented, which reaches the reader as a dead end. Pull requests build the
   // docs, so these surface before they are published.
   "treatWarningsAsErrors": true,
+  // Pages that belong to the project rather than to one package. Nested children are
+  // declared in the document's own front matter, so a new page in a section is added
+  // there and not here.
+  "projectDocuments": ["./docs/features/index.md"],
   "out": "./docs/build"
 }
