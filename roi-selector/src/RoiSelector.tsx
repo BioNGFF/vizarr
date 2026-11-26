@@ -205,7 +205,8 @@ function RoiSelector({
       <Divider />
 
       <Box sx={{ overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <Box sx={{ mt: 1, overflowY: "auto", minHeight: 0 }}>
+        {/* Padding, not margin: the scroll box would otherwise clip the first field's floating label. */}
+        <Box sx={{ pt: 1, overflowY: "auto", minHeight: 0 }}>
           {(pendingRoi || editingRoiId) && (
             <RoiCoordinateFields
               coords={coords}

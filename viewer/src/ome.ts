@@ -468,39 +468,7 @@ function getHighestResolutionTransformations(metadata: Ome.Multiscale[]): Ome.Co
 //Should be moved to the parsing layer
 //Unknown is suitable here because we really don't know anything about the structure of the data
 function getDefaultCoordinateSystem(multiscales: unknown[] = []): Ome.CoordinateSystem[] {
-  //Try to extract axes metadata
-  if (
-    typeof multiscales[0] === "object" &&
-    multiscales[0] &&
-    "axes" in multiscales[0] &&
-    Array.isArray(multiscales[0].axes)
-  ) {
-    return [
-      {
-        name: "default",
-        axes: multiscales[0].axes.map((axis) => {
-          if (typeof axis === "object" && "name" in axis) {
-            return axis;
-          }
-          if (typeof axis === "string") {
-            return { name: axis, type: "space" };
-          }
-          return { name: "default", ...axis };
-        }),
-      },
-    ];
-  }
-  return [
-    {
-      name: "default",
-      axes: [
-        { type: "channel", name: "c" },
-        { type: "space", name: "z" },
-        { type: "space", name: "y" },
-        { type: "space", name: "x" },
-      ],
-    },
-  ];
+  return [{ name: "default", axes: utils.getNgffAxes(multiscales) }];
 }
 
 /**

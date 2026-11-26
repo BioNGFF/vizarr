@@ -138,6 +138,9 @@ export function useRoiFields({
 
   const onCoordChange = React.useCallback(
     (key: CoordKey, value: string) => {
+      // Reject non-numeric input; z/t are integer slice/frame indices.
+      const pattern = key[0] === "z" || key[0] === "t" ? /^\d*$/ : /^-?\d*\.?\d*$/;
+      if (!pattern.test(value)) return;
       setCoords((prev) => {
         // Clamp numeric value to image bounds when available
         let clamped = value;
@@ -153,7 +156,8 @@ export function useRoiFields({
               ...(tMax !== null ? { t1: { lo: 0, hi: tMax }, t2: { lo: 0, hi: tMax } } : {}),
             };
             const range = limits[key];
-            if (range !== undefined) {
+            // Only rewrite out-of-range values so partial input like "1." stays editable.
+            if (range !== undefined && (num < range.lo || num > range.hi)) {
               clamped = String(Math.max(range.lo, Math.min(num, range.hi)));
             }
           }
