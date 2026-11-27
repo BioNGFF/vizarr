@@ -1,0 +1,30 @@
+name: Remote tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+
+concurrency:
+  group: remote-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  remote:
+    runs-on: ubuntu-latest
+    # A server that hangs should cost a bounded amount of Actions time.
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup
+
+      - name: Remote tests
+        run: pnpm test:remote
