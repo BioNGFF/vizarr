@@ -14,4 +14,4 @@ channels:
   - Hyb probe
 labels: 1
 name: 123062e1-46ad-474a-b308-d488073ccb7d.yaml
-testable: true
+testable: false

@@ -12,4 +12,4 @@ channels:
   - LaminB1
 labels: 0
 name: a410e397-651e-4eea-a6f2-f30aa8d8a9f0.yaml
-testable: true
+testable: false

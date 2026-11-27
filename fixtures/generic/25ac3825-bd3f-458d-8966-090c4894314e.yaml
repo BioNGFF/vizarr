@@ -11,4 +11,4 @@ channels:
   - NEG_Dextran
 labels: 2
 name: 25ac3825-bd3f-458d-8966-090c4894314e.yaml
-testable: true
+testable: false

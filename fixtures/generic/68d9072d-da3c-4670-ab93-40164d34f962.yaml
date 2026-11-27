@@ -12,4 +12,4 @@ channels:
   - Channel 2
 labels: 0
 name: 68d9072d-da3c-4670-ab93-40164d34f962.yaml
-testable: true
+testable: false

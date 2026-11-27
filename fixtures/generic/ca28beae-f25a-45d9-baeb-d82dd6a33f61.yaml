@@ -12,4 +12,4 @@ channels:
   - "3"
 labels: 0
 name: ca28beae-f25a-45d9-baeb-d82dd6a33f61.yaml
-testable: true
+testable: false

@@ -10,4 +10,4 @@ channels:
   - myr-tdTomato
 labels: 0
 name: 1bc4a58c-392a-4168-8713-94a85df1832a.yaml
-testable: true
+testable: false

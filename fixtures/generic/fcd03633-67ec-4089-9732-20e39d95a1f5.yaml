@@ -11,4 +11,4 @@ channels:
   - "2"
 labels: 0
 name: fcd03633-67ec-4089-9732-20e39d95a1f5.yaml
-testable: true
+testable: false

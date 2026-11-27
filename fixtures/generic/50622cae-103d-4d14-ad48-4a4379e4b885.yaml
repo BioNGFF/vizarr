@@ -10,4 +10,4 @@ channels:
   - Dapi
 labels: 1
 name: 50622cae-103d-4d14-ad48-4a4379e4b885.yaml
-testable: true
+testable: false

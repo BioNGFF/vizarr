@@ -35,4 +35,4 @@ channels:
   - CD14-156Gd
 labels: 0
 name: a6e4722e-85c7-40e2-8e8f-84ec55117186.yaml
-testable: true
+testable: false

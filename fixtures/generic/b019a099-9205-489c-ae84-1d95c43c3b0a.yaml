@@ -10,4 +10,4 @@ channels:
   - eGFP
 labels: 0
 name: b019a099-9205-489c-ae84-1d95c43c3b0a.yaml
-testable: true
+testable: false

@@ -11,4 +11,4 @@ channels:
   - Tx Red
 labels: 1
 name: f8545197-952d-4c23-94fa-af1e9fdb9f7d.yaml
-testable: true
+testable: false

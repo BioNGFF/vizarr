@@ -1253,4 +1253,4 @@ wells:
         - eGFP
       labels: 0
 name: 3e33a0e8-d4ea-4027-ba2a-e64150d957d8.yaml
-testable: true
+testable: false

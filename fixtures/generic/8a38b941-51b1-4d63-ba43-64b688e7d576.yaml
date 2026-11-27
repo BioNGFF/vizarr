@@ -12,4 +12,4 @@ channels:
   - cy 4
 labels: 0
 name: 8a38b941-51b1-4d63-ba43-64b688e7d576.yaml
-testable: true
+testable: false

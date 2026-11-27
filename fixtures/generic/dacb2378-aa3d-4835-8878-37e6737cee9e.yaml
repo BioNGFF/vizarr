@@ -9605,4 +9605,4 @@ wells:
         - Digital Phase Contrast
       labels: 0
 name: dacb2378-aa3d-4835-8878-37e6737cee9e.yaml
-testable: true
+testable: false

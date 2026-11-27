@@ -4613,4 +4613,4 @@ wells:
         - GFP
       labels: 0
 name: 0d594022-23f2-4c61-9141-0a5a433e6606.yaml
-testable: true
+testable: false

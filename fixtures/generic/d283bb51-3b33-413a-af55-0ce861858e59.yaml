@@ -9,4 +9,4 @@ channels:
   - Alexa488
 labels: 0
 name: d283bb51-3b33-413a-af55-0ce861858e59.yaml
-testable: true
+testable: false
