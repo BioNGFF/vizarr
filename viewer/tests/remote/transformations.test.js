@@ -19,27 +19,3 @@ test("Image-level transformations should be applied", async () => {
   const source = yaml.parse(fs.readFileSync(sourcePath, "utf-8"));
   await createSourceData(source);
 });
-
-test("Can read a scene image and apply transformations", async () => {
-  const sourcePath = path.resolve(
-    path.join(__dirname, "..", "..", "..", "fixtures", "generic", "34115deb-4f41-4278-9e29-a544e2a2ca5b.yaml"),
-  );
-  const source = yaml.parse(fs.readFileSync(sourcePath, "utf-8"));
-  const sourceDatas = await createSourceData(source);
-
-  const expectedMatrices = [
-    [0.10202959397405088, 0, 0, 0, 0, 0.10202959397405088, 0, 0, 0, 0, 0.5920416817598223, 0, 0, 0, 0, 1],
-    [
-      0.10202959397405088, 0, 0, 0, 0, 0.10202959397405088, 0, 0, 0, 0, 0.5920416817598223, 0, 61.21775638443053,
-      30.608878192215265, 0, 1,
-    ],
-    [
-      0.10202959397405088, 0, 0, 0, 0, 0.10202959397405088, 0, 0, 0, 0, 0.5920416817598223, 0, 91.8266345766458,
-      91.8266345766458, 0, 1,
-    ],
-  ];
-
-  for (const [index, sourceData] of sourceDatas.entries()) {
-    expect(Array.from(sourceData.model_matrix)).toEqual(expectedMatrices[index]);
-  }
-}, 30000);

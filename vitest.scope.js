@@ -22,6 +22,6 @@ export function testScope() {
     // Only a real network needs a timeout this long, and this branch's plate crawls
     // need all of it. Holding the offline suite to the default keeps a hang looking
     // like a hang.
-    testTimeout: remote ? 60000 : 5000,
+    testTimeout: remote ? 10000 : 5000,
   };
 }

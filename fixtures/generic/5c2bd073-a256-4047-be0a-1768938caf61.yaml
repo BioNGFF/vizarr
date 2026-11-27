@@ -35,4 +35,4 @@ channels:
   - Ki67-168Er
 labels: 0
 name: 5c2bd073-a256-4047-be0a-1768938caf61.yaml
-testable: true
+testable: false

@@ -11,4 +11,4 @@ channels:
   - A549-mCherry
 labels: 0
 name: 77aa71ae-e067-41e4-a24a-8c694160f8f7.yaml
-testable: true
+testable: false

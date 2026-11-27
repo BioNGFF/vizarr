@@ -9,4 +9,4 @@ channels:
   - Cy3
 labels: 0
 name: 65b1be90-370e-4661-b35a-6f20417a8b55.yaml
-testable: true
+testable: false

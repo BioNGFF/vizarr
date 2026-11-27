@@ -1,4 +1,4 @@
-source: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/test-data/v0.6.dev3/idr0050/4995115_scene.zarr
+source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.6/idr0050/4995115_scene.zarr
 zarr_version: 3
 version: 0.6.dev3
 type: scene
@@ -8,7 +8,7 @@ transformations:
   - affine
   - translation
 images:
-  - source: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/test-data/v0.6.dev3/idr0050/4995115_scene.zarr/4995115_full.zarr
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.6/idr0050/4995115_scene.zarr/4995115_full.zarr
     zarr_version: 3
     version: 0.6.dev3
     type: image
@@ -20,7 +20,7 @@ images:
       - Cell
       - Microtubules
     labels: 0
-  - source: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/test-data/v0.6.dev3/idr0050/4995115_scene.zarr/4995115_cropped_400_100_400_400_rot10.zarr
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.6/idr0050/4995115_scene.zarr/4995115_cropped_400_100_400_400_rot10.zarr
     zarr_version: 3
     version: 0.6.dev3
     type: image
@@ -35,7 +35,7 @@ images:
       - Cell
       - Microtubules
     labels: 1
-  - source: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/test-data/v0.6.dev3/idr0050/4995115_scene.zarr/4995115_cropped_700_700_400_400_rot45.zarr
+  - source: https://livingobjects.ebi.ac.uk/idr/zarr/v0.6/idr0050/4995115_scene.zarr/4995115_cropped_700_700_400_400_rot45.zarr
     zarr_version: 3
     version: 0.6.dev3
     type: image
@@ -51,4 +51,4 @@ images:
       - Microtubules
     labels: 1
 name: 34115deb-4f41-4278-9e29-a544e2a2ca5b.yaml
-testable: true
+testable: false

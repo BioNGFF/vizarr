@@ -52229,4 +52229,5 @@ wells:
         - Mito
       labels: 0
 name: 5d3e3fb3-05eb-43d6-8061-9ad463612d4e.yaml
-testable: true
+#Very big and times out easily
+testable: false

@@ -97,14 +97,28 @@ one and catches what the tests do not.
 generates, no network at all. It is what CI runs, and it takes about 15 seconds.
 
 **`pnpm test:remote` is the corpus**, which reads real images from IDR and elsewhere.
-It is slow, and it fails when a server we do not control is slow or down, so it is
-opt-in and CI does not run it. A test that needs a server we do not run belongs in
+It fails when a server we do not control is slow or down, so it stays out of
+`pnpm test` and out of `ci.yml`. A test that needs a server we do not run belongs in
 `tests/remote/`.
+
+**The corpus runs on pull requests into `main`**, through
+`.github/workflows/remote_tests.yml`, and a failure blocks the merge. In practice that
+pull request is the `dev` to `main` Release PR, so the corpus checks a release before it
+happens, and runs again on every merge into `dev` because each one updates that pull
+request. It never runs inside the release itself.
+
+**Which images it reads is set by `testable` in `fixtures/generic/*.yaml`.**
+`images.test.js` only reads fixtures marked `testable: true`. There are deliberately
+few of them: one for each type and version combination worth testing, plus at least one
+zipped fixture, one with labels and one with transformations. Turning more on makes the
+run slower and more likely to time out. A fixture that passes is rewritten with
+`testable: true`, but a fixture set to `false` never runs, so it is never switched back.
 
 That split is not cosmetic. While the corpus ran by default it took the *deploy* down
 twice — releases 1.4.0 and 1.4.1 both failed on a closed socket to EBI, in a workflow
-whose job was to publish a build that had already passed. Think twice before putting a
-fetch anywhere that has to succeed.
+whose job was to publish a build that had already passed. That is why it gates the pull
+request and not the publish. Think twice before putting a fetch anywhere that has to
+succeed.
 
 ## Things that are easy to get wrong
 

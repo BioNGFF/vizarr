@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { createSourceData } from "../src/io";
 
-const PLATE = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0001A/2551.zarr";
+const PLATE = "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0001A/2551.zarr";
 
 /**
  * Which image directory inside well A/1 a plate load actually opened.

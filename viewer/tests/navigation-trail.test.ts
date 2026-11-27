@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { decodeNavigationStep, encodeNavigationStep } from "../src/state";
 
-const PLATE = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0001A/2551.zarr";
+const PLATE = "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0001A/2551.zarr";
 
 test("A step the url fully describes is just its url, so a plain trail stays readable", () => {
   expect(encodeNavigationStep({ source: PLATE, name: "2551" })).toBe(PLATE);
